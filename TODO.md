@@ -38,7 +38,7 @@
 - [x] Add training loop or wrapper model.
 - [x] Persist training metrics.
 - [x] Add `GET /training-jobs/{job_id}/metrics`.
-- [ ] Add minimal model registry.
+- [x] Add minimal model registry.
 - [ ] Add `GET /models`.
 - [ ] Add `POST /models/{model_id}/infer`.
 - [ ] Add Docker Compose.

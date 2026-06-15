@@ -9,6 +9,7 @@ Ports live here:
 - `training_job_repository.rs`
 - `training_job_queue.rs`
 - `training_metric_repository.rs`
+- `model_repository.rs`
 - `sample_storage.rs`
 
 Adapters implement these ports outside the application crate.

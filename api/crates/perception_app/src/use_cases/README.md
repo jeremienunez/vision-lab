@@ -10,6 +10,9 @@ One file per product intention:
 - `transition_training_job.rs`
 - `record_training_metric.rs`
 - `list_training_metrics.rs`
+- `register_model.rs`
+- `list_models.rs`
+- `get_model.rs`
 - `run_inference.rs`
 
 HTTP handlers call use cases; they do not implement business orchestration.

@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
 use perception_domain::{
-    AnnotationId, DatasetId, DatasetStatus, DatasetVersionId, SampleId, TrainingHyperparameters,
-    TrainingJobId, TrainingJobStatus, TrainingMetricId,
+    AnnotationId, DatasetId, DatasetStatus, DatasetVersionId, ModelId, ModelStatus, SampleId,
+    TrainingHyperparameters, TrainingJobId, TrainingJobStatus, TrainingMetricId,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -109,6 +109,19 @@ pub struct TrainingMetricDraft {
     pub step: Option<u32>,
     pub epoch: Option<u32>,
     pub metadata: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ModelDraft {
+    pub id: ModelId,
+    pub name: String,
+    pub version: String,
+    pub training_job_id: TrainingJobId,
+    pub dataset_version_id: DatasetVersionId,
+    pub model_family: String,
+    pub artifact_uri: String,
+    pub metrics_summary: BTreeMap<String, String>,
+    pub status: ModelStatus,
 }
 
 impl TrainingJobQueueEntry {

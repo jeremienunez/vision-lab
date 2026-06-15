@@ -8,20 +8,21 @@ pub mod use_cases;
 
 pub use error::UseCaseError;
 pub use models::{
-    AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, SampleDraft, TaskType,
-    TrainingJobDraft, TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingMetricDraft,
+    AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, ModelDraft, SampleDraft,
+    TaskType, TrainingJobDraft, TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingMetricDraft,
 };
 pub use ports::{
-    AnnotationRepository, DatasetRepository, DatasetVersionRepository, SampleRepository,
-    SampleStorage, SampleStorageCommand, StoredSample, TrainingJobQueue, TrainingJobRepository,
-    TrainingMetricRepository,
+    AnnotationRepository, DatasetRepository, DatasetVersionRepository, ModelRepository,
+    SampleRepository, SampleStorage, SampleStorageCommand, StoredSample, TrainingJobQueue,
+    TrainingJobRepository, TrainingMetricRepository,
 };
 pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,
     CreateDatasetVersionCommand, CreateDatasetVersionUseCase, CreateTrainingJobCommand,
-    CreateTrainingJobUseCase, DatasetStatsUseCase, ListDatasetsUseCase,
-    ListSampleAnnotationsUseCase, ListTrainingMetricsUseCase, RecordTrainingMetricCommand,
-    RecordTrainingMetricUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
+    CreateTrainingJobUseCase, DatasetStatsUseCase, GetModelUseCase, ListDatasetsUseCase,
+    ListModelsUseCase, ListSampleAnnotationsUseCase, ListTrainingMetricsUseCase,
+    RecordTrainingMetricCommand, RecordTrainingMetricUseCase, RegisterModelCommand,
+    RegisterModelUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
     UploadSampleCommand, UploadSampleUseCase,
 };
 

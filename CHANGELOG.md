@@ -38,6 +38,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Tiny deterministic PyTorch trainer strategy that runs a CPU training loop, writes a local model artifact, and returns training metrics.
 - Training metric application use cases, repository port, domain id, and transient repository for persisted epoch metric records.
 - Training job metrics HTTP route returning persisted metric records ordered by epoch and step.
+- Minimal model registry use cases and transient repository for registering candidate models from succeeded training jobs.
 
 ### Changed
 
