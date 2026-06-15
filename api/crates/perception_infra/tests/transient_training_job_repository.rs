@@ -32,4 +32,22 @@ async fn transient_training_job_repository_creates_and_gets_jobs() {
             .status,
         TrainingJobStatus::Queued
     );
+
+    let mut job = repository
+        .get(job_id)
+        .await
+        .expect("job lookup succeeds")
+        .expect("job exists");
+    job.status = TrainingJobStatus::Running;
+    repository.update(job).await.expect("job update persists");
+
+    assert_eq!(
+        repository
+            .get(job_id)
+            .await
+            .expect("job lookup succeeds")
+            .expect("job exists")
+            .status,
+        TrainingJobStatus::Running
+    );
 }

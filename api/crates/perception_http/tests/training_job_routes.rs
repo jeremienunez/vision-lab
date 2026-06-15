@@ -70,6 +70,16 @@ impl TrainingJobRepository for RouteTrainingJobRepository {
             .find(|job| job.id == job_id)
             .cloned())
     }
+
+    async fn update(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError> {
+        let mut jobs = self.jobs.lock().expect("repository mutex is available");
+        let stored = jobs
+            .iter_mut()
+            .find(|stored_job| stored_job.id == job.id)
+            .ok_or(UseCaseError::NotFound("training job not found"))?;
+        *stored = job.clone();
+        Ok(job)
+    }
 }
 
 async fn json_body(response: axum::response::Response) -> Value {

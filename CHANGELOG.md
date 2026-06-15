@@ -32,6 +32,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Dataset stats use case and HTTP route reporting sample count, annotation count, and annotations by class.
 - Dataset version creation use case and HTTP route capturing immutable dataset snapshot metadata.
 - Training job creation use case and HTTP route queuing jobs from immutable dataset versions.
+- Training job lifecycle transition use case with persisted status updates and guarded state transitions.
 
 ### Changed
 

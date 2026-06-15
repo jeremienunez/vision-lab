@@ -3,7 +3,8 @@ use std::{collections::BTreeMap, sync::Mutex};
 use async_trait::async_trait;
 use perception_app::{
     CreateTrainingJobCommand, CreateTrainingJobUseCase, DatasetVersionDraft,
-    DatasetVersionRepository, TrainingJobDraft, TrainingJobRepository, UseCaseError,
+    DatasetVersionRepository, TrainingJobDraft, TrainingJobRepository,
+    TransitionTrainingJobCommand, TransitionTrainingJobUseCase, UseCaseError,
 };
 use perception_domain::{DatasetId, DatasetVersionId, TrainingJobId, TrainingJobStatus};
 
@@ -62,6 +63,16 @@ impl TrainingJobRepository for InMemoryTrainingJobRepository {
             .iter()
             .find(|job| job.id == job_id)
             .cloned())
+    }
+
+    async fn update(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError> {
+        let mut jobs = self.jobs.lock().expect("repository mutex is available");
+        let stored = jobs
+            .iter_mut()
+            .find(|stored_job| stored_job.id == job.id)
+            .ok_or(UseCaseError::NotFound("training job not found"))?;
+        *stored = job.clone();
+        Ok(job)
     }
 }
 
@@ -127,5 +138,92 @@ async fn create_training_job_rejects_missing_dataset_version() {
     assert_eq!(
         result,
         Err(UseCaseError::NotFound("dataset version not found"))
+    );
+}
+
+#[tokio::test]
+async fn transition_training_job_persists_valid_status_progression() {
+    let versions = InMemoryDatasetVersionRepository::default();
+    let jobs = InMemoryTrainingJobRepository::default();
+    let version = versions
+        .create(version_fixture())
+        .await
+        .expect("version is created");
+    let created = CreateTrainingJobUseCase::new(&versions, &jobs)
+        .execute(CreateTrainingJobCommand {
+            dataset_version_id: version.id,
+            model_family: "yolo".to_owned(),
+            base_model: Some("yolo11n".to_owned()),
+            epochs: 5,
+            batch_size: 2,
+            image_size: 640,
+            learning_rate: 0.001,
+        })
+        .await
+        .expect("job is created");
+
+    let running = TransitionTrainingJobUseCase::new(&jobs)
+        .execute(TransitionTrainingJobCommand {
+            job_id: created.id,
+            next_status: TrainingJobStatus::Running,
+            error_message: None,
+        })
+        .await
+        .expect("job moves to running");
+    let failed = TransitionTrainingJobUseCase::new(&jobs)
+        .execute(TransitionTrainingJobCommand {
+            job_id: running.id,
+            next_status: TrainingJobStatus::Failed,
+            error_message: Some("training crashed".to_owned()),
+        })
+        .await
+        .expect("job moves to failed");
+
+    assert_eq!(failed.status, TrainingJobStatus::Failed);
+    assert_eq!(failed.error_message, Some("training crashed".to_owned()));
+    assert_eq!(
+        jobs.get(created.id)
+            .await
+            .expect("job lookup succeeds")
+            .expect("job exists")
+            .status,
+        TrainingJobStatus::Failed
+    );
+}
+
+#[tokio::test]
+async fn transition_training_job_rejects_invalid_status_progression() {
+    let versions = InMemoryDatasetVersionRepository::default();
+    let jobs = InMemoryTrainingJobRepository::default();
+    let version = versions
+        .create(version_fixture())
+        .await
+        .expect("version is created");
+    let created = CreateTrainingJobUseCase::new(&versions, &jobs)
+        .execute(CreateTrainingJobCommand {
+            dataset_version_id: version.id,
+            model_family: "yolo".to_owned(),
+            base_model: Some("yolo11n".to_owned()),
+            epochs: 5,
+            batch_size: 2,
+            image_size: 640,
+            learning_rate: 0.001,
+        })
+        .await
+        .expect("job is created");
+
+    let result = TransitionTrainingJobUseCase::new(&jobs)
+        .execute(TransitionTrainingJobCommand {
+            job_id: created.id,
+            next_status: TrainingJobStatus::Succeeded,
+            error_message: None,
+        })
+        .await;
+
+    assert_eq!(
+        result,
+        Err(UseCaseError::Validation(
+            "invalid training job status transition"
+        ))
     );
 }

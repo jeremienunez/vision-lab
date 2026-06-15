@@ -26,4 +26,18 @@ impl TrainingJobRepository for TransientTrainingJobRepository {
             .map(|jobs| jobs.iter().find(|job| job.id == job_id).cloned())
             .map_err(|_| UseCaseError::Repository("training job repository lock poisoned"))
     }
+
+    async fn update(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError> {
+        let mut jobs = self
+            .jobs
+            .write()
+            .map_err(|_| UseCaseError::Repository("training job repository lock poisoned"))?;
+        let stored = jobs
+            .iter_mut()
+            .find(|stored_job| stored_job.id == job.id)
+            .ok_or(UseCaseError::NotFound("training job not found"))?;
+
+        *stored = job.clone();
+        Ok(job)
+    }
 }

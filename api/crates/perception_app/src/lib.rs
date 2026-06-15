@@ -19,7 +19,8 @@ pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,
     CreateDatasetVersionCommand, CreateDatasetVersionUseCase, CreateTrainingJobCommand,
     CreateTrainingJobUseCase, DatasetStatsUseCase, ListDatasetsUseCase,
-    ListSampleAnnotationsUseCase, UploadSampleCommand, UploadSampleUseCase,
+    ListSampleAnnotationsUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
+    UploadSampleCommand, UploadSampleUseCase,
 };
 
 pub const CRATE_NAME: &str = "perception_app";
