@@ -5,6 +5,7 @@ pub mod dataset_version;
 pub mod inference;
 pub mod model;
 pub mod model_export;
+pub mod overlay;
 pub mod sample;
 pub mod training_job;
 pub mod training_metric;

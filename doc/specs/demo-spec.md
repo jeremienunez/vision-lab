@@ -22,13 +22,13 @@ Message: this is not a model demo; this is ML infrastructure.
 - Dataset: `desk-objects-v1`.
 - Classes: `cup`, `book`, `phone`, `keyboard`, `mouse`.
 - Input: desk photo.
-- Output: annotated image plus JSON response.
+- Output: annotated SVG image plus JSON response.
 - Optional depth metadata: include `distance_m` when available.
 
 Expected demo artifacts live in `doc/demo/`:
 
 - `input.jpg`
-- `output_overlay.jpg`
+- `output_overlay.svg`
 - `inference_response.json`
 
 ## Portfolio Success Criteria

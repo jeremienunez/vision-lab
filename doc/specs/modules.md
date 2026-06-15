@@ -114,6 +114,7 @@ Acceptance signals:
 - Response includes detections.
 - Each detection has class, confidence, and bbox.
 - Response includes latency.
+- Response includes a persisted `run_id`.
 - Missing or unavailable model ids are rejected.
 
 ## Module I - Model Export
@@ -140,4 +141,5 @@ Acceptance signals:
 - Overlay is generated from inference results.
 - Boxes are visible.
 - Labels include class name and confidence.
+- Response includes a stored overlay artifact URI.
 - Optional `distance_m` appears when depth metadata exists.

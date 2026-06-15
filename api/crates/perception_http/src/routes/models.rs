@@ -6,10 +6,11 @@ use axum::{
     routing::{get, post},
 };
 use perception_app::{
-    ExportModelCommand, ExportModelUseCase, GetModelUseCase, ListModelExportsUseCase,
-    ListModelsUseCase, RunInferenceCommand, RunInferenceUseCase, UseCaseError,
+    ExportModelCommand, ExportModelUseCase, GenerateOverlayUseCase, GetModelUseCase,
+    ListModelExportsUseCase, ListModelsUseCase, RunInferenceCommand, RunInferenceUseCase,
+    UseCaseError,
 };
-use perception_domain::ModelId;
+use perception_domain::{InferenceRunId, ModelId};
 
 use crate::{
     dto::{
@@ -17,6 +18,7 @@ use crate::{
         inference::InferenceResponse,
         model::{ListModelsResponse, ModelResponse},
         model_export::{CreateModelExportRequest, ListModelExportsResponse, ModelExportResponse},
+        overlay::OverlayResponse,
     },
     mappers,
     state::ModelHttpState,
@@ -30,6 +32,10 @@ pub fn routes(state: ModelHttpState) -> Router {
         .route(
             "/models/{model_id}/exports",
             post(export_model).get(list_model_exports),
+        )
+        .route(
+            "/inference-runs/{inference_run_id}/overlay",
+            post(generate_overlay),
         )
         .with_state(state)
 }
@@ -124,6 +130,23 @@ async fn list_model_exports(
             .map(mappers::model_export::model_export_response)
             .collect(),
     }))
+}
+
+async fn generate_overlay(
+    State(state): State<ModelHttpState>,
+    Path(inference_run_id): Path<String>,
+) -> Result<(StatusCode, Json<OverlayResponse>), ModelRouteError> {
+    let inference_run_id = InferenceRunId::parse(inference_run_id)
+        .map_err(|_| UseCaseError::Validation("invalid inference run id"))?;
+    let overlay =
+        GenerateOverlayUseCase::new(state.inference_run_repository(), state.overlay_renderer())
+            .execute(inference_run_id)
+            .await?;
+
+    Ok((
+        StatusCode::CREATED,
+        Json(mappers::overlay::overlay_response(overlay)),
+    ))
 }
 
 struct InferencePayload {

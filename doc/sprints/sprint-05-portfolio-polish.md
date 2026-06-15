@@ -39,7 +39,7 @@ Then they can start the stack and execute the documented curl flow
 ### Scenario: Visual result is visible
 Given the demo inference has run
 When the overlay generation step completes
-Then `doc/demo/output_overlay.jpg` shows boxes, class labels, confidence scores, and optional distance metadata
+Then `doc/demo/output_overlay.svg` shows boxes, class labels, confidence scores, and optional distance metadata
 
 ### Scenario: Technical choices are explainable
 Given an interviewer asks why Rust and Python are both used

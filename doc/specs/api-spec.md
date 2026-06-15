@@ -132,6 +132,7 @@ Response:
 
 ```json
 {
+  "run_id": "irun_01hxyz",
   "model_id": "mdl_01hxyz",
   "latency_ms": 48,
   "detections": [
@@ -145,6 +146,24 @@ Response:
   ]
 }
 ```
+
+The `run_id` is persisted and can be used to generate downstream visual artifacts.
+
+## Visual Overlay Contract
+
+`POST /inference-runs/{run_id}/overlay` generates an SVG overlay from stored detections.
+
+Response:
+
+```json
+{
+  "inference_run_id": "irun_01hxyz",
+  "artifact_uri": "file:///tmp/perceptionlab/artifacts/overlays/irun_01hxyz.svg",
+  "labels": ["cup 89%"]
+}
+```
+
+Unknown inference run ids return `404`.
 
 ## Model Export Contract
 

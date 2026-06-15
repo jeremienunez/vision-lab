@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 use perception_app::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, InferenceEngine,
-    InferenceRunRepository, ModelExportRepository, ModelRepository, SampleRepository,
-    SampleStorage, TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
+    InferenceRunRepository, ModelExportRepository, ModelRepository, OverlayRenderer,
+    SampleRepository, SampleStorage, TrainingJobQueue, TrainingJobRepository,
+    TrainingMetricRepository,
 };
 
 #[derive(Clone)]
@@ -16,6 +17,7 @@ pub struct ModelHttpState {
     model_repository: Arc<dyn ModelRepository>,
     model_export_repository: Arc<dyn ModelExportRepository>,
     inference_run_repository: Arc<dyn InferenceRunRepository>,
+    overlay_renderer: Arc<dyn OverlayRenderer>,
     inference_engine: Arc<dyn InferenceEngine>,
 }
 
@@ -24,12 +26,14 @@ impl ModelHttpState {
         model_repository: Arc<dyn ModelRepository>,
         model_export_repository: Arc<dyn ModelExportRepository>,
         inference_run_repository: Arc<dyn InferenceRunRepository>,
+        overlay_renderer: Arc<dyn OverlayRenderer>,
         inference_engine: Arc<dyn InferenceEngine>,
     ) -> Self {
         Self {
             model_repository,
             model_export_repository,
             inference_run_repository,
+            overlay_renderer,
             inference_engine,
         }
     }
@@ -44,6 +48,10 @@ impl ModelHttpState {
 
     pub fn inference_run_repository(&self) -> &dyn InferenceRunRepository {
         self.inference_run_repository.as_ref()
+    }
+
+    pub fn overlay_renderer(&self) -> &dyn OverlayRenderer {
+        self.overlay_renderer.as_ref()
     }
 
     pub fn inference_engine(&self) -> &dyn InferenceEngine {

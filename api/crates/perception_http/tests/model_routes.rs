@@ -9,7 +9,7 @@ use axum::http::{Request, StatusCode};
 use perception_app::{
     DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, InferenceRunDraft,
     InferenceRunRepository, ModelDraft, ModelExportDraft, ModelExportRepository, ModelRepository,
-    UseCaseError,
+    OverlayArtifact, OverlayRenderer, UseCaseError,
 };
 use perception_domain::{
     DatasetVersionId, InferenceRunId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId,
@@ -33,6 +33,8 @@ struct RouteInferenceRunRepository {
 }
 
 struct RouteInferenceEngine;
+
+struct RouteOverlayRenderer;
 
 #[async_trait]
 impl ModelRepository for RouteModelRepository {
@@ -136,6 +138,27 @@ impl ModelExportRepository for RouteModelExportRepository {
     }
 }
 
+#[async_trait]
+impl OverlayRenderer for RouteOverlayRenderer {
+    async fn render(&self, run: InferenceRunDraft) -> Result<OverlayArtifact, UseCaseError> {
+        Ok(OverlayArtifact {
+            inference_run_id: run.id,
+            artifact_uri: format!("artifact://overlays/{}.svg", run.id),
+            labels: run
+                .detections
+                .iter()
+                .map(|detection| {
+                    format!(
+                        "{} {:.0}%",
+                        detection.class_name,
+                        detection.confidence * 100.0
+                    )
+                })
+                .collect(),
+        })
+    }
+}
+
 async fn json_body(response: axum::response::Response) -> Value {
     let body = to_bytes(response.into_body(), 4096)
         .await
@@ -186,6 +209,7 @@ async fn list_models_route_returns_registered_models() {
         models,
         exports,
         runs,
+        Arc::new(RouteOverlayRenderer),
         Arc::new(RouteInferenceEngine),
     );
 
@@ -226,6 +250,7 @@ async fn get_model_route_returns_model_detail() {
         models,
         exports,
         runs,
+        Arc::new(RouteOverlayRenderer),
         Arc::new(RouteInferenceEngine),
     );
 
@@ -265,6 +290,7 @@ async fn infer_model_route_returns_detections_filtered_by_confidence() {
         models,
         exports,
         runs.clone(),
+        Arc::new(RouteOverlayRenderer),
         Arc::new(RouteInferenceEngine),
     );
     let (boundary, body) = inference_multipart_body("image/jpeg", "0.90");
@@ -329,6 +355,7 @@ async fn infer_model_route_rejects_invalid_image_file() {
         models,
         exports,
         runs,
+        Arc::new(RouteOverlayRenderer),
         Arc::new(RouteInferenceEngine),
     );
     let (boundary, body) = inference_multipart_body("text/plain", "0.25");
@@ -364,6 +391,7 @@ async fn export_model_route_creates_and_lists_onnx_exports() {
         models,
         exports.clone(),
         runs,
+        Arc::new(RouteOverlayRenderer),
         Arc::new(RouteInferenceEngine),
     );
 
@@ -418,4 +446,82 @@ async fn export_model_route_creates_and_lists_onnx_exports() {
         .await
         .expect("exports are listed from repository");
     assert_eq!(listed.len(), 1);
+}
+
+#[tokio::test]
+async fn generate_overlay_route_returns_artifact_uri_and_labels() {
+    let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
+    let run = runs
+        .create(InferenceRunDraft {
+            id: InferenceRunId::new(),
+            model_id: ModelId::new(),
+            filename: "cup.jpg".to_owned(),
+            mime_type: "image/jpeg".to_owned(),
+            latency_ms: 12,
+            detections: vec![DetectionDraft {
+                class_id: 0,
+                class_name: "cup".to_owned(),
+                confidence: 0.89,
+                bbox: NormalizedBbox::new(0.1, 0.2, 0.3, 0.4).expect("bbox is valid"),
+                distance_m: None,
+            }],
+        })
+        .await
+        .expect("run is stored");
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs,
+        Arc::new(RouteOverlayRenderer),
+        Arc::new(RouteInferenceEngine),
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/inference-runs/{}/overlay", run.id))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let body = json_body(response).await;
+    assert_eq!(body["inference_run_id"], run.id.to_string());
+    assert_eq!(
+        body["artifact_uri"],
+        format!("artifact://overlays/{}.svg", run.id)
+    );
+    assert_eq!(body["labels"][0], "cup 89%");
+}
+
+#[tokio::test]
+async fn generate_overlay_route_rejects_unknown_inference_run() {
+    let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs,
+        Arc::new(RouteOverlayRenderer),
+        Arc::new(RouteInferenceEngine),
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/inference-runs/{}/overlay", InferenceRunId::new()))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }

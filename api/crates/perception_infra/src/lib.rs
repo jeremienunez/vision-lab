@@ -3,6 +3,7 @@
 
 mod fake_inference_engine;
 mod local_sample_storage;
+mod svg_overlay_renderer;
 mod transient_annotation_repository;
 mod transient_dataset_repository;
 mod transient_dataset_version_repository;
@@ -16,6 +17,7 @@ mod transient_training_metric_repository;
 
 pub use fake_inference_engine::FakeInferenceEngine;
 pub use local_sample_storage::LocalSampleStorage;
+pub use svg_overlay_renderer::SvgOverlayRenderer;
 pub use transient_annotation_repository::TransientAnnotationRepository;
 pub use transient_dataset_repository::TransientDatasetRepository;
 pub use transient_dataset_version_repository::TransientDatasetVersionRepository;

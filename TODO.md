@@ -50,7 +50,7 @@
 - [x] Import annotations YOLO.
 - [x] Export annotations YOLO.
 - [x] Export model to ONNX.
-- [ ] Generate visual overlay image.
+- [x] Generate visual overlay image.
 - [x] Track metrics by class.
 - [ ] Publish OpenAPI/Swagger documentation.
 - [ ] Add simple CLI.

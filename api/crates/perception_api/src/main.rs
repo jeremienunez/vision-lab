@@ -33,6 +33,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc::new(perception_infra::TransientModelExportRepository::default());
     let inference_run_repository =
         Arc::new(perception_infra::TransientInferenceRunRepository::default());
+    let artifact_root = std::env::var("PERCEPTIONLAB_ARTIFACT_ROOT")
+        .unwrap_or_else(|_| ".perceptionlab/artifacts".to_owned());
+    let overlay_renderer = Arc::new(perception_infra::SvgOverlayRenderer::new(format!(
+        "{artifact_root}/overlays"
+    )));
     let inference_engine = Arc::new(perception_infra::FakeInferenceEngine);
     let storage_root = std::env::var("PERCEPTIONLAB_STORAGE_ROOT")
         .unwrap_or_else(|_| ".perceptionlab/storage".to_owned());
@@ -52,6 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             model_repository,
             model_export_repository,
             inference_run_repository,
+            overlay_renderer,
             inference_engine,
         ),
     )
