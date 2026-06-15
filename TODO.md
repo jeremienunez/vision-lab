@@ -49,7 +49,7 @@
 
 - [x] Import annotations YOLO.
 - [x] Export annotations YOLO.
-- [ ] Export model to ONNX.
+- [x] Export model to ONNX.
 - [ ] Generate visual overlay image.
 - [ ] Track metrics by class.
 - [ ] Publish OpenAPI/Swagger documentation.

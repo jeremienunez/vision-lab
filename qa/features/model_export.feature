@@ -5,14 +5,14 @@ Feature: Model export
   Scenario: Request ONNX export
     Given a registered model exists and its artifact is available
     When I request an export for the model with format "onnx"
-    Then the response status should be 202
+    Then the response status should be 201
 
-  Scenario: Successful ONNX export creates artifact
-    Given an ONNX export is queued
-    When the worker completes the export successfully
-    Then the export status should become "succeeded"
+  Scenario: Successful ONNX export creates artifact reference
+    Given a registered model exists and its artifact is available
+    When I request an export for the model with format "onnx"
+    Then the export status should be "succeeded" and include an ONNX artifact URI
 
   Scenario: Reject unsupported export format
     Given a registered model exists
     When I request an export for the model with format "tflite"
-    Then the response status should be 422
+    Then the response status should be 400

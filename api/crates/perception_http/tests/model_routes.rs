@@ -8,7 +8,7 @@ use axum::body::to_bytes;
 use axum::http::{Request, StatusCode};
 use perception_app::{
     DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, ModelDraft,
-    ModelRepository, UseCaseError,
+    ModelExportDraft, ModelExportRepository, ModelRepository, UseCaseError,
 };
 use perception_domain::{DatasetVersionId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId};
 use serde_json::Value;
@@ -17,6 +17,11 @@ use tower::ServiceExt;
 #[derive(Default)]
 struct RouteModelRepository {
     models: Mutex<Vec<ModelDraft>>,
+}
+
+#[derive(Default)]
+struct RouteModelExportRepository {
+    exports: Mutex<Vec<ModelExportDraft>>,
 }
 
 struct RouteInferenceEngine;
@@ -76,6 +81,31 @@ impl InferenceEngine for RouteInferenceEngine {
     }
 }
 
+#[async_trait]
+impl ModelExportRepository for RouteModelExportRepository {
+    async fn create(&self, export: ModelExportDraft) -> Result<ModelExportDraft, UseCaseError> {
+        self.exports
+            .lock()
+            .expect("repository mutex is available")
+            .push(export.clone());
+        Ok(export)
+    }
+
+    async fn list_by_model(
+        &self,
+        model_id: ModelId,
+    ) -> Result<Vec<ModelExportDraft>, UseCaseError> {
+        Ok(self
+            .exports
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .filter(|export| export.model_id == model_id)
+            .cloned()
+            .collect())
+    }
+}
+
 async fn json_body(response: axum::response::Response) -> Value {
     let body = to_bytes(response.into_body(), 4096)
         .await
@@ -116,11 +146,13 @@ fake-jpeg-bytes\r\n\
 #[tokio::test]
 async fn list_models_route_returns_registered_models() {
     let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
+    let app =
+        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
 
     let response = app
         .oneshot(
@@ -149,11 +181,13 @@ async fn list_models_route_returns_registered_models() {
 #[tokio::test]
 async fn get_model_route_returns_model_detail() {
     let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
+    let app =
+        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
 
     let response = app
         .oneshot(
@@ -181,11 +215,13 @@ async fn get_model_route_returns_model_detail() {
 #[tokio::test]
 async fn infer_model_route_returns_detections_filtered_by_confidence() {
     let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
+    let app =
+        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
     let (boundary, body) = inference_multipart_body("image/jpeg", "0.90");
 
     let response = app
@@ -226,11 +262,13 @@ async fn infer_model_route_returns_detections_filtered_by_confidence() {
 #[tokio::test]
 async fn infer_model_route_rejects_invalid_image_file() {
     let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
+    let app =
+        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
     let (boundary, body) = inference_multipart_body("text/plain", "0.25");
 
     let response = app
@@ -249,4 +287,71 @@ async fn infer_model_route_rejects_invalid_image_file() {
         .expect("route responds");
 
     assert_eq!(response.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
+}
+
+#[tokio::test]
+async fn export_model_route_creates_and_lists_onnx_exports() {
+    let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
+    let model = models
+        .create(model_fixture())
+        .await
+        .expect("model is created");
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports.clone(),
+        Arc::new(RouteInferenceEngine),
+    );
+
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/models/{}/exports", model.id))
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    serde_json::to_vec(&serde_json::json!({ "format": "onnx" }))
+                        .expect("request JSON is encoded"),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let export = json_body(response).await;
+    assert_eq!(export["model_id"], model.id.to_string());
+    assert_eq!(export["format"], "onnx");
+    assert_eq!(export["artifact_uri"], "file:///tmp/model.onnx");
+    assert_eq!(export["status"], "succeeded");
+    assert_eq!(export["error_message"], Value::Null);
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri(format!("/models/{}/exports", model.id))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json_body(response).await;
+    assert_eq!(
+        body["exports"]
+            .as_array()
+            .expect("exports are an array")
+            .len(),
+        1
+    );
+    assert_eq!(body["exports"][0]["artifact_uri"], "file:///tmp/model.onnx");
+
+    let listed = exports
+        .list_by_model(model.id)
+        .await
+        .expect("exports are listed from repository");
+    assert_eq!(listed.len(), 1);
 }

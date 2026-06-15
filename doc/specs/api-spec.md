@@ -144,3 +144,43 @@ Response:
   ]
 }
 ```
+
+## Model Export Contract
+
+Request:
+
+```json
+{
+  "format": "onnx"
+}
+```
+
+Response:
+
+```json
+{
+  "id": "mexp_01hxyz",
+  "model_id": "mdl_01hxyz",
+  "format": "onnx",
+  "artifact_uri": "file:///tmp/model.onnx",
+  "status": "succeeded",
+  "error_message": null
+}
+```
+
+`GET /models/{model_id}/exports` returns:
+
+```json
+{
+  "exports": [
+    {
+      "id": "mexp_01hxyz",
+      "model_id": "mdl_01hxyz",
+      "format": "onnx",
+      "artifact_uri": "file:///tmp/model.onnx",
+      "status": "succeeded",
+      "error_message": null
+    }
+  ]
+}
+```
