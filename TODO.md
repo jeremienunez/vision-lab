@@ -26,7 +26,7 @@
 - [x] Add `POST /datasets` and `GET /datasets`.
 - [x] Add `POST /datasets/{dataset_id}/samples`.
 - [x] Connect abstracted file/object storage.
-- [ ] Add annotation endpoints.
+- [x] Add annotation endpoints.
 - [ ] Add `GET /datasets/{dataset_id}/stats`.
 - [ ] Add `POST /datasets/{dataset_id}/versions`.
 - [ ] Add `POST /training-jobs`.

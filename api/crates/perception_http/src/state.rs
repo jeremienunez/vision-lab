@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use perception_app::{DatasetRepository, SampleRepository, SampleStorage};
+use perception_app::{AnnotationRepository, DatasetRepository, SampleRepository, SampleStorage};
 
 #[derive(Clone)]
 pub struct HttpState {
@@ -47,5 +47,38 @@ impl SampleHttpState {
 
     pub fn sample_storage(&self) -> &dyn SampleStorage {
         self.sample_storage.as_ref()
+    }
+}
+
+#[derive(Clone)]
+pub struct AnnotationHttpState {
+    dataset_repository: Arc<dyn DatasetRepository>,
+    sample_repository: Arc<dyn SampleRepository>,
+    annotation_repository: Arc<dyn AnnotationRepository>,
+}
+
+impl AnnotationHttpState {
+    pub fn new(
+        dataset_repository: Arc<dyn DatasetRepository>,
+        sample_repository: Arc<dyn SampleRepository>,
+        annotation_repository: Arc<dyn AnnotationRepository>,
+    ) -> Self {
+        Self {
+            dataset_repository,
+            sample_repository,
+            annotation_repository,
+        }
+    }
+
+    pub fn dataset_repository(&self) -> &dyn DatasetRepository {
+        self.dataset_repository.as_ref()
+    }
+
+    pub fn sample_repository(&self) -> &dyn SampleRepository {
+        self.sample_repository.as_ref()
+    }
+
+    pub fn annotation_repository(&self) -> &dyn AnnotationRepository {
+        self.annotation_repository.as_ref()
     }
 }

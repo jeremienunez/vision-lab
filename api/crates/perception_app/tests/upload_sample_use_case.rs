@@ -7,6 +7,7 @@ use perception_app::{
     UseCaseError,
 };
 use perception_domain::{DatasetId, DatasetStatus};
+use perception_domain::SampleId;
 
 #[derive(Default)]
 struct InMemoryDatasetRepository {
@@ -55,6 +56,16 @@ impl SampleRepository for InMemorySampleRepository {
             .expect("repository mutex is available")
             .push(sample.clone());
         Ok(sample)
+    }
+
+    async fn get(&self, sample_id: SampleId) -> Result<Option<SampleDraft>, UseCaseError> {
+        Ok(self
+            .samples
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .find(|sample| sample.id == sample_id)
+            .cloned())
     }
 }
 

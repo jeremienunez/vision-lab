@@ -4,11 +4,10 @@ use async_trait::async_trait;
 use axum::body::to_bytes;
 use axum::http::{Request, StatusCode};
 use perception_app::{
-    DatasetDraft, DatasetRepository, SampleDraft, SampleRepository, SampleStorage,
-    SampleStorageCommand, StoredSample, UseCaseError,
+    AnnotationDraft, AnnotationRepository, DatasetDraft, DatasetRepository, SampleDraft,
+    SampleRepository, SampleStorage, SampleStorageCommand, StoredSample, UseCaseError,
 };
-use perception_domain::DatasetId;
-use perception_domain::SampleId;
+use perception_domain::{DatasetId, SampleId};
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
@@ -72,6 +71,39 @@ impl SampleRepository for RouteSampleRepository {
     }
 }
 
+#[derive(Default)]
+struct RouteAnnotationRepository {
+    annotations: Mutex<Vec<AnnotationDraft>>,
+}
+
+#[async_trait]
+impl AnnotationRepository for RouteAnnotationRepository {
+    async fn create(
+        &self,
+        annotation: AnnotationDraft,
+    ) -> Result<AnnotationDraft, UseCaseError> {
+        self.annotations
+            .lock()
+            .expect("repository mutex is available")
+            .push(annotation.clone());
+        Ok(annotation)
+    }
+
+    async fn list_by_sample(
+        &self,
+        sample_id: SampleId,
+    ) -> Result<Vec<AnnotationDraft>, UseCaseError> {
+        Ok(self
+            .annotations
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .filter(|annotation| annotation.sample_id == sample_id)
+            .cloned()
+            .collect())
+    }
+}
+
 struct RouteSampleStorage;
 
 #[async_trait]
@@ -112,12 +144,12 @@ fake-png-bytes\r\n\
 }
 
 #[tokio::test]
-async fn upload_sample_route_stores_file_metadata_for_existing_dataset() {
-    let dataset_repository = Arc::new(RouteDatasetRepository::default());
-    let app = perception_http::router_with_application_ports(
-        dataset_repository,
+async fn annotation_routes_add_and_list_sample_annotations() {
+    let app = perception_http::router_with_annotation_ports(
+        Arc::new(RouteDatasetRepository::default()),
         Arc::new(RouteSampleRepository::default()),
         Arc::new(RouteSampleStorage),
+        Arc::new(RouteAnnotationRepository::default()),
     );
 
     let create_dataset_response = app
@@ -132,7 +164,7 @@ async fn upload_sample_route_stores_file_metadata_for_existing_dataset() {
                         "name": "desk-objects-v1",
                         "description": null,
                         "task_type": "object_detection",
-                        "classes": ["cup"]
+                        "classes": ["cup", "book"]
                     })
                     .to_string(),
                 ))
@@ -143,8 +175,8 @@ async fn upload_sample_route_stores_file_metadata_for_existing_dataset() {
     let dataset = json_body(create_dataset_response).await;
     let dataset_id = dataset["id"].as_str().expect("dataset id is present");
     let (boundary, body) = multipart_body();
-
-    let response = app
+    let upload_sample_response = app
+        .clone()
         .oneshot(
             Request::builder()
                 .method("POST")
@@ -158,15 +190,57 @@ async fn upload_sample_route_stores_file_metadata_for_existing_dataset() {
         )
         .await
         .expect("route responds");
+    let sample = json_body(upload_sample_response).await;
+    let sample_id = sample["id"].as_str().expect("sample id is present");
 
-    assert_eq!(response.status(), StatusCode::CREATED);
-    let sample = json_body(response).await;
-    assert_eq!(sample["dataset_id"], dataset_id);
-    assert_eq!(sample["filename"], "cup.png");
-    assert_eq!(sample["mime_type"], "image/png");
-    assert_eq!(sample["width"], 640);
-    assert_eq!(sample["height"], 480);
-    assert_eq!(sample["size_bytes"], 14);
-    assert_eq!(sample["checksum"], "sha256:route-checksum");
-    assert_eq!(sample["source"], "upload");
+    let create_annotation_response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/samples/{sample_id}/annotations"))
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    json!({
+                        "class_name": "book",
+                        "bbox": {"x": 0.10, "y": 0.20, "width": 0.30, "height": 0.40},
+                        "confidence": 0.92
+                    })
+                    .to_string(),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(create_annotation_response.status(), StatusCode::CREATED);
+    let annotation = json_body(create_annotation_response).await;
+    assert_eq!(annotation["sample_id"], sample_id);
+    assert_eq!(annotation["dataset_id"], dataset_id);
+    assert_eq!(annotation["class_name"], "book");
+    assert_eq!(annotation["class_id"], 1);
+    assert_eq!(annotation["bbox"]["x"], 0.10);
+    assert_eq!(annotation["format"], "normalized_xywh");
+    assert_eq!(annotation["source"], "manual");
+
+    let list_response = app
+        .oneshot(
+            Request::builder()
+                .uri(format!("/samples/{sample_id}/annotations"))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(list_response.status(), StatusCode::OK);
+    let listed = json_body(list_response).await;
+    assert_eq!(
+        listed["annotations"]
+            .as_array()
+            .expect("annotations is an array")
+            .len(),
+        1
+    );
+    assert_eq!(listed["annotations"][0]["class_name"], "book");
 }
