@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use perception_app::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, SampleRepository,
-    SampleStorage, TrainingJobQueue, TrainingJobRepository,
+    SampleStorage, TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
 };
 
 pub mod dto;
@@ -96,12 +96,14 @@ pub fn router_with_training_job_ports(
     dataset_version_repository: Arc<dyn DatasetVersionRepository>,
     training_job_repository: Arc<dyn TrainingJobRepository>,
     training_job_queue: Arc<dyn TrainingJobQueue>,
+    training_metric_repository: Arc<dyn TrainingMetricRepository>,
 ) -> Router {
     routes::health::routes().merge(routes::training_jobs::routes(
         state::TrainingJobHttpState::new(
             dataset_version_repository,
             training_job_repository,
             training_job_queue,
+            training_metric_repository,
         ),
     ))
 }
@@ -114,6 +116,7 @@ pub fn router_with_p0_ports(
     dataset_version_repository: Arc<dyn DatasetVersionRepository>,
     training_job_repository: Arc<dyn TrainingJobRepository>,
     training_job_queue: Arc<dyn TrainingJobQueue>,
+    training_metric_repository: Arc<dyn TrainingMetricRepository>,
 ) -> Router {
     router_with_version_ports(
         dataset_repository,
@@ -127,6 +130,7 @@ pub fn router_with_p0_ports(
             dataset_version_repository,
             training_job_repository,
             training_job_queue,
+            training_metric_repository,
         ),
     ))
 }

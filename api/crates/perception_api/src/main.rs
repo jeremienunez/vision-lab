@@ -26,6 +26,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let training_job_repository =
         Arc::new(perception_infra::TransientTrainingJobRepository::default());
     let training_job_queue = Arc::new(perception_infra::TransientTrainingJobQueue::default());
+    let training_metric_repository =
+        Arc::new(perception_infra::TransientTrainingMetricRepository::default());
     let storage_root = std::env::var("PERCEPTIONLAB_STORAGE_ROOT")
         .unwrap_or_else(|_| ".perceptionlab/storage".to_owned());
     let sample_storage = Arc::new(perception_infra::LocalSampleStorage::new(storage_root));
@@ -40,6 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             dataset_version_repository,
             training_job_repository,
             training_job_queue,
+            training_metric_repository,
         ),
     )
     .await?;

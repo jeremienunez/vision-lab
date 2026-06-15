@@ -8,9 +8,13 @@ use axum::body::to_bytes;
 use axum::http::{Request, StatusCode};
 use perception_app::{
     DatasetVersionDraft, DatasetVersionRepository, TrainingJobDraft, TrainingJobQueue,
-    TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingJobRepository, UseCaseError,
+    TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingJobRepository, TrainingMetricDraft,
+    TrainingMetricRepository, UseCaseError,
 };
-use perception_domain::{DatasetId, DatasetVersionId, TrainingJobId};
+use perception_domain::{
+    DatasetId, DatasetVersionId, TrainingHyperparameters, TrainingJobId, TrainingJobStatus,
+    TrainingMetricId,
+};
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
@@ -54,6 +58,11 @@ struct RouteTrainingJobRepository {
 #[derive(Default)]
 struct RouteTrainingJobQueue {
     entries: Mutex<Vec<TrainingJobQueueEntry>>,
+}
+
+#[derive(Default)]
+struct RouteTrainingMetricRepository {
+    metrics: Mutex<Vec<TrainingMetricDraft>>,
 }
 
 #[async_trait]
@@ -119,11 +128,69 @@ impl TrainingJobQueue for RouteTrainingJobQueue {
     }
 }
 
+#[async_trait]
+impl TrainingMetricRepository for RouteTrainingMetricRepository {
+    async fn create(
+        &self,
+        metric: TrainingMetricDraft,
+    ) -> Result<TrainingMetricDraft, UseCaseError> {
+        self.metrics
+            .lock()
+            .expect("repository mutex is available")
+            .push(metric.clone());
+        Ok(metric)
+    }
+
+    async fn list_by_training_job(
+        &self,
+        training_job_id: TrainingJobId,
+    ) -> Result<Vec<TrainingMetricDraft>, UseCaseError> {
+        Ok(self
+            .metrics
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .filter(|metric| metric.training_job_id == training_job_id)
+            .cloned()
+            .collect())
+    }
+}
+
 async fn json_body(response: axum::response::Response) -> Value {
     let body = to_bytes(response.into_body(), 4096)
         .await
         .expect("body is readable");
     serde_json::from_slice(&body).expect("body is JSON")
+}
+
+fn training_job_fixture() -> TrainingJobDraft {
+    TrainingJobDraft {
+        id: TrainingJobId::new(),
+        dataset_version_id: DatasetVersionId::new(),
+        model_family: "tiny_torch".to_owned(),
+        base_model: None,
+        status: TrainingJobStatus::Running,
+        hyperparameters: TrainingHyperparameters::new(2, 1, 64, 0.01)
+            .expect("hyperparameters are valid"),
+        error_message: None,
+    }
+}
+
+fn metric_fixture(
+    training_job_id: TrainingJobId,
+    epoch: u32,
+    metric_value: f64,
+) -> TrainingMetricDraft {
+    TrainingMetricDraft {
+        id: TrainingMetricId::new(),
+        training_job_id,
+        split_name: "train".to_owned(),
+        metric_name: "loss".to_owned(),
+        metric_value,
+        step: Some(epoch),
+        epoch: Some(epoch),
+        metadata: BTreeMap::new(),
+    }
 }
 
 #[tokio::test]
@@ -146,6 +213,7 @@ async fn create_training_job_route_returns_queued_job_for_existing_dataset_versi
         versions,
         Arc::new(RouteTrainingJobRepository::default()),
         Arc::new(RouteTrainingJobQueue::default()),
+        Arc::new(RouteTrainingMetricRepository::default()),
     );
 
     let response = app
@@ -202,6 +270,7 @@ async fn create_training_job_route_enqueues_created_job() {
         versions,
         Arc::new(RouteTrainingJobRepository::default()),
         queue.clone(),
+        Arc::new(RouteTrainingMetricRepository::default()),
     );
 
     let response = app
@@ -237,4 +306,54 @@ async fn create_training_job_route_enqueues_created_job() {
 
     assert_eq!(leased.training_job_id.to_string(), job["id"]);
     assert_eq!(leased.status, TrainingJobQueueStatus::Leased);
+}
+
+#[tokio::test]
+async fn list_training_job_metrics_route_returns_metrics_ordered_by_epoch() {
+    let versions = Arc::new(RouteDatasetVersionRepository::default());
+    let jobs = Arc::new(RouteTrainingJobRepository::default());
+    let metrics = Arc::new(RouteTrainingMetricRepository::default());
+    let job = jobs
+        .create(training_job_fixture())
+        .await
+        .expect("job is created");
+    metrics
+        .create(metric_fixture(job.id, 2, 0.32))
+        .await
+        .expect("epoch 2 metric is created");
+    metrics
+        .create(metric_fixture(job.id, 1, 0.51))
+        .await
+        .expect("epoch 1 metric is created");
+    let app = perception_http::router_with_training_job_ports(
+        versions,
+        jobs,
+        Arc::new(RouteTrainingJobQueue::default()),
+        metrics,
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri(format!("/training-jobs/{}/metrics", job.id))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json_body(response).await;
+    assert_eq!(
+        body["metrics"]
+            .as_array()
+            .expect("metrics are an array")
+            .len(),
+        2
+    );
+    assert_eq!(body["metrics"][0]["epoch"], 1);
+    assert_eq!(body["metrics"][0]["metric_value"], 0.51);
+    assert_eq!(body["metrics"][1]["epoch"], 2);
+    assert_eq!(body["metrics"][1]["metric_value"], 0.32);
 }

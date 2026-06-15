@@ -37,6 +37,7 @@
 - [x] Add strict worker contracts and strategy ports.
 - [x] Add training loop or wrapper model.
 - [x] Persist training metrics.
+- [x] Add `GET /training-jobs/{job_id}/metrics`.
 - [ ] Add minimal model registry.
 - [ ] Add `GET /models`.
 - [ ] Add `POST /models/{model_id}/infer`.
@@ -50,7 +51,6 @@
 - [ ] Export model to ONNX.
 - [ ] Generate visual overlay image.
 - [ ] Track metrics by class.
-- [ ] Add `GET /training-jobs/{job_id}/metrics`.
 - [ ] Publish OpenAPI/Swagger documentation.
 - [ ] Add simple CLI.
 - [ ] Add seed demo dataset.

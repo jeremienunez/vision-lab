@@ -6,3 +6,4 @@ pub mod error;
 pub mod health;
 pub mod sample;
 pub mod training_job;
+pub mod training_metric;

@@ -4,3 +4,4 @@ pub mod dataset_stats;
 pub mod dataset_version;
 pub mod sample;
 pub mod training_job;
+pub mod training_metric;

@@ -1,17 +1,20 @@
 use axum::{
     Json, Router,
-    extract::State,
+    extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::post,
+    routing::{get, post},
 };
-use perception_app::{CreateTrainingJobCommand, CreateTrainingJobUseCase, UseCaseError};
-use perception_domain::DatasetVersionId;
+use perception_app::{
+    CreateTrainingJobCommand, CreateTrainingJobUseCase, ListTrainingMetricsUseCase, UseCaseError,
+};
+use perception_domain::{DatasetVersionId, TrainingJobId};
 
 use crate::{
     dto::{
         error::ErrorResponse,
         training_job::{CreateTrainingJobRequest, TrainingJobResponse},
+        training_metric::ListTrainingMetricsResponse,
     },
     mappers,
     state::TrainingJobHttpState,
@@ -20,6 +23,10 @@ use crate::{
 pub fn routes(state: TrainingJobHttpState) -> Router {
     Router::new()
         .route("/training-jobs", post(create_training_job))
+        .route(
+            "/training-jobs/{training_job_id}/metrics",
+            get(list_training_metrics),
+        )
         .with_state(state)
 }
 
@@ -50,6 +57,26 @@ async fn create_training_job(
         StatusCode::CREATED,
         Json(mappers::training_job::training_job_response(job)),
     ))
+}
+
+async fn list_training_metrics(
+    State(state): State<TrainingJobHttpState>,
+    Path(training_job_id): Path<String>,
+) -> Result<Json<ListTrainingMetricsResponse>, TrainingJobRouteError> {
+    let training_job_id = TrainingJobId::parse(training_job_id)
+        .map_err(|_| UseCaseError::Validation("invalid training job id"))?;
+    let use_case = ListTrainingMetricsUseCase::new(
+        state.training_job_repository(),
+        state.training_metric_repository(),
+    );
+    let metrics = use_case.execute(training_job_id).await?;
+
+    Ok(Json(ListTrainingMetricsResponse {
+        metrics: metrics
+            .into_iter()
+            .map(mappers::training_metric::training_metric_response)
+            .collect(),
+    }))
 }
 
 struct TrainingJobRouteError {
