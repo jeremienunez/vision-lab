@@ -80,12 +80,14 @@ Expected metrics:
 - `epoch`
 - `learning_rate`
 - `duration_seconds`
+- class-level metrics tagged with `metadata.class_name`
 
 Acceptance signals:
 
 - Successful job has final metrics.
 - Metrics are linked to `job_id`.
 - Metrics are available through API.
+- Class-level metrics are available through API.
 - Summary exposes the best epoch.
 
 ## Module G - Model Registry

@@ -2,9 +2,9 @@ use std::{collections::BTreeMap, sync::Mutex};
 
 use async_trait::async_trait;
 use perception_app::{
-    ListTrainingMetricsUseCase, RecordTrainingMetricCommand, RecordTrainingMetricUseCase,
-    TrainingJobDraft, TrainingJobRepository, TrainingMetricDraft, TrainingMetricRepository,
-    UseCaseError,
+    ListTrainingClassMetricsUseCase, ListTrainingMetricsUseCase, RecordTrainingMetricCommand,
+    RecordTrainingMetricUseCase, TrainingJobDraft, TrainingJobRepository, TrainingMetricDraft,
+    TrainingMetricRepository, UseCaseError,
 };
 use perception_domain::{
     DatasetVersionId, TrainingHyperparameters, TrainingJobId, TrainingJobStatus,
@@ -189,4 +189,62 @@ async fn record_training_metric_rejects_invalid_metric_contract() {
         result,
         Err(UseCaseError::Validation("invalid training metric"))
     );
+}
+
+#[tokio::test]
+async fn list_training_class_metrics_returns_only_metrics_tagged_with_class_name() {
+    let jobs = InMemoryTrainingJobRepository::default();
+    let metrics = InMemoryTrainingMetricRepository::default();
+    let job = jobs
+        .create(running_job_fixture())
+        .await
+        .expect("job is created");
+
+    RecordTrainingMetricUseCase::new(&jobs, &metrics)
+        .execute(RecordTrainingMetricCommand {
+            training_job_id: job.id,
+            split_name: "validation".to_owned(),
+            metric_name: "mAP50".to_owned(),
+            metric_value: 0.82,
+            step: None,
+            epoch: Some(1),
+            metadata: BTreeMap::from([("class_name".to_owned(), "cup".to_owned())]),
+        })
+        .await
+        .expect("cup class metric is recorded");
+    RecordTrainingMetricUseCase::new(&jobs, &metrics)
+        .execute(RecordTrainingMetricCommand {
+            training_job_id: job.id,
+            split_name: "validation".to_owned(),
+            metric_name: "mAP50".to_owned(),
+            metric_value: 0.74,
+            step: None,
+            epoch: Some(1),
+            metadata: BTreeMap::from([("class_name".to_owned(), "book".to_owned())]),
+        })
+        .await
+        .expect("book class metric is recorded");
+    RecordTrainingMetricUseCase::new(&jobs, &metrics)
+        .execute(RecordTrainingMetricCommand {
+            training_job_id: job.id,
+            split_name: "validation".to_owned(),
+            metric_name: "mAP50".to_owned(),
+            metric_value: 0.79,
+            step: None,
+            epoch: Some(1),
+            metadata: BTreeMap::new(),
+        })
+        .await
+        .expect("aggregate metric is recorded");
+
+    let class_metrics = ListTrainingClassMetricsUseCase::new(&jobs, &metrics)
+        .execute(job.id)
+        .await
+        .expect("class metrics are listed");
+
+    assert_eq!(class_metrics.len(), 2);
+    assert_eq!(class_metrics[0].class_name, "book");
+    assert_eq!(class_metrics[0].metric_value, 0.74);
+    assert_eq!(class_metrics[1].class_name, "cup");
+    assert_eq!(class_metrics[1].metric_value, 0.82);
 }

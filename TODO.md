@@ -51,7 +51,7 @@
 - [x] Export annotations YOLO.
 - [x] Export model to ONNX.
 - [ ] Generate visual overlay image.
-- [ ] Track metrics by class.
+- [x] Track metrics by class.
 - [ ] Publish OpenAPI/Swagger documentation.
 - [ ] Add simple CLI.
 - [ ] Add seed demo dataset.

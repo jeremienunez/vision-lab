@@ -112,6 +112,17 @@ pub struct TrainingMetricDraft {
     pub metadata: BTreeMap<String, String>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct TrainingClassMetric {
+    pub training_job_id: TrainingJobId,
+    pub class_name: String,
+    pub split_name: String,
+    pub metric_name: String,
+    pub metric_value: f64,
+    pub step: Option<u32>,
+    pub epoch: Option<u32>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModelDraft {
     pub id: ModelId,

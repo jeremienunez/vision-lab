@@ -193,6 +193,23 @@ fn metric_fixture(
     }
 }
 
+fn class_metric_fixture(
+    training_job_id: TrainingJobId,
+    class_name: &str,
+    metric_value: f64,
+) -> TrainingMetricDraft {
+    TrainingMetricDraft {
+        id: TrainingMetricId::new(),
+        training_job_id,
+        split_name: "validation".to_owned(),
+        metric_name: "mAP50".to_owned(),
+        metric_value,
+        step: None,
+        epoch: Some(1),
+        metadata: BTreeMap::from([("class_name".to_owned(), class_name.to_owned())]),
+    }
+}
+
 #[tokio::test]
 async fn create_training_job_route_returns_queued_job_for_existing_dataset_version() {
     let versions = Arc::new(RouteDatasetVersionRepository::default());
@@ -356,4 +373,58 @@ async fn list_training_job_metrics_route_returns_metrics_ordered_by_epoch() {
     assert_eq!(body["metrics"][0]["metric_value"], 0.51);
     assert_eq!(body["metrics"][1]["epoch"], 2);
     assert_eq!(body["metrics"][1]["metric_value"], 0.32);
+}
+
+#[tokio::test]
+async fn list_training_job_metrics_by_class_route_returns_class_tagged_metrics() {
+    let versions = Arc::new(RouteDatasetVersionRepository::default());
+    let jobs = Arc::new(RouteTrainingJobRepository::default());
+    let metrics = Arc::new(RouteTrainingMetricRepository::default());
+    let job = jobs
+        .create(training_job_fixture())
+        .await
+        .expect("job is created");
+    metrics
+        .create(class_metric_fixture(job.id, "cup", 0.82))
+        .await
+        .expect("cup class metric is created");
+    metrics
+        .create(class_metric_fixture(job.id, "book", 0.74))
+        .await
+        .expect("book class metric is created");
+    metrics
+        .create(metric_fixture(job.id, 1, 0.79))
+        .await
+        .expect("aggregate metric is created");
+    let app = perception_http::router_with_training_job_ports(
+        versions,
+        jobs,
+        Arc::new(RouteTrainingJobQueue::default()),
+        metrics,
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri(format!("/training-jobs/{}/metrics/by-class", job.id))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json_body(response).await;
+    assert_eq!(
+        body["class_metrics"]
+            .as_array()
+            .expect("class metrics are an array")
+            .len(),
+        2
+    );
+    assert_eq!(body["class_metrics"][0]["class_name"], "book");
+    assert_eq!(body["class_metrics"][0]["metric_value"], 0.74);
+    assert_eq!(body["class_metrics"][1]["class_name"], "cup");
+    assert_eq!(body["class_metrics"][1]["metric_value"], 0.82);
 }

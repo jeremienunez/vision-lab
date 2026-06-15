@@ -19,6 +19,7 @@
 | GET | `/training-jobs` | List training jobs. |
 | GET | `/training-jobs/{job_id}` | Read job status. |
 | GET | `/training-jobs/{job_id}/metrics` | Read job metrics. |
+| GET | `/training-jobs/{job_id}/metrics/by-class` | Read class-level job metrics. |
 | GET | `/models` | List registered models. |
 | GET | `/models/{model_id}` | Read model detail. |
 | POST | `/models/{model_id}/infer` | Run inference on an image. |
@@ -152,6 +153,28 @@ Request:
 ```json
 {
   "format": "onnx"
+}
+```
+
+## Class Metrics Contract
+
+`GET /training-jobs/{job_id}/metrics/by-class` returns metrics whose metadata includes `class_name`.
+
+Response:
+
+```json
+{
+  "class_metrics": [
+    {
+      "training_job_id": "job_01hxyz",
+      "class_name": "cup",
+      "split_name": "validation",
+      "metric_name": "mAP50",
+      "metric_value": 0.82,
+      "step": null,
+      "epoch": 1
+    }
+  ]
 }
 ```
 

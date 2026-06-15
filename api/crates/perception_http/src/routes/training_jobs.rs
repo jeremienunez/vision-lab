@@ -6,7 +6,8 @@ use axum::{
     routing::{get, post},
 };
 use perception_app::{
-    CreateTrainingJobCommand, CreateTrainingJobUseCase, ListTrainingMetricsUseCase, UseCaseError,
+    CreateTrainingJobCommand, CreateTrainingJobUseCase, ListTrainingClassMetricsUseCase,
+    ListTrainingMetricsUseCase, UseCaseError,
 };
 use perception_domain::{DatasetVersionId, TrainingJobId};
 
@@ -14,7 +15,7 @@ use crate::{
     dto::{
         error::ErrorResponse,
         training_job::{CreateTrainingJobRequest, TrainingJobResponse},
-        training_metric::ListTrainingMetricsResponse,
+        training_metric::{ListTrainingClassMetricsResponse, ListTrainingMetricsResponse},
     },
     mappers,
     state::TrainingJobHttpState,
@@ -26,6 +27,10 @@ pub fn routes(state: TrainingJobHttpState) -> Router {
         .route(
             "/training-jobs/{training_job_id}/metrics",
             get(list_training_metrics),
+        )
+        .route(
+            "/training-jobs/{training_job_id}/metrics/by-class",
+            get(list_training_class_metrics),
         )
         .with_state(state)
 }
@@ -75,6 +80,26 @@ async fn list_training_metrics(
         metrics: metrics
             .into_iter()
             .map(mappers::training_metric::training_metric_response)
+            .collect(),
+    }))
+}
+
+async fn list_training_class_metrics(
+    State(state): State<TrainingJobHttpState>,
+    Path(training_job_id): Path<String>,
+) -> Result<Json<ListTrainingClassMetricsResponse>, TrainingJobRouteError> {
+    let training_job_id = TrainingJobId::parse(training_job_id)
+        .map_err(|_| UseCaseError::Validation("invalid training job id"))?;
+    let use_case = ListTrainingClassMetricsUseCase::new(
+        state.training_job_repository(),
+        state.training_metric_repository(),
+    );
+    let class_metrics = use_case.execute(training_job_id).await?;
+
+    Ok(Json(ListTrainingClassMetricsResponse {
+        class_metrics: class_metrics
+            .into_iter()
+            .map(mappers::training_metric::training_class_metric_response)
             .collect(),
     }))
 }

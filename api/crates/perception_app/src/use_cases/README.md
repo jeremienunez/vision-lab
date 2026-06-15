@@ -10,6 +10,7 @@ One file per product intention:
 - `transition_training_job.rs`
 - `record_training_metric.rs`
 - `list_training_metrics.rs`
+- `list_training_class_metrics.rs`
 - `register_model.rs`
 - `list_models.rs`
 - `get_model.rs`
