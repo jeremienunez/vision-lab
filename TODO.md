@@ -32,9 +32,9 @@
 - [x] Add `POST /training-jobs`.
 - [x] Add training job lifecycle persistence and transitions.
 - [x] Add queue-backed training orchestration.
-- [ ] Add minimal Python/PyTorch worker.
+- [x] Add minimal Python/PyTorch worker.
 - [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
-- [ ] Add strict worker contracts and strategy ports.
+- [x] Add strict worker contracts and strategy ports.
 - [ ] Add training loop or wrapper model.
 - [ ] Persist training metrics.
 - [ ] Add minimal model registry.
