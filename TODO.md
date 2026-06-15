@@ -35,7 +35,7 @@
 - [x] Add minimal Python/PyTorch worker.
 - [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
 - [x] Add strict worker contracts and strategy ports.
-- [ ] Add training loop or wrapper model.
+- [x] Add training loop or wrapper model.
 - [ ] Persist training metrics.
 - [ ] Add minimal model registry.
 - [ ] Add `GET /models`.
