@@ -1,0 +1,58 @@
+name: perceptionlab
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: perceptionlab
+      POSTGRES_USER: perceptionlab
+      POSTGRES_PASSWORD: perceptionlab
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./api/migrations/0001_initial_schema.sql:/docker-entrypoint-initdb.d/0001_initial_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perceptionlab -d perceptionlab"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: rust:1.93-bookworm
+    working_dir: /workspace
+    command: cargo run --manifest-path api/Cargo.toml -p perception_api
+    environment:
+      - PERCEPTIONLAB_ENV=local
+      - PERCEPTIONLAB_API_ADDR=0.0.0.0:8080
+      - PERCEPTIONLAB_PROJECT_ROOT=/workspace
+      - PERCEPTIONLAB_DATA_ROOT=/workspace/datasets
+      - PERCEPTIONLAB_SEED_DATASET_ROOT=/workspace/datasets/seed
+      - PERCEPTIONLAB_STORAGE_ROOT=/workspace/.perceptionlab/storage
+      - PERCEPTIONLAB_ARTIFACT_ROOT=/workspace/.perceptionlab/artifacts
+      - PERCEPTIONLAB_TMP_ROOT=/workspace/.perceptionlab/tmp
+      - PERCEPTIONLAB_DATABASE_URL=postgres://perceptionlab:perceptionlab@postgres:5432/perceptionlab
+      - PERCEPTIONLAB_QUEUE_URL=postgres://perceptionlab:perceptionlab@postgres:5432/perceptionlab
+      - PERCEPTIONLAB_OBJECT_STORAGE_BUCKET=perceptionlab
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/workspace
+      - cargo-registry:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+      - api-target:/workspace/api/target
+      - local-storage:/workspace/.perceptionlab/storage
+      - local-artifacts:/workspace/.perceptionlab/artifacts
+      - local-tmp:/workspace/.perceptionlab/tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  cargo-registry:
+  cargo-git:
+  api-target:
+  local-storage:
+  local-artifacts:
+  local-tmp:

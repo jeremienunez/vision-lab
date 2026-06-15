@@ -42,7 +42,7 @@
 - [x] Add `GET /models`.
 - [x] Add `GET /models/{model_id}`.
 - [x] Add `POST /models/{model_id}/infer`.
-- [ ] Add Docker Compose.
+- [x] Add Docker Compose.
 - [ ] Add product-grade README quickstart.
 
 ## P1 - Fortement Valorisant

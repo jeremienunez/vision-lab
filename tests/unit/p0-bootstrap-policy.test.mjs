@@ -68,6 +68,15 @@ describe('P0 bootstrap policy', () => {
     assert.match(packageJson.scripts['install:deps'], /npm run install:worker:ml/);
   });
 
+  it('requires Docker Compose services for the local P0 stack', () => {
+    const compose = readFileSync('compose.yaml', 'utf8');
+
+    assert.match(compose, /^services:/m);
+    assert.match(compose, /^  postgres:/m);
+    assert.match(compose, /^  api:/m);
+    assert.match(compose, /PERCEPTIONLAB_API_ADDR=0\.0\.0\.0:8080/);
+  });
+
   it('keeps internal agent planning docs out of git', () => {
     const gitignore = readFileSync('.gitignore', 'utf8');
 

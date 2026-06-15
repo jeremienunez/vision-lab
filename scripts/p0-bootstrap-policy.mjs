@@ -13,6 +13,7 @@ export const requiredP0BootstrapPaths = [
   'worker/pyproject.toml',
   'worker/perception_worker/__init__.py',
   'worker/tests/test_worker_package.py',
+  'compose.yaml',
   '.env.example',
   'scripts/bootstrap-local-env.mjs',
 ];
