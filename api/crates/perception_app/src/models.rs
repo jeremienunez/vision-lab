@@ -165,6 +165,13 @@ pub struct InferenceRunDraft {
     pub detections: Vec<DetectionDraft>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OverlayArtifact {
+    pub inference_run_id: InferenceRunId,
+    pub artifact_uri: String,
+    pub labels: Vec<String>,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct InferenceRequest {
     pub model: ModelDraft,

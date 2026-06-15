@@ -13,6 +13,7 @@ Ports live here:
 - `model_export_repository.rs`
 - `inference_engine.rs`
 - `inference_run_repository.rs`
+- `overlay_renderer.rs`
 - `sample_storage.rs`
 
 Adapters implement these ports outside the application crate.

@@ -5,6 +5,7 @@ pub mod create_training_job;
 pub mod dataset_stats;
 pub mod export_model;
 pub mod export_yolo_annotations;
+pub mod generate_overlay;
 pub mod get_model;
 pub mod import_yolo_annotations;
 pub mod list_datasets;
@@ -26,6 +27,7 @@ pub use create_training_job::{CreateTrainingJobCommand, CreateTrainingJobUseCase
 pub use dataset_stats::DatasetStatsUseCase;
 pub use export_model::{ExportModelCommand, ExportModelUseCase};
 pub use export_yolo_annotations::ExportYoloAnnotationsUseCase;
+pub use generate_overlay::GenerateOverlayUseCase;
 pub use get_model::GetModelUseCase;
 pub use import_yolo_annotations::{ImportYoloAnnotationsCommand, ImportYoloAnnotationsUseCase};
 pub use list_datasets::ListDatasetsUseCase;
