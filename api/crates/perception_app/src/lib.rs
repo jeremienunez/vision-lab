@@ -11,7 +11,7 @@ pub use models::{
     AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, DetectionDraft,
     InferenceRequest, InferenceResult, ModelDraft, SampleDraft, TaskType, TrainingJobDraft,
     TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingMetricDraft, YoloAnnotationExport,
-    YoloAnnotationFile,
+    YoloAnnotationFile, YoloAnnotationImportFile, YoloAnnotationImportResult,
 };
 pub use ports::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, InferenceEngine,
@@ -22,11 +22,11 @@ pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,
     CreateDatasetVersionCommand, CreateDatasetVersionUseCase, CreateTrainingJobCommand,
     CreateTrainingJobUseCase, DatasetStatsUseCase, ExportYoloAnnotationsUseCase, GetModelUseCase,
-    ListDatasetsUseCase, ListModelsUseCase, ListSampleAnnotationsUseCase,
-    ListTrainingMetricsUseCase, RecordTrainingMetricCommand, RecordTrainingMetricUseCase,
-    RegisterModelCommand, RegisterModelUseCase, RunInferenceCommand, RunInferenceUseCase,
-    TransitionTrainingJobCommand, TransitionTrainingJobUseCase, UploadSampleCommand,
-    UploadSampleUseCase,
+    ImportYoloAnnotationsCommand, ImportYoloAnnotationsUseCase, ListDatasetsUseCase,
+    ListModelsUseCase, ListSampleAnnotationsUseCase, ListTrainingMetricsUseCase,
+    RecordTrainingMetricCommand, RecordTrainingMetricUseCase, RegisterModelCommand,
+    RegisterModelUseCase, RunInferenceCommand, RunInferenceUseCase, TransitionTrainingJobCommand,
+    TransitionTrainingJobUseCase, UploadSampleCommand, UploadSampleUseCase,
 };
 
 pub const CRATE_NAME: &str = "perception_app";

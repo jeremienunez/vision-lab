@@ -5,6 +5,7 @@ pub mod create_training_job;
 pub mod dataset_stats;
 pub mod export_yolo_annotations;
 pub mod get_model;
+pub mod import_yolo_annotations;
 pub mod list_datasets;
 pub mod list_models;
 pub mod list_sample_annotations;
@@ -22,6 +23,7 @@ pub use create_training_job::{CreateTrainingJobCommand, CreateTrainingJobUseCase
 pub use dataset_stats::DatasetStatsUseCase;
 pub use export_yolo_annotations::ExportYoloAnnotationsUseCase;
 pub use get_model::GetModelUseCase;
+pub use import_yolo_annotations::{ImportYoloAnnotationsCommand, ImportYoloAnnotationsUseCase};
 pub use list_datasets::ListDatasetsUseCase;
 pub use list_models::ListModelsUseCase;
 pub use list_sample_annotations::ListSampleAnnotationsUseCase;

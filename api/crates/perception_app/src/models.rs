@@ -161,6 +161,18 @@ pub struct YoloAnnotationFile {
     pub content: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct YoloAnnotationImportFile {
+    pub sample_filename: String,
+    pub content: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct YoloAnnotationImportResult {
+    pub dataset_id: DatasetId,
+    pub imported_count: usize,
+}
+
 impl TrainingJobQueueEntry {
     pub fn queued(training_job_id: TrainingJobId) -> Self {
         Self {

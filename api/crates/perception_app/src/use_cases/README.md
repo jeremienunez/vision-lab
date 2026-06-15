@@ -15,5 +15,6 @@ One file per product intention:
 - `get_model.rs`
 - `run_inference.rs`
 - `export_yolo_annotations.rs`
+- `import_yolo_annotations.rs`
 
 HTTP handlers call use cases; they do not implement business orchestration.
