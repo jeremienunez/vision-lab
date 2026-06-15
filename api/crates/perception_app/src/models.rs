@@ -148,6 +148,19 @@ pub struct InferenceResult {
     pub detections: Vec<DetectionDraft>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct YoloAnnotationExport {
+    pub dataset_id: DatasetId,
+    pub classes_txt: String,
+    pub files: Vec<YoloAnnotationFile>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct YoloAnnotationFile {
+    pub path: String,
+    pub content: String,
+}
+
 impl TrainingJobQueueEntry {
     pub fn queued(training_job_id: TrainingJobId) -> Self {
         Self {
