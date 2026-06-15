@@ -9,6 +9,7 @@ mod value_objects;
 pub use error::DomainError;
 pub use ids::{
     AnnotationId, ArtifactId, DatasetId, DatasetVersionId, ModelId, SampleId, TrainingJobId,
+    TrainingMetricId,
 };
 pub use state::{DatasetStatus, ExportStatus, ModelStatus, TrainingJobStatus};
 pub use value_objects::{ImageDimensions, NormalizedBbox, TrainingHyperparameters};

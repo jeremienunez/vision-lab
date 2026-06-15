@@ -5,6 +5,8 @@ pub mod create_training_job;
 pub mod dataset_stats;
 pub mod list_datasets;
 pub mod list_sample_annotations;
+pub mod list_training_metrics;
+pub mod record_training_metric;
 pub mod transition_training_job;
 pub mod upload_sample;
 
@@ -15,5 +17,7 @@ pub use create_training_job::{CreateTrainingJobCommand, CreateTrainingJobUseCase
 pub use dataset_stats::DatasetStatsUseCase;
 pub use list_datasets::ListDatasetsUseCase;
 pub use list_sample_annotations::ListSampleAnnotationsUseCase;
+pub use list_training_metrics::ListTrainingMetricsUseCase;
+pub use record_training_metric::{RecordTrainingMetricCommand, RecordTrainingMetricUseCase};
 pub use transition_training_job::{TransitionTrainingJobCommand, TransitionTrainingJobUseCase};
 pub use upload_sample::{UploadSampleCommand, UploadSampleUseCase};

@@ -45,5 +45,6 @@ define_id!(SampleId);
 define_id!(AnnotationId);
 define_id!(DatasetVersionId);
 define_id!(TrainingJobId);
+define_id!(TrainingMetricId);
 define_id!(ModelId);
 define_id!(ArtifactId);

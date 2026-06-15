@@ -36,7 +36,7 @@
 - [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
 - [x] Add strict worker contracts and strategy ports.
 - [x] Add training loop or wrapper model.
-- [ ] Persist training metrics.
+- [x] Persist training metrics.
 - [ ] Add minimal model registry.
 - [ ] Add `GET /models`.
 - [ ] Add `POST /models/{model_id}/infer`.

@@ -36,6 +36,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Queue-backed training orchestration port with transient queue adapter, enqueue-on-create, and lease-next behavior.
 - Minimal Python worker processor with strict Pydantic training-job contracts, repository/trainer ports, and a fake training adapter for deterministic orchestration tests.
 - Tiny deterministic PyTorch trainer strategy that runs a CPU training loop, writes a local model artifact, and returns training metrics.
+- Training metric application use cases, repository port, domain id, and transient repository for persisted epoch metric records.
 
 ### Changed
 
