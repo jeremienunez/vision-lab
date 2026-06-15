@@ -55,7 +55,7 @@
 - [x] Publish OpenAPI/Swagger documentation.
 - [x] Add simple CLI.
 - [x] Add seed demo dataset.
-- [ ] Benchmark inference latency.
+- [x] Benchmark inference latency.
 - [ ] Choose final BDD runner and step definition stack during the technical QA pass.
 
 ## P2 - Avance

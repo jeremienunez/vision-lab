@@ -207,6 +207,16 @@ With the API running, seed the local transient API:
 sh scripts/seed_demo_dataset.sh
 ```
 
+## Benchmarks
+
+Inference latency benchmark harness:
+
+```bash
+npm run benchmark:inference -- --model-id <model_id> --iterations 10
+```
+
+Benchmark notes live in [doc/benchmarks/inference-latency.md](doc/benchmarks/inference-latency.md).
+
 ## Product References
 
 - [Product spec](doc/specs/product-spec.md)
