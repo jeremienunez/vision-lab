@@ -30,6 +30,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Sample upload use case and multipart HTTP route with abstracted sample repository and local file storage adapters.
 - Annotation add/list use cases and HTTP routes with dataset class and normalized bbox validation.
 - Dataset stats use case and HTTP route reporting sample count, annotation count, and annotations by class.
+- Dataset version creation use case and HTTP route capturing immutable dataset snapshot metadata.
 
 ### Changed
 

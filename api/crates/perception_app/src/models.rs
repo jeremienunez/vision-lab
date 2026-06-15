@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use perception_domain::{AnnotationId, DatasetId, DatasetStatus, SampleId};
+use perception_domain::{AnnotationId, DatasetId, DatasetStatus, DatasetVersionId, SampleId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskType {
@@ -54,4 +54,16 @@ pub struct DatasetStats {
     pub sample_count: u64,
     pub annotation_count: u64,
     pub annotations_by_class: BTreeMap<String, u64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DatasetVersionDraft {
+    pub id: DatasetVersionId,
+    pub dataset_id: DatasetId,
+    pub version_name: String,
+    pub sample_count: u64,
+    pub annotation_count: u64,
+    pub classes_snapshot: Vec<String>,
+    pub split_config: BTreeMap<String, String>,
+    pub created_by: String,
 }
