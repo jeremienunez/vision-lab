@@ -4,9 +4,7 @@
 use axum::Router;
 use std::sync::Arc;
 
-use perception_app::{
-    AnnotationRepository, DatasetRepository, SampleRepository, SampleStorage,
-};
+use perception_app::{AnnotationRepository, DatasetRepository, SampleRepository, SampleStorage};
 
 pub mod dto;
 pub mod mappers;
@@ -52,6 +50,13 @@ pub fn router_with_annotation_ports(
         sample_repository.clone(),
         sample_storage,
     )
+    .merge(routes::dataset_stats::routes(
+        state::DatasetStatsHttpState::new(
+            dataset_repository.clone(),
+            sample_repository.clone(),
+            annotation_repository.clone(),
+        ),
+    ))
     .merge(routes::annotations::routes(
         state::AnnotationHttpState::new(
             dataset_repository,

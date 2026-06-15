@@ -169,7 +169,7 @@ fake-png-bytes\r\n\
 }
 
 #[tokio::test]
-async fn annotation_routes_add_and_list_sample_annotations() {
+async fn dataset_stats_route_returns_counts_after_sample_and_annotation_creation() {
     let app = perception_http::router_with_annotation_ports(
         Arc::new(RouteDatasetRepository::default()),
         Arc::new(RouteSampleRepository::default()),
@@ -237,35 +237,22 @@ async fn annotation_routes_add_and_list_sample_annotations() {
         )
         .await
         .expect("route responds");
-
     assert_eq!(create_annotation_response.status(), StatusCode::CREATED);
-    let annotation = json_body(create_annotation_response).await;
-    assert_eq!(annotation["sample_id"], sample_id);
-    assert_eq!(annotation["dataset_id"], dataset_id);
-    assert_eq!(annotation["class_name"], "book");
-    assert_eq!(annotation["class_id"], 1);
-    assert_eq!(annotation["bbox"]["x"], 0.10);
-    assert_eq!(annotation["format"], "normalized_xywh");
-    assert_eq!(annotation["source"], "manual");
 
-    let list_response = app
+    let stats_response = app
         .oneshot(
             Request::builder()
-                .uri(format!("/samples/{sample_id}/annotations"))
+                .uri(format!("/datasets/{dataset_id}/stats"))
                 .body(axum::body::Body::empty())
                 .expect("request is valid"),
         )
         .await
         .expect("route responds");
 
-    assert_eq!(list_response.status(), StatusCode::OK);
-    let listed = json_body(list_response).await;
-    assert_eq!(
-        listed["annotations"]
-            .as_array()
-            .expect("annotations is an array")
-            .len(),
-        1
-    );
-    assert_eq!(listed["annotations"][0]["class_name"], "book");
+    assert_eq!(stats_response.status(), StatusCode::OK);
+    let stats = json_body(stats_response).await;
+    assert_eq!(stats["dataset_id"], dataset_id);
+    assert_eq!(stats["sample_count"], 1);
+    assert_eq!(stats["annotation_count"], 1);
+    assert_eq!(stats["annotations_by_class"]["book"], 1);
 }

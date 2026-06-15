@@ -6,8 +6,7 @@ use perception_app::{
     SampleStorageCommand, StoredSample, TaskType, UploadSampleCommand, UploadSampleUseCase,
     UseCaseError,
 };
-use perception_domain::{DatasetId, DatasetStatus};
-use perception_domain::SampleId;
+use perception_domain::{DatasetId, DatasetStatus, SampleId};
 
 #[derive(Default)]
 struct InMemoryDatasetRepository {
@@ -66,6 +65,20 @@ impl SampleRepository for InMemorySampleRepository {
             .iter()
             .find(|sample| sample.id == sample_id)
             .cloned())
+    }
+
+    async fn list_by_dataset(
+        &self,
+        dataset_id: DatasetId,
+    ) -> Result<Vec<SampleDraft>, UseCaseError> {
+        Ok(self
+            .samples
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .filter(|sample| sample.dataset_id == dataset_id)
+            .cloned()
+            .collect())
     }
 }
 

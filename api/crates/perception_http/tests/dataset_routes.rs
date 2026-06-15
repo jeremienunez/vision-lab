@@ -97,7 +97,13 @@ async fn create_dataset_route_persists_a_draft_dataset_and_list_route_returns_it
 
     assert_eq!(list_response.status(), StatusCode::OK);
     let listed = json_body(list_response).await;
-    assert_eq!(listed["datasets"].as_array().expect("datasets is an array").len(), 1);
+    assert_eq!(
+        listed["datasets"]
+            .as_array()
+            .expect("datasets is an array")
+            .len(),
+        1
+    );
     assert_eq!(listed["datasets"][0]["name"], "desk-objects-v1");
     assert_eq!(listed["datasets"][0]["status"], "draft");
 }

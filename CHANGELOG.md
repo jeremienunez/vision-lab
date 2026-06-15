@@ -29,6 +29,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Dataset creation and listing HTTP routes backed by the application repository port and a local transient repository adapter.
 - Sample upload use case and multipart HTTP route with abstracted sample repository and local file storage adapters.
 - Annotation add/list use cases and HTTP routes with dataset class and normalized bbox validation.
+- Dataset stats use case and HTTP route reporting sample count, annotation count, and annotations by class.
 
 ### Changed
 

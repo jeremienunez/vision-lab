@@ -1,9 +1,9 @@
 #![forbid(unsafe_code)]
 //! PostgreSQL, storage, queue, and config adapters for PerceptionLab.
 
-mod transient_dataset_repository;
 mod local_sample_storage;
 mod transient_annotation_repository;
+mod transient_dataset_repository;
 mod transient_sample_repository;
 
 pub use local_sample_storage::LocalSampleStorage;

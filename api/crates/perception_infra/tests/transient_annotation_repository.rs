@@ -6,12 +6,13 @@ use perception_infra::TransientAnnotationRepository;
 async fn transient_annotation_repository_creates_and_lists_annotations_by_sample() {
     let repository = TransientAnnotationRepository::default();
     let sample_id = SampleId::new();
+    let dataset_id = DatasetId::new();
 
     repository
         .create(AnnotationDraft {
             id: AnnotationId::new(),
             sample_id,
-            dataset_id: DatasetId::new(),
+            dataset_id,
             class_name: "cup".to_owned(),
             class_id: 0,
             bbox_x: 0.10,
@@ -32,4 +33,12 @@ async fn transient_annotation_repository_creates_and_lists_annotations_by_sample
 
     assert_eq!(annotations.len(), 1);
     assert_eq!(annotations[0].class_name, "cup");
+    assert_eq!(
+        repository
+            .list_by_dataset(dataset_id)
+            .await
+            .expect("dataset annotations are listed")
+            .len(),
+        1
+    );
 }

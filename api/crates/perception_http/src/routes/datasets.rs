@@ -63,9 +63,11 @@ impl From<UseCaseError> for DatasetRouteError {
 impl IntoResponse for DatasetRouteError {
     fn into_response(self) -> Response {
         let (status, code, message) = match self.error {
-            UseCaseError::Validation(message) => {
-                (StatusCode::BAD_REQUEST, "validation_failed", message.to_owned())
-            }
+            UseCaseError::Validation(message) => (
+                StatusCode::BAD_REQUEST,
+                "validation_failed",
+                message.to_owned(),
+            ),
             UseCaseError::NotFound(message) => {
                 (StatusCode::NOT_FOUND, "not_found", message.to_owned())
             }

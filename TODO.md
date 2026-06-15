@@ -27,7 +27,7 @@
 - [x] Add `POST /datasets/{dataset_id}/samples`.
 - [x] Connect abstracted file/object storage.
 - [x] Add annotation endpoints.
-- [ ] Add `GET /datasets/{dataset_id}/stats`.
+- [x] Add `GET /datasets/{dataset_id}/stats`.
 - [ ] Add `POST /datasets/{dataset_id}/versions`.
 - [ ] Add `POST /training-jobs`.
 - [ ] Add training job lifecycle persistence and transitions.

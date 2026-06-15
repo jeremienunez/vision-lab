@@ -27,7 +27,9 @@ fn image_dimensions_must_be_non_zero() {
         Err(DomainError::InvalidImageDimensions)
     );
     assert_eq!(
-        ImageDimensions::new(640, 480).expect("valid dimensions").width,
+        ImageDimensions::new(640, 480)
+            .expect("valid dimensions")
+            .width,
         640
     );
 }

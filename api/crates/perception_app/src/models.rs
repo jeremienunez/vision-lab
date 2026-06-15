@@ -47,3 +47,11 @@ pub struct AnnotationDraft {
     pub confidence: Option<f32>,
     pub source: String,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DatasetStats {
+    pub dataset_id: DatasetId,
+    pub sample_count: u64,
+    pub annotation_count: u64,
+    pub annotations_by_class: BTreeMap<String, u64>,
+}

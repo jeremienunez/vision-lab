@@ -18,10 +18,7 @@ impl<'repository> ListSampleAnnotationsUseCase<'repository> {
         }
     }
 
-    pub async fn execute(
-        &self,
-        sample_id: SampleId,
-    ) -> Result<Vec<AnnotationDraft>, UseCaseError> {
+    pub async fn execute(&self, sample_id: SampleId) -> Result<Vec<AnnotationDraft>, UseCaseError> {
         if self.sample_repository.get(sample_id).await?.is_none() {
             return Err(UseCaseError::NotFound("sample not found"));
         }

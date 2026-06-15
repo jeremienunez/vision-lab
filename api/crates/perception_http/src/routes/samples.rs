@@ -25,8 +25,8 @@ async fn upload_sample(
     Path(dataset_id): Path<String>,
     multipart: Multipart,
 ) -> Result<(StatusCode, Json<SampleResponse>), SampleRouteError> {
-    let dataset_id = DatasetId::parse(dataset_id)
-        .map_err(|_| UseCaseError::Validation("invalid dataset id"))?;
+    let dataset_id =
+        DatasetId::parse(dataset_id).map_err(|_| UseCaseError::Validation("invalid dataset id"))?;
     let payload = read_upload_payload(multipart).await?;
     let use_case = UploadSampleUseCase::new(
         state.dataset_repository(),
@@ -130,9 +130,11 @@ impl From<UseCaseError> for SampleRouteError {
 impl IntoResponse for SampleRouteError {
     fn into_response(self) -> Response {
         let (status, code, message) = match self.error {
-            UseCaseError::Validation(message) => {
-                (StatusCode::BAD_REQUEST, "validation_failed", message.to_owned())
-            }
+            UseCaseError::Validation(message) => (
+                StatusCode::BAD_REQUEST,
+                "validation_failed",
+                message.to_owned(),
+            ),
             UseCaseError::NotFound(message) => {
                 (StatusCode::NOT_FOUND, "not_found", message.to_owned())
             }

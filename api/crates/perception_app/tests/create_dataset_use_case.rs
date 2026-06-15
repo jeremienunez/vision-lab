@@ -78,7 +78,10 @@ async fn create_dataset_rejects_empty_name() {
         })
         .await;
 
-    assert_eq!(result, Err(UseCaseError::Validation("dataset name is required")));
+    assert_eq!(
+        result,
+        Err(UseCaseError::Validation("dataset name is required"))
+    );
 }
 
 #[tokio::test]
