@@ -24,5 +24,10 @@ The initial PDF references are stored in `doc/references/`:
 - `doc/specs/qa-bdd-spec.md` - QA strategy and BDD format.
 - `doc/sprints/` - sprint plans with validation criteria.
 - `doc/quality/` - definition of done and BDD validation checklist.
+- `doc/quality/qa-bdd.md` - QA/BDD strategy extracted from the QA reference PDF.
+- `doc/quality/test-strategy.md` - test pyramid, gates, and execution modes.
+- `doc/quality/acceptance-matrix.md` - product module to feature-file traceability.
 - `doc/architecture/` - conventions and ADRs.
 - `doc/demo/` - planned demo inputs, overlays, and API response examples.
+- `qa/features/` - Gherkin acceptance scenarios in English.
+- `fixtures/` - planned test fixtures mirrored from the QA/BDD reference.

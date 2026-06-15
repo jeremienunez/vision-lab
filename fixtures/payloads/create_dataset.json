@@ -1,0 +1,6 @@
+{
+  "name": "desk-objects-v1",
+  "description": "Dataset for detecting desk objects from local captures",
+  "task_type": "object_detection",
+  "classes": ["cup", "book", "phone", "keyboard", "mouse"]
+}

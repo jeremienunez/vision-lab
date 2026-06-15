@@ -74,3 +74,5 @@ npm run prepare:hooks
 - [Requirements](doc/specs/requirements.md)
 - [Roadmap](doc/specs/roadmap.md)
 - [Demo spec](doc/specs/demo-spec.md)
+- [QA BDD](doc/quality/qa-bdd.md)
+- [Acceptance matrix](doc/quality/acceptance-matrix.md)

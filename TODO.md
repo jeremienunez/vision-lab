@@ -11,6 +11,7 @@
 - [x] Add commit message shape validation.
 - [x] Add Dependency Cruiser architecture rules.
 - [x] Align documentation with Product Owning PDF for PerceptionLab.
+- [x] Add QA/BDD feature structure and static BDD validation.
 
 ## P0 - MVP Obligatoire
 
@@ -46,6 +47,7 @@
 - [ ] Add simple CLI.
 - [ ] Add seed demo dataset.
 - [ ] Benchmark inference latency.
+- [ ] Choose final BDD runner and step definition stack during the technical QA pass.
 
 ## P2 - Avance
 

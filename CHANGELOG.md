@@ -17,8 +17,10 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Commit message validation for Conventional Commits.
 - Dependency Cruiser architecture boundaries.
 - Node test suite for local policy scripts.
+- QA/BDD feature structure, fixtures, traceability docs, and static BDD validation command.
 
 ### Changed
 
 - Reframed the project from generic Vision Lab foundation to PerceptionLab, a Rust + PyTorch ML infrastructure platform.
 - Aligned product specs, roadmap, sprints, and validation criteria with the Product Owning reference PDF.
+- Aligned QA documentation and feature coverage with the QA & BDD reference PDF.

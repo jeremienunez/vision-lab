@@ -34,8 +34,21 @@ Then one observable outcome is true
 - Unit tests cover policy scripts, domain value objects, and application rules.
 - Integration tests cover API, PostgreSQL, storage, and queue behavior.
 - Contract tests cover Rust API to Python worker payloads.
+- BDD feature files live in `qa/features/` and use English Gherkin for a GitHub technical audience.
+- `npm run validate:bdd` statically validates BDD feature structure until the final runner is selected.
 - Sprint documents include goal, priority, dependencies, scope, BDD criteria, and definition of done.
 - Architecture checks run locally and later in CI.
+
+## Criticality Rule
+
+- 100% of P0 scenarios must pass before MVP validation.
+- At least 80% of P1 scenarios must pass before portfolio polish is accepted.
+- No critical bug may remain on ingestion, versioning, training jobs, or model registry.
+
+## Training Test Modes
+
+- `fake_training`: fast, deterministic, required for CI and BDD acceptance.
+- `tiny_training`: real PyTorch on a small seed dataset, required locally or nightly once the worker exists.
 
 ## Defect Rule
 

@@ -7,8 +7,9 @@
   "scripts": {
     "test": "node --test tests/**/*.test.mjs",
     "validate:docs": "node scripts/validate-sprint-docs.mjs",
+    "validate:bdd": "node scripts/validate-bdd-features.mjs",
     "lint:architecture": "depcruise src scripts tests --config .dependency-cruiser.cjs",
-    "quality": "npm test && npm run validate:docs && npm run lint:architecture",
+    "quality": "npm test && npm run validate:docs && npm run validate:bdd && npm run lint:architecture",
     "prepare:hooks": "git config core.hooksPath .githooks"
   },
   "devDependencies": {

@@ -1,0 +1,11 @@
+{
+  "dataset_version_id": "dsv_demo_v1",
+  "model_family": "yolo",
+  "base_model": "yolo11n",
+  "hyperparameters": {
+    "epochs": 2,
+    "batch_size": 2,
+    "image_size": 320,
+    "learning_rate": 0.001
+  }
+}
