@@ -70,15 +70,19 @@ async fn run_inference(
     let model_id =
         ModelId::parse(model_id).map_err(|_| UseCaseError::Validation("invalid model id"))?;
     let payload = read_inference_payload(multipart).await?;
-    let result = RunInferenceUseCase::new(state.model_repository(), state.inference_engine())
-        .execute(RunInferenceCommand {
-            model_id,
-            filename: payload.filename,
-            mime_type: payload.mime_type,
-            image_bytes: payload.image_bytes,
-            confidence_threshold: payload.confidence_threshold,
-        })
-        .await?;
+    let result = RunInferenceUseCase::new(
+        state.model_repository(),
+        state.inference_run_repository(),
+        state.inference_engine(),
+    )
+    .execute(RunInferenceCommand {
+        model_id,
+        filename: payload.filename,
+        mime_type: payload.mime_type,
+        image_bytes: payload.image_bytes,
+        confidence_threshold: payload.confidence_threshold,
+    })
+    .await?;
 
     Ok(Json(mappers::inference::inference_response(result)))
 }

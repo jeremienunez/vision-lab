@@ -8,8 +8,8 @@ mod value_objects;
 
 pub use error::DomainError;
 pub use ids::{
-    AnnotationId, ArtifactId, DatasetId, DatasetVersionId, ModelExportId, ModelId, SampleId,
-    TrainingJobId, TrainingMetricId,
+    AnnotationId, ArtifactId, DatasetId, DatasetVersionId, InferenceRunId, ModelExportId, ModelId,
+    SampleId, TrainingJobId, TrainingMetricId,
 };
 pub use state::{DatasetStatus, ExportStatus, ModelStatus, TrainingJobStatus};
 pub use value_objects::{ImageDimensions, NormalizedBbox, TrainingHyperparameters};

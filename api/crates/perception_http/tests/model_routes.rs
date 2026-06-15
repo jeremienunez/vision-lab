@@ -7,10 +7,13 @@ use async_trait::async_trait;
 use axum::body::to_bytes;
 use axum::http::{Request, StatusCode};
 use perception_app::{
-    DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, ModelDraft,
-    ModelExportDraft, ModelExportRepository, ModelRepository, UseCaseError,
+    DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, InferenceRunDraft,
+    InferenceRunRepository, ModelDraft, ModelExportDraft, ModelExportRepository, ModelRepository,
+    UseCaseError,
 };
-use perception_domain::{DatasetVersionId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId};
+use perception_domain::{
+    DatasetVersionId, InferenceRunId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId,
+};
 use serde_json::Value;
 use tower::ServiceExt;
 
@@ -22,6 +25,11 @@ struct RouteModelRepository {
 #[derive(Default)]
 struct RouteModelExportRepository {
     exports: Mutex<Vec<ModelExportDraft>>,
+}
+
+#[derive(Default)]
+struct RouteInferenceRunRepository {
+    runs: Mutex<Vec<InferenceRunDraft>>,
 }
 
 struct RouteInferenceEngine;
@@ -59,6 +67,7 @@ impl ModelRepository for RouteModelRepository {
 impl InferenceEngine for RouteInferenceEngine {
     async fn infer(&self, request: InferenceRequest) -> Result<InferenceResult, UseCaseError> {
         Ok(InferenceResult {
+            run_id: InferenceRunId::new(),
             model_id: request.model.id,
             latency_ms: 9,
             detections: vec![
@@ -78,6 +87,27 @@ impl InferenceEngine for RouteInferenceEngine {
                 },
             ],
         })
+    }
+}
+
+#[async_trait]
+impl InferenceRunRepository for RouteInferenceRunRepository {
+    async fn create(&self, run: InferenceRunDraft) -> Result<InferenceRunDraft, UseCaseError> {
+        self.runs
+            .lock()
+            .expect("repository mutex is available")
+            .push(run.clone());
+        Ok(run)
+    }
+
+    async fn get(&self, run_id: InferenceRunId) -> Result<Option<InferenceRunDraft>, UseCaseError> {
+        Ok(self
+            .runs
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .find(|run| run.id == run_id)
+            .cloned())
     }
 }
 
@@ -147,12 +177,17 @@ fake-jpeg-bytes\r\n\
 async fn list_models_route_returns_registered_models() {
     let models = Arc::new(RouteModelRepository::default());
     let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app =
-        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs,
+        Arc::new(RouteInferenceEngine),
+    );
 
     let response = app
         .oneshot(
@@ -182,12 +217,17 @@ async fn list_models_route_returns_registered_models() {
 async fn get_model_route_returns_model_detail() {
     let models = Arc::new(RouteModelRepository::default());
     let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app =
-        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs,
+        Arc::new(RouteInferenceEngine),
+    );
 
     let response = app
         .oneshot(
@@ -216,12 +256,17 @@ async fn get_model_route_returns_model_detail() {
 async fn infer_model_route_returns_detections_filtered_by_confidence() {
     let models = Arc::new(RouteModelRepository::default());
     let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app =
-        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs.clone(),
+        Arc::new(RouteInferenceEngine),
+    );
     let (boundary, body) = inference_multipart_body("image/jpeg", "0.90");
 
     let response = app
@@ -242,6 +287,8 @@ async fn infer_model_route_returns_detections_filtered_by_confidence() {
     assert_eq!(response.status(), StatusCode::OK);
     let body = json_body(response).await;
     assert_eq!(body["model_id"], model.id.to_string());
+    let run_id = InferenceRunId::parse(body["run_id"].as_str().expect("run id is a string"))
+        .expect("run id parses");
     assert_eq!(body["latency_ms"], 9);
     assert_eq!(
         body["detections"]
@@ -257,18 +304,33 @@ async fn infer_model_route_returns_detections_filtered_by_confidence() {
             .expect("confidence is numeric")
             >= 0.90
     );
+
+    let stored = runs
+        .get(run_id)
+        .await
+        .expect("run lookup succeeds")
+        .expect("run is stored");
+
+    assert_eq!(stored.model_id, model.id);
+    assert_eq!(stored.detections.len(), 1);
+    assert_eq!(stored.detections[0].class_name, "cup");
 }
 
 #[tokio::test]
 async fn infer_model_route_rejects_invalid_image_file() {
     let models = Arc::new(RouteModelRepository::default());
     let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
     let model = models
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app =
-        perception_http::router_with_model_ports(models, exports, Arc::new(RouteInferenceEngine));
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs,
+        Arc::new(RouteInferenceEngine),
+    );
     let (boundary, body) = inference_multipart_body("text/plain", "0.25");
 
     let response = app
@@ -293,6 +355,7 @@ async fn infer_model_route_rejects_invalid_image_file() {
 async fn export_model_route_creates_and_lists_onnx_exports() {
     let models = Arc::new(RouteModelRepository::default());
     let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
     let model = models
         .create(model_fixture())
         .await
@@ -300,6 +363,7 @@ async fn export_model_route_creates_and_lists_onnx_exports() {
     let app = perception_http::router_with_model_ports(
         models,
         exports.clone(),
+        runs,
         Arc::new(RouteInferenceEngine),
     );
 

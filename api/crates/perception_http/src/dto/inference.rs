@@ -2,6 +2,7 @@ use serde::Serialize;
 
 #[derive(Debug, Serialize)]
 pub struct InferenceResponse {
+    pub run_id: String,
     pub model_id: String,
     pub latency_ms: u32,
     pub detections: Vec<DetectionResponse>,

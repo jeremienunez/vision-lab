@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use perception_app::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, InferenceEngine,
-    ModelExportRepository, ModelRepository, SampleRepository, SampleStorage, TrainingJobQueue,
-    TrainingJobRepository, TrainingMetricRepository,
+    InferenceRunRepository, ModelExportRepository, ModelRepository, SampleRepository,
+    SampleStorage, TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
 };
 
 #[derive(Clone)]
@@ -15,6 +15,7 @@ pub struct HttpState {
 pub struct ModelHttpState {
     model_repository: Arc<dyn ModelRepository>,
     model_export_repository: Arc<dyn ModelExportRepository>,
+    inference_run_repository: Arc<dyn InferenceRunRepository>,
     inference_engine: Arc<dyn InferenceEngine>,
 }
 
@@ -22,11 +23,13 @@ impl ModelHttpState {
     pub fn new(
         model_repository: Arc<dyn ModelRepository>,
         model_export_repository: Arc<dyn ModelExportRepository>,
+        inference_run_repository: Arc<dyn InferenceRunRepository>,
         inference_engine: Arc<dyn InferenceEngine>,
     ) -> Self {
         Self {
             model_repository,
             model_export_repository,
+            inference_run_repository,
             inference_engine,
         }
     }
@@ -37,6 +40,10 @@ impl ModelHttpState {
 
     pub fn model_export_repository(&self) -> &dyn ModelExportRepository {
         self.model_export_repository.as_ref()
+    }
+
+    pub fn inference_run_repository(&self) -> &dyn InferenceRunRepository {
+        self.inference_run_repository.as_ref()
     }
 
     pub fn inference_engine(&self) -> &dyn InferenceEngine {

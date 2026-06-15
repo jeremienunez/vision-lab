@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use perception_domain::{
-    AnnotationId, DatasetId, DatasetStatus, DatasetVersionId, ExportStatus, ModelExportId, ModelId,
-    ModelStatus, NormalizedBbox, SampleId, TrainingHyperparameters, TrainingJobId,
-    TrainingJobStatus, TrainingMetricId,
+    AnnotationId, DatasetId, DatasetStatus, DatasetVersionId, ExportStatus, InferenceRunId,
+    ModelExportId, ModelId, ModelStatus, NormalizedBbox, SampleId, TrainingHyperparameters,
+    TrainingJobId, TrainingJobStatus, TrainingMetricId,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -156,6 +156,16 @@ pub struct DetectionDraft {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct InferenceRunDraft {
+    pub id: InferenceRunId,
+    pub model_id: ModelId,
+    pub filename: String,
+    pub mime_type: String,
+    pub latency_ms: u32,
+    pub detections: Vec<DetectionDraft>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct InferenceRequest {
     pub model: ModelDraft,
     pub filename: String,
@@ -165,6 +175,7 @@ pub struct InferenceRequest {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct InferenceResult {
+    pub run_id: InferenceRunId,
     pub model_id: ModelId,
     pub latency_ms: u32,
     pub detections: Vec<DetectionDraft>,

@@ -4,6 +4,7 @@ use crate::dto::inference::{DetectionBboxResponse, DetectionResponse, InferenceR
 
 pub fn inference_response(result: InferenceResult) -> InferenceResponse {
     InferenceResponse {
+        run_id: result.run_id.to_string(),
         model_id: result.model_id.to_string(),
         latency_ms: result.latency_ms,
         detections: result

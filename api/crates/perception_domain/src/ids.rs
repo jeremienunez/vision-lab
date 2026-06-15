@@ -48,4 +48,5 @@ define_id!(TrainingJobId);
 define_id!(TrainingMetricId);
 define_id!(ModelId);
 define_id!(ModelExportId);
+define_id!(InferenceRunId);
 define_id!(ArtifactId);

@@ -1,6 +1,9 @@
-use perception_domain::{ModelId, ModelStatus};
+use perception_domain::{InferenceRunId, ModelId, ModelStatus};
 
-use crate::{InferenceEngine, InferenceRequest, InferenceResult, ModelRepository, UseCaseError};
+use crate::{
+    InferenceEngine, InferenceRequest, InferenceResult, InferenceRunDraft, InferenceRunRepository,
+    ModelRepository, UseCaseError,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RunInferenceCommand {
@@ -13,16 +16,19 @@ pub struct RunInferenceCommand {
 
 pub struct RunInferenceUseCase<'repository> {
     model_repository: &'repository dyn ModelRepository,
+    inference_run_repository: &'repository dyn InferenceRunRepository,
     inference_engine: &'repository dyn InferenceEngine,
 }
 
 impl<'repository> RunInferenceUseCase<'repository> {
     pub fn new(
         model_repository: &'repository dyn ModelRepository,
+        inference_run_repository: &'repository dyn InferenceRunRepository,
         inference_engine: &'repository dyn InferenceEngine,
     ) -> Self {
         Self {
             model_repository,
+            inference_run_repository,
             inference_engine,
         }
     }
@@ -45,18 +51,33 @@ impl<'repository> RunInferenceUseCase<'repository> {
             ));
         }
 
+        let filename = command.filename;
+        let mime_type = command.mime_type;
+        let run_id = InferenceRunId::new();
         let mut result = self
             .inference_engine
             .infer(InferenceRequest {
                 model,
-                filename: command.filename,
-                mime_type: command.mime_type,
+                filename: filename.clone(),
+                mime_type: mime_type.clone(),
                 image_bytes: command.image_bytes,
             })
             .await?;
+        result.run_id = run_id;
         result
             .detections
             .retain(|detection| detection.confidence >= command.confidence_threshold);
+
+        self.inference_run_repository
+            .create(InferenceRunDraft {
+                id: run_id,
+                model_id: result.model_id,
+                filename,
+                mime_type,
+                latency_ms: result.latency_ms,
+                detections: result.detections.clone(),
+            })
+            .await?;
 
         Ok(result)
     }

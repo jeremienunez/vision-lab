@@ -9,15 +9,16 @@ pub mod use_cases;
 pub use error::UseCaseError;
 pub use models::{
     AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, DetectionDraft,
-    InferenceRequest, InferenceResult, ModelDraft, ModelExportDraft, SampleDraft, TaskType,
-    TrainingClassMetric, TrainingJobDraft, TrainingJobQueueEntry, TrainingJobQueueStatus,
-    TrainingMetricDraft, YoloAnnotationExport, YoloAnnotationFile, YoloAnnotationImportFile,
-    YoloAnnotationImportResult,
+    InferenceRequest, InferenceResult, InferenceRunDraft, ModelDraft, ModelExportDraft,
+    SampleDraft, TaskType, TrainingClassMetric, TrainingJobDraft, TrainingJobQueueEntry,
+    TrainingJobQueueStatus, TrainingMetricDraft, YoloAnnotationExport, YoloAnnotationFile,
+    YoloAnnotationImportFile, YoloAnnotationImportResult,
 };
 pub use ports::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, InferenceEngine,
-    ModelExportRepository, ModelRepository, SampleRepository, SampleStorage, SampleStorageCommand,
-    StoredSample, TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
+    InferenceRunRepository, ModelExportRepository, ModelRepository, SampleRepository,
+    SampleStorage, SampleStorageCommand, StoredSample, TrainingJobQueue, TrainingJobRepository,
+    TrainingMetricRepository,
 };
 pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,

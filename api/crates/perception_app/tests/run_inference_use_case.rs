@@ -2,10 +2,13 @@ use std::{collections::BTreeMap, sync::Mutex};
 
 use async_trait::async_trait;
 use perception_app::{
-    DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, ModelDraft,
-    ModelRepository, RunInferenceCommand, RunInferenceUseCase, UseCaseError,
+    DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, InferenceRunDraft,
+    InferenceRunRepository, ModelDraft, ModelRepository, RunInferenceCommand, RunInferenceUseCase,
+    UseCaseError,
 };
-use perception_domain::{DatasetVersionId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId};
+use perception_domain::{
+    DatasetVersionId, InferenceRunId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId,
+};
 
 #[derive(Default)]
 struct InMemoryModelRepository {
@@ -41,12 +44,39 @@ impl ModelRepository for InMemoryModelRepository {
     }
 }
 
+#[derive(Default)]
+struct InMemoryInferenceRunRepository {
+    runs: Mutex<Vec<InferenceRunDraft>>,
+}
+
+#[async_trait]
+impl InferenceRunRepository for InMemoryInferenceRunRepository {
+    async fn create(&self, run: InferenceRunDraft) -> Result<InferenceRunDraft, UseCaseError> {
+        self.runs
+            .lock()
+            .expect("repository mutex is available")
+            .push(run.clone());
+        Ok(run)
+    }
+
+    async fn get(&self, run_id: InferenceRunId) -> Result<Option<InferenceRunDraft>, UseCaseError> {
+        Ok(self
+            .runs
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .find(|run| run.id == run_id)
+            .cloned())
+    }
+}
+
 struct TestInferenceEngine;
 
 #[async_trait]
 impl InferenceEngine for TestInferenceEngine {
     async fn infer(&self, request: InferenceRequest) -> Result<InferenceResult, UseCaseError> {
         Ok(InferenceResult {
+            run_id: InferenceRunId::new(),
             model_id: request.model.id,
             latency_ms: 7,
             detections: vec![
@@ -86,12 +116,13 @@ fn model_fixture(status: ModelStatus) -> ModelDraft {
 #[tokio::test]
 async fn run_inference_returns_detections_filtered_by_threshold() {
     let models = InMemoryModelRepository::default();
+    let runs = InMemoryInferenceRunRepository::default();
     let model = models
         .create(model_fixture(ModelStatus::Candidate))
         .await
         .expect("model is stored");
 
-    let result = RunInferenceUseCase::new(&models, &TestInferenceEngine)
+    let result = RunInferenceUseCase::new(&models, &runs, &TestInferenceEngine)
         .execute(RunInferenceCommand {
             model_id: model.id,
             filename: "cup.jpg".to_owned(),
@@ -107,13 +138,27 @@ async fn run_inference_returns_detections_filtered_by_threshold() {
     assert_eq!(result.detections.len(), 1);
     assert_eq!(result.detections[0].class_name, "cup");
     assert!(result.detections[0].confidence >= 0.90);
+
+    let stored = runs
+        .get(result.run_id)
+        .await
+        .expect("run lookup succeeds")
+        .expect("run is stored");
+
+    assert_eq!(stored.id, result.run_id);
+    assert_eq!(stored.model_id, model.id);
+    assert_eq!(stored.filename, "cup.jpg");
+    assert_eq!(stored.mime_type, "image/jpeg");
+    assert_eq!(stored.detections.len(), 1);
+    assert_eq!(stored.detections[0].class_name, "cup");
 }
 
 #[tokio::test]
 async fn run_inference_rejects_missing_or_archived_model() {
     let models = InMemoryModelRepository::default();
+    let runs = InMemoryInferenceRunRepository::default();
 
-    let missing = RunInferenceUseCase::new(&models, &TestInferenceEngine)
+    let missing = RunInferenceUseCase::new(&models, &runs, &TestInferenceEngine)
         .execute(RunInferenceCommand {
             model_id: ModelId::new(),
             filename: "cup.jpg".to_owned(),
@@ -129,7 +174,7 @@ async fn run_inference_rejects_missing_or_archived_model() {
         .create(model_fixture(ModelStatus::Archived))
         .await
         .expect("model is stored");
-    let archived_result = RunInferenceUseCase::new(&models, &TestInferenceEngine)
+    let archived_result = RunInferenceUseCase::new(&models, &runs, &TestInferenceEngine)
         .execute(RunInferenceCommand {
             model_id: archived.id,
             filename: "cup.jpg".to_owned(),
@@ -150,12 +195,13 @@ async fn run_inference_rejects_missing_or_archived_model() {
 #[tokio::test]
 async fn run_inference_rejects_invalid_image_contract() {
     let models = InMemoryModelRepository::default();
+    let runs = InMemoryInferenceRunRepository::default();
     let model = models
         .create(model_fixture(ModelStatus::Candidate))
         .await
         .expect("model is stored");
 
-    let result = RunInferenceUseCase::new(&models, &TestInferenceEngine)
+    let result = RunInferenceUseCase::new(&models, &runs, &TestInferenceEngine)
         .execute(RunInferenceCommand {
             model_id: model.id,
             filename: "invalid.txt".to_owned(),
