@@ -66,4 +66,10 @@ describe('P0 bootstrap policy', () => {
     assert.match(packageJson.scripts['install:deps'], /npm run install:rust/);
     assert.match(packageJson.scripts['install:deps'], /npm run install:worker:ml/);
   });
+
+  it('keeps internal agent planning docs out of git', () => {
+    const gitignore = readFileSync('.gitignore', 'utf8');
+
+    assert.match(gitignore, /^doc\/superpowers\/$/m);
+  });
 });

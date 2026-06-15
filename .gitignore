@@ -2,6 +2,7 @@ node_modules/
 coverage/
 dist/
 build/
+doc/superpowers/
 api/target/
 .perceptionlab/
 .venv/

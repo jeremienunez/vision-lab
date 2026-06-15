@@ -32,12 +32,14 @@ describe('architecture conventions policy', () => {
       'apps/api-rust/README.md',
       'workers/pytorch-trainer/README.md',
       'src/domain/README.md',
+      'doc/superpowers/plans/internal-plan.md',
     ]);
 
     assert.equal(result.valid, false);
     assert.match(result.errors.join('\n'), /apps\/api-rust/);
     assert.match(result.errors.join('\n'), /workers\/pytorch-trainer/);
     assert.match(result.errors.join('\n'), /src\/domain/);
+    assert.match(result.errors.join('\n'), /doc\/superpowers/);
   });
 
   it('rejects missing required architecture folders', () => {

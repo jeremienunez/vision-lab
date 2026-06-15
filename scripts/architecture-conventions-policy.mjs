@@ -32,7 +32,7 @@ export const requiredArchitecturePaths = [
   'doc/architecture/adr/0003-use-strategy-for-training-and-inference-modes.md',
 ];
 
-const forbiddenLegacyPaths = ['apps/api-rust', 'workers/pytorch-trainer', 'src'];
+const forbiddenLegacyPaths = ['apps/api-rust', 'workers/pytorch-trainer', 'src', 'doc/superpowers'];
 const forbiddenBaseNames = new Set(['utils', 'helpers', 'misc', 'common', 'manager', 'service']);
 const ignoredGeneratedPathPrefixes = [
   '.perceptionlab/',
