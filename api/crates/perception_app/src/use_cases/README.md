@@ -14,6 +14,8 @@ One file per product intention:
 - `list_models.rs`
 - `get_model.rs`
 - `run_inference.rs`
+- `export_model.rs`
+- `list_model_exports.rs`
 - `export_yolo_annotations.rs`
 - `import_yolo_annotations.rs`
 

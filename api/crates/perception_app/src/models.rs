@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
 use perception_domain::{
-    AnnotationId, DatasetId, DatasetStatus, DatasetVersionId, ModelId, ModelStatus, NormalizedBbox,
-    SampleId, TrainingHyperparameters, TrainingJobId, TrainingJobStatus, TrainingMetricId,
+    AnnotationId, DatasetId, DatasetStatus, DatasetVersionId, ExportStatus, ModelExportId, ModelId,
+    ModelStatus, NormalizedBbox, SampleId, TrainingHyperparameters, TrainingJobId,
+    TrainingJobStatus, TrainingMetricId,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -122,6 +123,16 @@ pub struct ModelDraft {
     pub artifact_uri: String,
     pub metrics_summary: BTreeMap<String, String>,
     pub status: ModelStatus,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ModelExportDraft {
+    pub id: ModelExportId,
+    pub model_id: ModelId,
+    pub format: String,
+    pub artifact_uri: Option<String>,
+    pub status: ExportStatus,
+    pub error_message: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

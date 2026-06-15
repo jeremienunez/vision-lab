@@ -9,24 +9,25 @@ pub mod use_cases;
 pub use error::UseCaseError;
 pub use models::{
     AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, DetectionDraft,
-    InferenceRequest, InferenceResult, ModelDraft, SampleDraft, TaskType, TrainingJobDraft,
-    TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingMetricDraft, YoloAnnotationExport,
-    YoloAnnotationFile, YoloAnnotationImportFile, YoloAnnotationImportResult,
+    InferenceRequest, InferenceResult, ModelDraft, ModelExportDraft, SampleDraft, TaskType,
+    TrainingJobDraft, TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingMetricDraft,
+    YoloAnnotationExport, YoloAnnotationFile, YoloAnnotationImportFile, YoloAnnotationImportResult,
 };
 pub use ports::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, InferenceEngine,
-    ModelRepository, SampleRepository, SampleStorage, SampleStorageCommand, StoredSample,
-    TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
+    ModelExportRepository, ModelRepository, SampleRepository, SampleStorage, SampleStorageCommand,
+    StoredSample, TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
 };
 pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,
     CreateDatasetVersionCommand, CreateDatasetVersionUseCase, CreateTrainingJobCommand,
-    CreateTrainingJobUseCase, DatasetStatsUseCase, ExportYoloAnnotationsUseCase, GetModelUseCase,
-    ImportYoloAnnotationsCommand, ImportYoloAnnotationsUseCase, ListDatasetsUseCase,
-    ListModelsUseCase, ListSampleAnnotationsUseCase, ListTrainingMetricsUseCase,
-    RecordTrainingMetricCommand, RecordTrainingMetricUseCase, RegisterModelCommand,
-    RegisterModelUseCase, RunInferenceCommand, RunInferenceUseCase, TransitionTrainingJobCommand,
-    TransitionTrainingJobUseCase, UploadSampleCommand, UploadSampleUseCase,
+    CreateTrainingJobUseCase, DatasetStatsUseCase, ExportModelCommand, ExportModelUseCase,
+    ExportYoloAnnotationsUseCase, GetModelUseCase, ImportYoloAnnotationsCommand,
+    ImportYoloAnnotationsUseCase, ListDatasetsUseCase, ListModelExportsUseCase, ListModelsUseCase,
+    ListSampleAnnotationsUseCase, ListTrainingMetricsUseCase, RecordTrainingMetricCommand,
+    RecordTrainingMetricUseCase, RegisterModelCommand, RegisterModelUseCase, RunInferenceCommand,
+    RunInferenceUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
+    UploadSampleCommand, UploadSampleUseCase,
 };
 
 pub const CRATE_NAME: &str = "perception_app";
