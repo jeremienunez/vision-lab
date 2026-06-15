@@ -13,6 +13,7 @@
     "validate:p0-bootstrap": "node scripts/validate-p0-bootstrap.mjs",
     "validate:migrations": "node scripts/validate-database-migrations.mjs",
     "bootstrap:env": "node scripts/bootstrap-local-env.mjs",
+    "cli": "node scripts/perceptionlab-cli.mjs",
     "install:rust": "cargo fetch --manifest-path api/Cargo.toml",
     "install:worker:ml": "cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv sync --extra ml --group dev",
     "install:deps": "npm run bootstrap:env && npm run install:rust && npm run install:worker:ml",

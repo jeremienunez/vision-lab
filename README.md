@@ -173,6 +173,24 @@ curl -sS -X POST http://127.0.0.1:8080/models/<model_id>/infer \
   -F 'image=@<image.jpg>;type=image/jpeg'
 ```
 
+## Simple CLI
+
+The local CLI wraps the most common smoke-check calls:
+
+```bash
+npm run cli -- health
+npm run cli -- datasets
+npm run cli -- models
+npm run cli -- create-dataset --name desk-objects-v1 --classes cup,book --description "Desk demo"
+npm run cli -- openapi
+```
+
+Use `--base-url` before the command to target another API:
+
+```bash
+npm run cli -- --base-url http://127.0.0.1:8080 health
+```
+
 ## Product References
 
 - [Product spec](doc/specs/product-spec.md)
