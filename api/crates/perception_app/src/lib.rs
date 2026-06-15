@@ -8,13 +8,14 @@ pub mod use_cases;
 
 pub use error::UseCaseError;
 pub use models::{
-    AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, ModelDraft, SampleDraft,
-    TaskType, TrainingJobDraft, TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingMetricDraft,
+    AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, DetectionDraft,
+    InferenceRequest, InferenceResult, ModelDraft, SampleDraft, TaskType, TrainingJobDraft,
+    TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingMetricDraft,
 };
 pub use ports::{
-    AnnotationRepository, DatasetRepository, DatasetVersionRepository, ModelRepository,
-    SampleRepository, SampleStorage, SampleStorageCommand, StoredSample, TrainingJobQueue,
-    TrainingJobRepository, TrainingMetricRepository,
+    AnnotationRepository, DatasetRepository, DatasetVersionRepository, InferenceEngine,
+    ModelRepository, SampleRepository, SampleStorage, SampleStorageCommand, StoredSample,
+    TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
 };
 pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,
@@ -22,8 +23,8 @@ pub use use_cases::{
     CreateTrainingJobUseCase, DatasetStatsUseCase, GetModelUseCase, ListDatasetsUseCase,
     ListModelsUseCase, ListSampleAnnotationsUseCase, ListTrainingMetricsUseCase,
     RecordTrainingMetricCommand, RecordTrainingMetricUseCase, RegisterModelCommand,
-    RegisterModelUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
-    UploadSampleCommand, UploadSampleUseCase,
+    RegisterModelUseCase, RunInferenceCommand, RunInferenceUseCase, TransitionTrainingJobCommand,
+    TransitionTrainingJobUseCase, UploadSampleCommand, UploadSampleUseCase,
 };
 
 pub const CRATE_NAME: &str = "perception_app";

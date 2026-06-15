@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 //! PostgreSQL, storage, queue, and config adapters for PerceptionLab.
 
+mod fake_inference_engine;
 mod local_sample_storage;
 mod transient_annotation_repository;
 mod transient_dataset_repository;
@@ -11,6 +12,7 @@ mod transient_training_job_queue;
 mod transient_training_job_repository;
 mod transient_training_metric_repository;
 
+pub use fake_inference_engine::FakeInferenceEngine;
 pub use local_sample_storage::LocalSampleStorage;
 pub use transient_annotation_repository::TransientAnnotationRepository;
 pub use transient_dataset_repository::TransientDatasetRepository;

@@ -10,6 +10,7 @@ pub mod list_sample_annotations;
 pub mod list_training_metrics;
 pub mod record_training_metric;
 pub mod register_model;
+pub mod run_inference;
 pub mod transition_training_job;
 pub mod upload_sample;
 
@@ -25,5 +26,6 @@ pub use list_sample_annotations::ListSampleAnnotationsUseCase;
 pub use list_training_metrics::ListTrainingMetricsUseCase;
 pub use record_training_metric::{RecordTrainingMetricCommand, RecordTrainingMetricUseCase};
 pub use register_model::{RegisterModelCommand, RegisterModelUseCase};
+pub use run_inference::{RunInferenceCommand, RunInferenceUseCase};
 pub use transition_training_job::{TransitionTrainingJobCommand, TransitionTrainingJobUseCase};
 pub use upload_sample::{UploadSampleCommand, UploadSampleUseCase};
