@@ -22,7 +22,7 @@
 - [x] Create Cargo workspace under `api/`.
 - [x] Create `perception_domain` crate with newtype ids, value objects, and state machines.
 - [x] Create `perception_app` crate with ports and first use case.
-- [ ] Create initial PostgreSQL schema.
+- [x] Create initial PostgreSQL schema.
 - [ ] Add `POST /datasets` and `GET /datasets`.
 - [ ] Add `POST /datasets/{dataset_id}/samples`.
 - [ ] Connect abstracted file/object storage.
@@ -30,7 +30,7 @@
 - [ ] Add `GET /datasets/{dataset_id}/stats`.
 - [ ] Add `POST /datasets/{dataset_id}/versions`.
 - [ ] Add `POST /training-jobs`.
-- [ ] Add `training_jobs` table and job lifecycle.
+- [ ] Add training job lifecycle persistence and transitions.
 - [ ] Add queue-backed training orchestration.
 - [ ] Add minimal Python/PyTorch worker.
 - [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
