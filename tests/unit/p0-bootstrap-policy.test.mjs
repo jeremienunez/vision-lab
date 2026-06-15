@@ -77,6 +77,15 @@ describe('P0 bootstrap policy', () => {
     assert.match(compose, /PERCEPTIONLAB_API_ADDR=0\.0\.0\.0:8080/);
   });
 
+  it('documents the product-grade P0 quickstart commands', () => {
+    const readme = readFileSync('README.md', 'utf8');
+
+    assert.match(readme, /npm run quality/);
+    assert.match(readme, /docker compose up api/);
+    assert.match(readme, /POST http:\/\/127\.0\.0\.1:8080\/training-jobs/);
+    assert.match(readme, /POST http:\/\/127\.0\.0\.1:8080\/models\/<model_id>\/infer/);
+  });
+
   it('keeps internal agent planning docs out of git', () => {
     const gitignore = readFileSync('.gitignore', 'utf8');
 

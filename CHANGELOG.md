@@ -43,6 +43,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Inference application use case, strategy port, and deterministic fake inference engine for local MVP execution.
 - Multipart model inference HTTP route with confidence filtering and unsupported media type handling.
 - Docker Compose local stack for the Rust API and PostgreSQL schema bootstrap.
+- Product-grade README quickstart covering installation, quality gates, direct API run, Docker Compose, and P0 curl examples.
 
 ### Changed
 

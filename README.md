@@ -27,18 +27,19 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 - Queue-backed asynchronous training so HTTP requests never block on ML work.
 - Docker Compose local stack for the final MVP demo.
 
-## Features Planned For MVP
+## P0 MVP Surface
 
 - Dataset creation and listing.
-- Image upload with validation and metadata extraction.
+- Image upload with validation and metadata storage.
 - Bounding-box annotation management.
 - Immutable dataset versions.
-- Async PyTorch training jobs.
-- Training metrics tracking.
-- Model registry.
-- Model inference endpoint.
-- ONNX export.
-- Overlay generation for visual detections.
+- Async training job creation and queueing.
+- Training job lifecycle transitions.
+- Training metrics persistence and `GET /training-jobs/{job_id}/metrics`.
+- Model registry use cases and `GET /models` / `GET /models/{model_id}`.
+- Multipart model inference contract at `POST /models/{model_id}/infer`.
+- Python worker contracts, fake trainer, and tiny deterministic PyTorch trainer.
+- Docker Compose stack for the Rust API and PostgreSQL schema bootstrap.
 
 ## Project Layout
 
@@ -53,20 +54,20 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 - `tests/` - policy, unit, integration, and contract tests.
 - `.githooks/` - versioned Git hooks.
 
-## Quickstart For Current Foundation
+## Quickstart
+
+Prerequisites:
+
+- Node.js 22 or newer.
+- Rust toolchain compatible with `api/Cargo.toml`.
+- Python 3.12 and `uv`.
+- Docker with Compose v2 for the containerized stack.
+
+Install dependencies and local config:
 
 ```bash
 npm install
 npm run install:deps
-npm test
-npm run validate:docs
-npm run validate:bdd
-npm run validate:conventions
-npm run validate:p0-bootstrap
-npm run check:rust
-npm run check:worker
-npm run lint:architecture
-npm run quality
 npm run prepare:hooks
 ```
 
@@ -75,18 +76,101 @@ npm run prepare:hooks
 `npm run install:deps` generates ignored local path config in `.env.local`, fetches Rust
 workspace dependencies, and syncs the Python worker with CPU PyTorch and Ultralytics.
 
-Current generated local paths on this Ubuntu filesystem:
+Run the full local quality gate:
+
+```bash
+npm run quality
+cargo test --manifest-path api/Cargo.toml --workspace
+cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv run ruff check .
+cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv run mypy perception_worker tests
+```
+
+Current generated local paths on this Ubuntu filesystem are:
 
 - `PERCEPTIONLAB_PROJECT_ROOT=/home/jerem/vision-lab`
 - `PERCEPTIONLAB_DATA_ROOT=/home/jerem/vision-lab/datasets`
 - `PERCEPTIONLAB_STORAGE_ROOT=/home/jerem/vision-lab/.perceptionlab/storage`
 - `PERCEPTIONLAB_ARTIFACT_ROOT=/home/jerem/vision-lab/.perceptionlab/artifacts`
 
-Run the current Rust API healthcheck locally:
+Run the Rust API directly:
 
 ```bash
 PERCEPTIONLAB_API_ADDR=127.0.0.1:8080 cargo run --manifest-path api/Cargo.toml -p perception_api
+```
+
+In another terminal:
+
+```bash
 curl http://127.0.0.1:8080/health
+```
+
+Run the containerized local stack:
+
+```bash
+docker compose up api
+curl http://127.0.0.1:8080/health
+docker compose down
+```
+
+The Compose stack starts PostgreSQL and loads `api/migrations/0001_initial_schema.sql` on first boot. The current P0 HTTP process uses local transient adapters for fast demo feedback while the schema and repository ports define the database boundary.
+
+## API Smoke Flow
+
+Create a dataset:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/datasets \
+  -H 'content-type: application/json' \
+  -d '{
+    "name": "desk-objects-v1",
+    "description": "Desk object detection demo",
+    "task_type": "object_detection",
+    "classes": ["cup", "book"]
+  }'
+```
+
+Upload a sample after replacing `<dataset_id>`:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/datasets/<dataset_id>/samples \
+  -F 'width=640' \
+  -F 'height=480' \
+  -F 'file=@<image.jpg>;type=image/jpeg'
+```
+
+Create a dataset version after at least one sample and annotation exist:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/datasets/<dataset_id>/versions \
+  -H 'content-type: application/json' \
+  -d '{"version_name": "v1", "created_by": "local-user"}'
+```
+
+Create a queued training job after replacing `<dataset_version_id>`:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/training-jobs \
+  -H 'content-type: application/json' \
+  -d '{
+    "dataset_version_id": "<dataset_version_id>",
+    "model_family": "tiny_torch",
+    "base_model": null,
+    "hyperparameters": {
+      "epochs": 2,
+      "batch_size": 1,
+      "image_size": 64,
+      "learning_rate": 0.01
+    }
+  }'
+```
+
+Model registry and inference routes are wired for registered models:
+
+```bash
+curl -sS http://127.0.0.1:8080/models
+curl -sS -X POST http://127.0.0.1:8080/models/<model_id>/infer \
+  -F 'confidence_threshold=0.25' \
+  -F 'image=@<image.jpg>;type=image/jpeg'
 ```
 
 ## Product References
