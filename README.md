@@ -57,16 +57,30 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 
 ```bash
 npm install
+npm run install:deps
 npm test
 npm run validate:docs
 npm run validate:bdd
 npm run validate:conventions
+npm run validate:p0-bootstrap
+npm run check:rust
+npm run check:worker
 npm run lint:architecture
 npm run quality
 npm run prepare:hooks
 ```
 
 `npm run prepare:hooks` configures Git to use `.githooks/`.
+
+`npm run install:deps` generates ignored local path config in `.env.local`, fetches Rust
+workspace dependencies, and syncs the Python worker with CPU PyTorch and Ultralytics.
+
+Current generated local paths on this Ubuntu filesystem:
+
+- `PERCEPTIONLAB_PROJECT_ROOT=/home/jerem/vision-lab`
+- `PERCEPTIONLAB_DATA_ROOT=/home/jerem/vision-lab/datasets`
+- `PERCEPTIONLAB_STORAGE_ROOT=/home/jerem/vision-lab/.perceptionlab/storage`
+- `PERCEPTIONLAB_ARTIFACT_ROOT=/home/jerem/vision-lab/.perceptionlab/artifacts`
 
 ## Product References
 

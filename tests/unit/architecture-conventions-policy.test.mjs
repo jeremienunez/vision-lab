@@ -48,4 +48,16 @@ describe('architecture conventions policy', () => {
     assert.equal(result.valid, false);
     assert.match(result.errors.join('\n'), /perception_domain/);
   });
+
+  it('ignores generated dependency and local cache folders', () => {
+    const result = validateArchitectureConventions([
+      ...requiredArchitecturePaths,
+      '.perceptionlab/cache/uv/archive-v0/example/ultralytics/utils.py',
+      'worker/.venv/lib/python3.12/site-packages/torch/utils/data.py',
+      'api/target/debug/build/example/utils.rs',
+    ]);
+
+    assert.equal(result.valid, true);
+    assert.deepEqual(result.errors, []);
+  });
 });

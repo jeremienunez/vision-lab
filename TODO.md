@@ -17,8 +17,9 @@
 
 ## P0 - MVP Obligatoire
 
+- [x] Bootstrap P0 dependency installation and absolute local paths.
 - [ ] Create Rust API with healthcheck.
-- [ ] Create Cargo workspace under `api/`.
+- [x] Create Cargo workspace under `api/`.
 - [ ] Create `perception_domain` crate with newtype ids, value objects, and state machines.
 - [ ] Create `perception_app` crate with ports and first use case.
 - [ ] Create initial PostgreSQL schema.
@@ -32,7 +33,8 @@
 - [ ] Add `training_jobs` table and job lifecycle.
 - [ ] Add queue-backed training orchestration.
 - [ ] Add minimal Python/PyTorch worker.
-- [ ] Create `worker/perception_worker` package with strict contracts and strategy ports.
+- [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
+- [ ] Add strict worker contracts and strategy ports.
 - [ ] Add training loop or wrapper model.
 - [ ] Persist training metrics.
 - [ ] Add minimal model registry.

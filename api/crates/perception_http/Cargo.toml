@@ -1,0 +1,15 @@
+[package]
+name = "perception_http"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+axum.workspace = true
+perception_app = { path = "../perception_app" }
+perception_domain = { path = "../perception_domain" }
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+utoipa.workspace = true

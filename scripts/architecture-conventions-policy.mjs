@@ -34,6 +34,11 @@ export const requiredArchitecturePaths = [
 
 const forbiddenLegacyPaths = ['apps/api-rust', 'workers/pytorch-trainer', 'src'];
 const forbiddenBaseNames = new Set(['utils', 'helpers', 'misc', 'common', 'manager', 'service']);
+const ignoredGeneratedPathPrefixes = [
+  '.perceptionlab/',
+  'api/target/',
+  'worker/.venv/',
+];
 
 function normalizePath(path) {
   return String(path ?? '').replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
@@ -53,7 +58,12 @@ function pathExists(pathSet, requiredPath) {
 }
 
 export function validateArchitectureConventions(paths) {
-  const normalizedPaths = paths.map(normalizePath).filter(Boolean);
+  const normalizedPaths = paths
+    .map(normalizePath)
+    .filter(Boolean)
+    .filter(
+      (path) => !ignoredGeneratedPathPrefixes.some((prefix) => path.startsWith(prefix)),
+    );
   const pathSet = new Set(normalizedPaths);
   const errors = [];
 

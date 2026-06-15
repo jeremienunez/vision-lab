@@ -1,0 +1,11 @@
+[package]
+name = "perception_app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+perception_domain = { path = "../perception_domain" }
+thiserror.workspace = true
