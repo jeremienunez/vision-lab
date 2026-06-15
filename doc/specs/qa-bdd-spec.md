@@ -37,7 +37,8 @@ Then one observable outcome is true
 - Integration tests cover API, PostgreSQL, storage, and queue behavior.
 - Contract tests cover Rust API to Python worker payloads.
 - BDD feature files live in `qa/features/` and use English Gherkin for a GitHub technical audience.
-- `npm run validate:bdd` statically validates BDD feature structure until the final runner is selected.
+- `npm run validate:bdd` statically validates BDD feature structure.
+- `@cucumber/cucumber` is the final executable BDD runner, with steps in `qa/steps/**/*.mjs`, support in `qa/support/**/*.mjs`, and reports in `qa/reports/cucumber-report.json`.
 - Sprint documents include goal, priority, dependencies, scope, BDD criteria, and definition of done.
 - Architecture checks run locally and later in CI.
 

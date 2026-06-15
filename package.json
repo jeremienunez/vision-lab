@@ -10,22 +10,25 @@
     "validate:openapi": "node scripts/validate-openapi-contract.mjs",
     "validate:seed": "node scripts/validate-seed-dataset.mjs",
     "validate:bdd": "node scripts/validate-bdd-features.mjs",
+    "validate:bdd-runner": "node scripts/validate-bdd-runner-decision.mjs",
     "validate:conventions": "node scripts/validate-architecture-conventions.mjs",
     "validate:p0-bootstrap": "node scripts/validate-p0-bootstrap.mjs",
     "validate:migrations": "node scripts/validate-database-migrations.mjs",
     "bootstrap:env": "node scripts/bootstrap-local-env.mjs",
     "cli": "node scripts/perceptionlab-cli.mjs",
     "benchmark:inference": "node scripts/benchmark-inference.mjs",
+    "bdd:dry-run": "cucumber-js \"qa/features/**/*.feature\" --import \"qa/steps/**/*.mjs\" --import \"qa/support/**/*.mjs\" --format json:qa/reports/cucumber-report.json --dry-run",
     "install:rust": "cargo fetch --manifest-path api/Cargo.toml",
     "install:worker:ml": "cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv sync --extra ml --group dev",
     "install:deps": "npm run bootstrap:env && npm run install:rust && npm run install:worker:ml",
     "check:rust": "cargo check --manifest-path api/Cargo.toml --workspace",
     "check:worker": "cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv run pytest",
     "lint:architecture": "depcruise scripts tests --config .dependency-cruiser.cjs",
-    "quality": "npm test && npm run validate:docs && npm run validate:openapi && npm run validate:seed && npm run validate:bdd && npm run validate:conventions && npm run validate:p0-bootstrap && npm run validate:migrations && npm run check:rust && npm run check:worker && npm run lint:architecture",
+    "quality": "npm test && npm run validate:docs && npm run validate:openapi && npm run validate:seed && npm run validate:bdd && npm run validate:bdd-runner && npm run validate:conventions && npm run validate:p0-bootstrap && npm run validate:migrations && npm run check:rust && npm run check:worker && npm run lint:architecture",
     "prepare:hooks": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^13.0.0",
     "dependency-cruiser": "^17.4.3"
   }
 }

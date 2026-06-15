@@ -2,10 +2,13 @@
 
 Shared test support lives here:
 
-- `api_client.py`
-- `db.py`
-- `storage.py`
-- `waiters.py`
-- `assertions.py`
+- `world.mjs`
+- `api-client.mjs`
+- `database.mjs`
+- `storage.mjs`
+- `waiters.mjs`
+- `assertions.mjs`
 
 Avoid vague helper modules.
+
+The final runner is `@cucumber/cucumber`; support files are loaded with `qa/support/**/*.mjs`.

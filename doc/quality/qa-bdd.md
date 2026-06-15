@@ -30,7 +30,10 @@ I can ingest visual data, annotate it, version it, train a model, register it, r
 - Feature files are written in English.
 - Feature files live in `qa/features/`.
 - Fixtures live in `qa/fixtures/`.
-- Reports are expected in `qa/reports/` once the final BDD runner is selected.
+- Runner is `@cucumber/cucumber`.
+- Step definitions live in `qa/steps/**/*.mjs`.
+- Support files live in `qa/support/**/*.mjs`.
+- Reports are written to `qa/reports/cucumber-report.json`.
 - Tags use priority and domain labels: `@p0`, `@p1`, `@p2`, `@api`, `@database`, `@storage`, `@worker`, `@ml`, `@inference`, `@export`, `@nonfunctional`, `@security`, `@e2e`.
 
 ## Criticality Levels
@@ -42,13 +45,14 @@ I can ingest visual data, annotate it, version it, train a model, register it, r
 
 MVP validation requires all P0 scenarios to pass, at least 80% of P1 scenarios to pass, and no critical defect on ingestion, versioning, training jobs, or model registry.
 
-## Current Runner Status
+## Runner
 
-The final BDD runner is intentionally left for the technical QA pass. Until then:
+The final BDD runner is Cucumber-JS via `@cucumber/cucumber`.
 
 ```bash
 npm run validate:bdd
+npm run bdd:dry-run
 ./scripts/run_bdd.sh
 ```
 
-These commands perform static validation of feature-file structure and keep the acceptance suite visible in CI-ready form.
+`npm run validate:bdd` performs static validation of feature-file structure. `npm run bdd:dry-run` validates runner wiring until executable step definitions are implemented.

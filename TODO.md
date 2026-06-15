@@ -56,7 +56,7 @@
 - [x] Add simple CLI.
 - [x] Add seed demo dataset.
 - [x] Benchmark inference latency.
-- [ ] Choose final BDD runner and step definition stack during the technical QA pass.
+- [x] Choose final BDD runner and step definition stack during the technical QA pass.
 
 ## P2 - Avance
 

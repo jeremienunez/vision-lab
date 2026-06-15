@@ -11,6 +11,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+qa/reports/*.json
+!qa/reports/.gitkeep
 .env
 .env.*
 !.env.example
