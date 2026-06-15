@@ -2,11 +2,36 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "InferenceResponse",
   "type": "object",
-  "required": ["model_id", "latency_ms", "detections"],
+  "required": ["run_id", "model_id", "latency_ms", "detections"],
   "additionalProperties": false,
   "properties": {
+    "run_id": { "type": "string" },
     "model_id": { "type": "string" },
-    "latency_ms": { "type": "number" },
-    "detections": { "type": "array" }
+    "latency_ms": { "type": "integer", "minimum": 0 },
+    "detections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["class_id", "class_name", "confidence", "bbox", "distance_m"],
+        "additionalProperties": false,
+        "properties": {
+          "class_id": { "type": "integer", "minimum": 0 },
+          "class_name": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "bbox": {
+            "type": "object",
+            "required": ["x", "y", "width", "height"],
+            "additionalProperties": false,
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "width": { "type": "number" },
+              "height": { "type": "number" }
+            }
+          },
+          "distance_m": { "type": ["number", "null"] }
+        }
+      }
+    }
   }
 }

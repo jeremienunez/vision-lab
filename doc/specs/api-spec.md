@@ -1,5 +1,8 @@
 # API Spec
 
+The published executable OpenAPI contract lives in `contracts/openapi.json`.
+Validate it with `npm run validate:openapi` or export it with `sh scripts/export_openapi.sh`.
+
 ## MVP Endpoints
 
 | Method | Path | Purpose |

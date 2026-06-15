@@ -2,7 +2,1050 @@
   "openapi": "3.1.0",
   "info": {
     "title": "PerceptionLab API",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "description": "HTTP contract for PerceptionLab dataset, annotation, training, model, inference, export, and overlay workflows."
   },
-  "paths": {}
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080",
+      "description": "Local development API"
+    }
+  ],
+  "tags": [
+    { "name": "Health" },
+    { "name": "Datasets" },
+    { "name": "Samples" },
+    { "name": "Annotations" },
+    { "name": "Dataset Versions" },
+    { "name": "Training Jobs" },
+    { "name": "Models" },
+    { "name": "Inference" },
+    { "name": "Exports" },
+    { "name": "Overlays" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "tags": ["Health"],
+        "summary": "Check API readiness.",
+        "responses": {
+          "200": {
+            "description": "API health status.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/datasets": {
+      "post": {
+        "operationId": "createDataset",
+        "tags": ["Datasets"],
+        "summary": "Create a dataset.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDatasetRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/DatasetCreated" },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      },
+      "get": {
+        "operationId": "listDatasets",
+        "tags": ["Datasets"],
+        "summary": "List datasets.",
+        "responses": {
+          "200": {
+            "description": "Dataset list.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListDatasetsResponse" }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/datasets/{dataset_id}/stats": {
+      "get": {
+        "operationId": "getDatasetStats",
+        "tags": ["Datasets"],
+        "summary": "Read dataset sample and annotation stats.",
+        "parameters": [{ "$ref": "#/components/parameters/DatasetId" }],
+        "responses": {
+          "200": {
+            "description": "Dataset statistics.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DatasetStatsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/datasets/{dataset_id}/samples": {
+      "post": {
+        "operationId": "uploadSample",
+        "tags": ["Samples"],
+        "summary": "Upload an image sample.",
+        "parameters": [{ "$ref": "#/components/parameters/DatasetId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "width", "height"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "width": { "type": "integer", "minimum": 1 },
+                  "height": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Uploaded sample.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SampleResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/samples/{sample_id}/annotations": {
+      "post": {
+        "operationId": "addAnnotation",
+        "tags": ["Annotations"],
+        "summary": "Add a bounding-box annotation.",
+        "parameters": [{ "$ref": "#/components/parameters/SampleId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddAnnotationRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created annotation.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnnotationResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      },
+      "get": {
+        "operationId": "listSampleAnnotations",
+        "tags": ["Annotations"],
+        "summary": "List sample annotations.",
+        "parameters": [{ "$ref": "#/components/parameters/SampleId" }],
+        "responses": {
+          "200": {
+            "description": "Sample annotations.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListAnnotationsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/datasets/{dataset_id}/versions": {
+      "post": {
+        "operationId": "createDatasetVersion",
+        "tags": ["Dataset Versions"],
+        "summary": "Create an immutable dataset version.",
+        "parameters": [{ "$ref": "#/components/parameters/DatasetId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDatasetVersionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created dataset version.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DatasetVersionResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/training-jobs": {
+      "post": {
+        "operationId": "createTrainingJob",
+        "tags": ["Training Jobs"],
+        "summary": "Create an async training job.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTrainingJobRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created training job.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TrainingJobResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/training-jobs/{training_job_id}/metrics": {
+      "get": {
+        "operationId": "listTrainingMetrics",
+        "tags": ["Training Jobs"],
+        "summary": "Read training metrics.",
+        "parameters": [{ "$ref": "#/components/parameters/TrainingJobId" }],
+        "responses": {
+          "200": {
+            "description": "Training metrics.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListTrainingMetricsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/training-jobs/{training_job_id}/metrics/by-class": {
+      "get": {
+        "operationId": "listTrainingClassMetrics",
+        "tags": ["Training Jobs"],
+        "summary": "Read class-level training metrics.",
+        "parameters": [{ "$ref": "#/components/parameters/TrainingJobId" }],
+        "responses": {
+          "200": {
+            "description": "Class-level training metrics.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListTrainingClassMetricsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/models": {
+      "get": {
+        "operationId": "listModels",
+        "tags": ["Models"],
+        "summary": "List registered models.",
+        "responses": {
+          "200": {
+            "description": "Model list.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListModelsResponse" }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/models/{model_id}": {
+      "get": {
+        "operationId": "getModel",
+        "tags": ["Models"],
+        "summary": "Read model detail.",
+        "parameters": [{ "$ref": "#/components/parameters/ModelId" }],
+        "responses": {
+          "200": {
+            "description": "Model detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ModelResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/models/{model_id}/infer": {
+      "post": {
+        "operationId": "runInference",
+        "tags": ["Inference"],
+        "summary": "Run inference on an image.",
+        "parameters": [{ "$ref": "#/components/parameters/ModelId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": { "type": "string", "format": "binary" },
+                  "confidence_threshold": {
+                    "type": "number",
+                    "format": "float",
+                    "default": 0.25
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inference result.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InferenceResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaTypeError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/models/{model_id}/exports": {
+      "post": {
+        "operationId": "exportModel",
+        "tags": ["Exports"],
+        "summary": "Create a model export.",
+        "parameters": [{ "$ref": "#/components/parameters/ModelId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateModelExportRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created model export.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ModelExportResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      },
+      "get": {
+        "operationId": "listModelExports",
+        "tags": ["Exports"],
+        "summary": "List model exports.",
+        "parameters": [{ "$ref": "#/components/parameters/ModelId" }],
+        "responses": {
+          "200": {
+            "description": "Model exports.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListModelExportsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/datasets/{dataset_id}/import/yolo": {
+      "post": {
+        "operationId": "importYoloAnnotations",
+        "tags": ["Annotations"],
+        "summary": "Import YOLO annotations.",
+        "parameters": [{ "$ref": "#/components/parameters/DatasetId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/YoloAnnotationImportRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "YOLO import result.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/YoloAnnotationImportResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/datasets/{dataset_id}/export/yolo": {
+      "get": {
+        "operationId": "exportYoloAnnotations",
+        "tags": ["Annotations"],
+        "summary": "Export annotations in YOLO format.",
+        "parameters": [{ "$ref": "#/components/parameters/DatasetId" }],
+        "responses": {
+          "200": {
+            "description": "YOLO annotation export.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/YoloAnnotationExportResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/inference-runs/{run_id}/overlay": {
+      "post": {
+        "operationId": "generateOverlay",
+        "tags": ["Overlays"],
+        "summary": "Generate an SVG overlay from stored inference detections.",
+        "parameters": [{ "$ref": "#/components/parameters/InferenceRunId" }],
+        "responses": {
+          "201": {
+            "description": "Generated overlay artifact.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OverlayResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "DatasetId": {
+        "name": "dataset_id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "SampleId": {
+        "name": "sample_id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "TrainingJobId": {
+        "name": "training_job_id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "ModelId": {
+        "name": "model_id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "InferenceRunId": {
+        "name": "run_id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "DatasetCreated": {
+        "description": "Created dataset.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/DatasetResponse" }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validation error.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Resource not found.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "UnsupportedMediaTypeError": {
+        "description": "Unsupported media type.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "RepositoryError": {
+        "description": "Repository or adapter failure.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "dependencies"],
+        "additionalProperties": false,
+        "properties": {
+          "status": { "type": "string", "example": "healthy" },
+          "dependencies": { "$ref": "#/components/schemas/HealthDependencies" }
+        }
+      },
+      "HealthDependencies": {
+        "type": "object",
+        "required": ["database", "storage", "queue"],
+        "additionalProperties": false,
+        "properties": {
+          "database": { "type": "string" },
+          "storage": { "type": "string" },
+          "queue": { "type": "string" }
+        }
+      },
+      "CreateDatasetRequest": {
+        "type": "object",
+        "required": ["name", "task_type", "classes"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "task_type": { "type": "string", "enum": ["object_detection"] },
+          "classes": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "DatasetResponse": {
+        "type": "object",
+        "required": ["id", "name", "description", "task_type", "classes", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "task_type": { "type": "string" },
+          "classes": { "type": "array", "items": { "type": "string" } },
+          "status": { "type": "string" }
+        }
+      },
+      "ListDatasetsResponse": {
+        "type": "object",
+        "required": ["datasets"],
+        "additionalProperties": false,
+        "properties": {
+          "datasets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DatasetResponse" }
+          }
+        }
+      },
+      "SampleResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "dataset_id",
+          "storage_uri",
+          "filename",
+          "mime_type",
+          "width",
+          "height",
+          "size_bytes",
+          "checksum",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "dataset_id": { "type": "string" },
+          "storage_uri": { "type": "string" },
+          "filename": { "type": "string" },
+          "mime_type": { "type": "string" },
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "checksum": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      },
+      "AddAnnotationRequest": {
+        "type": "object",
+        "required": ["class_name", "bbox"],
+        "additionalProperties": false,
+        "properties": {
+          "class_name": { "type": "string" },
+          "bbox": { "$ref": "#/components/schemas/BboxRequest" },
+          "confidence": { "type": ["number", "null"], "format": "float" }
+        }
+      },
+      "BboxRequest": {
+        "type": "object",
+        "required": ["x", "y", "width", "height"],
+        "additionalProperties": false,
+        "properties": {
+          "x": { "type": "number", "format": "float", "minimum": 0, "maximum": 1 },
+          "y": { "type": "number", "format": "float", "minimum": 0, "maximum": 1 },
+          "width": { "type": "number", "format": "float", "minimum": 0, "maximum": 1 },
+          "height": { "type": "number", "format": "float", "minimum": 0, "maximum": 1 }
+        }
+      },
+      "BboxResponse": {
+        "type": "object",
+        "required": ["x", "y", "width", "height"],
+        "additionalProperties": false,
+        "properties": {
+          "x": { "type": "number", "format": "float" },
+          "y": { "type": "number", "format": "float" },
+          "width": { "type": "number", "format": "float" },
+          "height": { "type": "number", "format": "float" }
+        }
+      },
+      "AnnotationResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "sample_id",
+          "dataset_id",
+          "class_name",
+          "class_id",
+          "bbox",
+          "format",
+          "confidence",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "sample_id": { "type": "string" },
+          "dataset_id": { "type": "string" },
+          "class_name": { "type": "string" },
+          "class_id": { "type": "integer", "minimum": 0 },
+          "bbox": { "$ref": "#/components/schemas/BboxResponse" },
+          "format": { "type": "string" },
+          "confidence": { "type": ["number", "null"], "format": "float" },
+          "source": { "type": "string" }
+        }
+      },
+      "ListAnnotationsResponse": {
+        "type": "object",
+        "required": ["annotations"],
+        "additionalProperties": false,
+        "properties": {
+          "annotations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AnnotationResponse" }
+          }
+        }
+      },
+      "DatasetStatsResponse": {
+        "type": "object",
+        "required": ["dataset_id", "sample_count", "annotation_count", "annotations_by_class"],
+        "additionalProperties": false,
+        "properties": {
+          "dataset_id": { "type": "string" },
+          "sample_count": { "type": "integer", "minimum": 0 },
+          "annotation_count": { "type": "integer", "minimum": 0 },
+          "annotations_by_class": {
+            "type": "object",
+            "additionalProperties": { "type": "integer", "minimum": 0 }
+          }
+        }
+      },
+      "CreateDatasetVersionRequest": {
+        "type": "object",
+        "required": ["version_name", "created_by"],
+        "additionalProperties": false,
+        "properties": {
+          "version_name": { "type": "string" },
+          "created_by": { "type": "string" }
+        }
+      },
+      "DatasetVersionResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "dataset_id",
+          "version_name",
+          "sample_count",
+          "annotation_count",
+          "classes_snapshot",
+          "created_by"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "dataset_id": { "type": "string" },
+          "version_name": { "type": "string" },
+          "sample_count": { "type": "integer", "minimum": 0 },
+          "annotation_count": { "type": "integer", "minimum": 0 },
+          "classes_snapshot": { "type": "array", "items": { "type": "string" } },
+          "created_by": { "type": "string" }
+        }
+      },
+      "CreateTrainingJobRequest": {
+        "type": "object",
+        "required": ["dataset_version_id", "model_family", "hyperparameters"],
+        "additionalProperties": false,
+        "properties": {
+          "dataset_version_id": { "type": "string" },
+          "model_family": { "type": "string" },
+          "base_model": { "type": ["string", "null"] },
+          "hyperparameters": { "$ref": "#/components/schemas/TrainingHyperparametersRequest" }
+        }
+      },
+      "TrainingHyperparametersRequest": {
+        "type": "object",
+        "required": ["epochs", "batch_size", "image_size", "learning_rate"],
+        "additionalProperties": false,
+        "properties": {
+          "epochs": { "type": "integer", "minimum": 1 },
+          "batch_size": { "type": "integer", "minimum": 1 },
+          "image_size": { "type": "integer", "minimum": 1 },
+          "learning_rate": { "type": "number", "format": "float", "exclusiveMinimum": 0 }
+        }
+      },
+      "TrainingJobResponse": {
+        "type": "object",
+        "required": ["id", "dataset_version_id", "model_family", "base_model", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "dataset_version_id": { "type": "string" },
+          "model_family": { "type": "string" },
+          "base_model": { "type": ["string", "null"] },
+          "status": { "type": "string" }
+        }
+      },
+      "TrainingMetricResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "training_job_id",
+          "split_name",
+          "metric_name",
+          "metric_value",
+          "step",
+          "epoch",
+          "metadata"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "training_job_id": { "type": "string" },
+          "split_name": { "type": "string" },
+          "metric_name": { "type": "string" },
+          "metric_value": { "type": "number" },
+          "step": { "type": ["integer", "null"], "minimum": 0 },
+          "epoch": { "type": ["integer", "null"], "minimum": 1 },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "ListTrainingMetricsResponse": {
+        "type": "object",
+        "required": ["metrics"],
+        "additionalProperties": false,
+        "properties": {
+          "metrics": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TrainingMetricResponse" }
+          }
+        }
+      },
+      "TrainingClassMetricResponse": {
+        "type": "object",
+        "required": [
+          "training_job_id",
+          "class_name",
+          "split_name",
+          "metric_name",
+          "metric_value",
+          "step",
+          "epoch"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "training_job_id": { "type": "string" },
+          "class_name": { "type": "string" },
+          "split_name": { "type": "string" },
+          "metric_name": { "type": "string" },
+          "metric_value": { "type": "number" },
+          "step": { "type": ["integer", "null"], "minimum": 0 },
+          "epoch": { "type": ["integer", "null"], "minimum": 1 }
+        }
+      },
+      "ListTrainingClassMetricsResponse": {
+        "type": "object",
+        "required": ["class_metrics"],
+        "additionalProperties": false,
+        "properties": {
+          "class_metrics": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TrainingClassMetricResponse" }
+          }
+        }
+      },
+      "ModelResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "training_job_id",
+          "dataset_version_id",
+          "model_family",
+          "artifact_uri",
+          "metrics_summary",
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "training_job_id": { "type": "string" },
+          "dataset_version_id": { "type": "string" },
+          "model_family": { "type": "string" },
+          "artifact_uri": { "type": "string" },
+          "metrics_summary": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "status": { "type": "string" }
+        }
+      },
+      "ListModelsResponse": {
+        "type": "object",
+        "required": ["models"],
+        "additionalProperties": false,
+        "properties": {
+          "models": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ModelResponse" }
+          }
+        }
+      },
+      "CreateModelExportRequest": {
+        "type": "object",
+        "required": ["format"],
+        "additionalProperties": false,
+        "properties": {
+          "format": { "type": "string", "enum": ["onnx"] }
+        }
+      },
+      "ModelExportResponse": {
+        "type": "object",
+        "required": ["id", "model_id", "format", "artifact_uri", "status", "error_message"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "model_id": { "type": "string" },
+          "format": { "type": "string" },
+          "artifact_uri": { "type": ["string", "null"] },
+          "status": { "type": "string" },
+          "error_message": { "type": ["string", "null"] }
+        }
+      },
+      "ListModelExportsResponse": {
+        "type": "object",
+        "required": ["exports"],
+        "additionalProperties": false,
+        "properties": {
+          "exports": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ModelExportResponse" }
+          }
+        }
+      },
+      "InferenceResponse": {
+        "type": "object",
+        "required": ["run_id", "model_id", "latency_ms", "detections"],
+        "additionalProperties": false,
+        "properties": {
+          "run_id": { "type": "string" },
+          "model_id": { "type": "string" },
+          "latency_ms": { "type": "integer", "minimum": 0 },
+          "detections": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DetectionResponse" }
+          }
+        }
+      },
+      "DetectionResponse": {
+        "type": "object",
+        "required": ["class_id", "class_name", "confidence", "bbox", "distance_m"],
+        "additionalProperties": false,
+        "properties": {
+          "class_id": { "type": "integer", "minimum": 0 },
+          "class_name": { "type": "string" },
+          "confidence": { "type": "number", "format": "float", "minimum": 0, "maximum": 1 },
+          "bbox": { "$ref": "#/components/schemas/DetectionBboxResponse" },
+          "distance_m": { "type": ["number", "null"], "format": "float" }
+        }
+      },
+      "DetectionBboxResponse": {
+        "type": "object",
+        "required": ["x", "y", "width", "height"],
+        "additionalProperties": false,
+        "properties": {
+          "x": { "type": "number", "format": "float" },
+          "y": { "type": "number", "format": "float" },
+          "width": { "type": "number", "format": "float" },
+          "height": { "type": "number", "format": "float" }
+        }
+      },
+      "OverlayResponse": {
+        "type": "object",
+        "required": ["inference_run_id", "artifact_uri", "labels"],
+        "additionalProperties": false,
+        "properties": {
+          "inference_run_id": { "type": "string" },
+          "artifact_uri": { "type": "string" },
+          "labels": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "YoloAnnotationImportRequest": {
+        "type": "object",
+        "required": ["files"],
+        "additionalProperties": false,
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/YoloAnnotationImportFileRequest" }
+          }
+        }
+      },
+      "YoloAnnotationImportFileRequest": {
+        "type": "object",
+        "required": ["sample_filename", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "sample_filename": { "type": "string" },
+          "content": { "type": "string" }
+        }
+      },
+      "YoloAnnotationImportResponse": {
+        "type": "object",
+        "required": ["dataset_id", "imported_count"],
+        "additionalProperties": false,
+        "properties": {
+          "dataset_id": { "type": "string" },
+          "imported_count": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "YoloAnnotationExportResponse": {
+        "type": "object",
+        "required": ["dataset_id", "classes_txt", "files"],
+        "additionalProperties": false,
+        "properties": {
+          "dataset_id": { "type": "string" },
+          "classes_txt": { "type": "string" },
+          "files": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/YoloAnnotationFileResponse" }
+          }
+        }
+      },
+      "YoloAnnotationFileResponse": {
+        "type": "object",
+        "required": ["path", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "content": { "type": "string" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "additionalProperties": false,
+        "properties": {
+          "error": { "$ref": "#/components/schemas/ErrorBody" }
+        }
+      },
+      "ErrorBody": {
+        "type": "object",
+        "required": ["code", "message"],
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
 }

@@ -7,6 +7,7 @@
   "scripts": {
     "test": "node --test tests/**/*.test.mjs",
     "validate:docs": "node scripts/validate-sprint-docs.mjs",
+    "validate:openapi": "node scripts/validate-openapi-contract.mjs",
     "validate:bdd": "node scripts/validate-bdd-features.mjs",
     "validate:conventions": "node scripts/validate-architecture-conventions.mjs",
     "validate:p0-bootstrap": "node scripts/validate-p0-bootstrap.mjs",
@@ -18,7 +19,7 @@
     "check:rust": "cargo check --manifest-path api/Cargo.toml --workspace",
     "check:worker": "cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv run pytest",
     "lint:architecture": "depcruise scripts tests --config .dependency-cruiser.cjs",
-    "quality": "npm test && npm run validate:docs && npm run validate:bdd && npm run validate:conventions && npm run validate:p0-bootstrap && npm run validate:migrations && npm run check:rust && npm run check:worker && npm run lint:architecture",
+    "quality": "npm test && npm run validate:docs && npm run validate:openapi && npm run validate:bdd && npm run validate:conventions && npm run validate:p0-bootstrap && npm run validate:migrations && npm run check:rust && npm run check:worker && npm run lint:architecture",
     "prepare:hooks": "git config core.hooksPath .githooks"
   },
   "devDependencies": {

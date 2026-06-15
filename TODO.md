@@ -52,7 +52,7 @@
 - [x] Export model to ONNX.
 - [x] Generate visual overlay image.
 - [x] Track metrics by class.
-- [ ] Publish OpenAPI/Swagger documentation.
+- [x] Publish OpenAPI/Swagger documentation.
 - [ ] Add simple CLI.
 - [ ] Add seed demo dataset.
 - [ ] Benchmark inference latency.
