@@ -1,0 +1,17 @@
+{
+  "name": "perceptionlab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PerceptionLab product foundation, documentation, and local quality gates.",
+  "scripts": {
+    "test": "node --test tests/**/*.test.mjs",
+    "validate:docs": "node scripts/validate-sprint-docs.mjs",
+    "lint:architecture": "depcruise src scripts tests --config .dependency-cruiser.cjs",
+    "quality": "npm test && npm run validate:docs && npm run lint:architecture",
+    "prepare:hooks": "git config core.hooksPath .githooks"
+  },
+  "devDependencies": {
+    "dependency-cruiser": "^17.4.3"
+  }
+}

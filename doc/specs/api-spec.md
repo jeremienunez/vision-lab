@@ -1,0 +1,119 @@
+# API Spec
+
+## MVP Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/health` | Check API readiness. |
+| POST | `/datasets` | Create a dataset. |
+| GET | `/datasets` | List datasets. |
+| GET | `/datasets/{dataset_id}` | Read dataset detail. |
+| GET | `/datasets/{dataset_id}/stats` | Read dataset sample and annotation stats. |
+| POST | `/datasets/{dataset_id}/samples` | Upload an image sample. |
+| GET | `/datasets/{dataset_id}/samples` | List dataset samples. |
+| POST | `/samples/{sample_id}/annotations` | Add a bounding-box annotation. |
+| GET | `/samples/{sample_id}/annotations` | List sample annotations. |
+| POST | `/datasets/{dataset_id}/versions` | Create immutable dataset version. |
+| GET | `/datasets/{dataset_id}/versions` | List dataset versions. |
+| POST | `/training-jobs` | Create async training job. |
+| GET | `/training-jobs` | List training jobs. |
+| GET | `/training-jobs/{job_id}` | Read job status. |
+| GET | `/training-jobs/{job_id}/metrics` | Read job metrics. |
+| GET | `/models` | List registered models. |
+| GET | `/models/{model_id}` | Read model detail. |
+| POST | `/models/{model_id}/infer` | Run inference on an image. |
+| POST | `/models/{model_id}/exports` | Create model export. |
+| GET | `/models/{model_id}/exports` | List model exports. |
+
+## P1 Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/datasets/{dataset_id}/import/yolo` | Import YOLO annotations. |
+| GET | `/datasets/{dataset_id}/export/yolo` | Export annotations in YOLO format. |
+| POST | `/inference-runs/{run_id}/overlay` | Generate visual overlay. |
+| GET | `/artifacts/{artifact_id}/download` | Download stored artifact. |
+
+## Dataset Creation Contract
+
+Request:
+
+```json
+{
+  "name": "desk-objects-v1",
+  "description": "Dataset for detecting desk objects from iPhone captures",
+  "task_type": "object_detection",
+  "classes": ["cup", "book", "phone", "keyboard", "mouse"]
+}
+```
+
+Response:
+
+```json
+{
+  "id": "ds_01hxyz",
+  "name": "desk-objects-v1",
+  "task_type": "object_detection",
+  "classes": ["cup", "book", "phone", "keyboard", "mouse"],
+  "status": "draft",
+  "created_at": "2026-06-15T12:00:00Z"
+}
+```
+
+## Training Job Contract
+
+Request:
+
+```json
+{
+  "dataset_version_id": "dsv_01hxyz",
+  "model_family": "yolo",
+  "base_model": "yolo11n",
+  "hyperparameters": {
+    "epochs": 50,
+    "batch_size": 16,
+    "image_size": 640,
+    "learning_rate": 0.001
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "id": "job_01hxyz",
+  "status": "queued",
+  "dataset_version_id": "dsv_01hxyz",
+  "model_family": "yolo",
+  "created_at": "2026-06-15T12:05:00Z"
+}
+```
+
+## Inference Contract
+
+Request:
+
+```text
+multipart/form-data
+image=@test.jpg
+confidence_threshold=0.25
+```
+
+Response:
+
+```json
+{
+  "model_id": "mdl_01hxyz",
+  "latency_ms": 48,
+  "detections": [
+    {
+      "class_id": 0,
+      "class_name": "cup",
+      "confidence": 0.89,
+      "bbox": { "x": 0.36, "y": 0.48, "width": 0.28, "height": 0.31 },
+      "distance_m": 0.4
+    }
+  ]
+}
+```
