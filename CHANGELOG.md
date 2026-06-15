@@ -22,6 +22,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Pre-P0 coverage audit across Product Owning, QA/BDD, and Design Patterns references.
 - BDD coverage for ML pipeline consistency and basic API security.
 - P0 dependency bootstrap with Cargo workspace, Python worker package, CPU PyTorch/Ultralytics sync, local absolute path generation, and validation commands.
+- Rust API healthcheck route with Axum router, JSON dependency status, and executable local server entrypoint.
 
 ### Changed
 
@@ -31,3 +32,4 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Aligned architecture documentation and implementation roots with the Design Patterns & Conventions reference PDF.
 - Removed the obsolete root `src/` foundation layout so P0 starts from `api/crates/` and `worker/perception_worker/`.
 - Extended local quality gates to validate P0 bootstrap files, Rust workspace checks, and worker package tests.
+- Excluded internal agent planning docs from Git tracking and future adds before publishing.

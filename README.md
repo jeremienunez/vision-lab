@@ -82,6 +82,13 @@ Current generated local paths on this Ubuntu filesystem:
 - `PERCEPTIONLAB_STORAGE_ROOT=/home/jerem/vision-lab/.perceptionlab/storage`
 - `PERCEPTIONLAB_ARTIFACT_ROOT=/home/jerem/vision-lab/.perceptionlab/artifacts`
 
+Run the current Rust API healthcheck locally:
+
+```bash
+PERCEPTIONLAB_API_ADDR=127.0.0.1:8080 cargo run --manifest-path api/Cargo.toml -p perception_api
+curl http://127.0.0.1:8080/health
+```
+
 ## Product References
 
 - [Product spec](doc/specs/product-spec.md)

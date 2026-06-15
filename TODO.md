@@ -18,7 +18,7 @@
 ## P0 - MVP Obligatoire
 
 - [x] Bootstrap P0 dependency installation and absolute local paths.
-- [ ] Create Rust API with healthcheck.
+- [x] Create Rust API with healthcheck.
 - [x] Create Cargo workspace under `api/`.
 - [ ] Create `perception_domain` crate with newtype ids, value objects, and state machines.
 - [ ] Create `perception_app` crate with ports and first use case.

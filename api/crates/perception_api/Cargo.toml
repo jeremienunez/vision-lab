@@ -6,6 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
+axum.workspace = true
 config.workspace = true
 dotenvy.workspace = true
 perception_app = { path = "../perception_app" }

@@ -26,6 +26,7 @@ sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-r
 thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "fs"] }
 tower-http = { version = "0.6", features = ["cors", "trace", "request-id"] }
+tower = "0.5"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }

@@ -28,6 +28,7 @@ describe('P0 bootstrap policy', () => {
     const envContent = buildLocalEnvContent('/home/jerem/vision-lab');
 
     assert.match(envContent, /PERCEPTIONLAB_PROJECT_ROOT=\/home\/jerem\/vision-lab/);
+    assert.match(envContent, /PERCEPTIONLAB_API_ADDR=127\.0\.0\.1:8080/);
     assert.match(envContent, /PERCEPTIONLAB_DATA_ROOT=\/home\/jerem\/vision-lab\/datasets/);
     assert.match(
       envContent,

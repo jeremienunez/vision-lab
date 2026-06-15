@@ -1199,6 +1199,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 name = "perception_api"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "config",
  "dotenvy",
  "perception_app",
@@ -1238,7 +1239,10 @@ dependencies = [
  "perception_app",
  "perception_domain",
  "serde",
+ "serde_json",
  "thiserror",
+ "tokio",
+ "tower",
  "tracing",
  "utoipa",
 ]
