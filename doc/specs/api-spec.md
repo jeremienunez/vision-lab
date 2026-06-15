@@ -90,6 +90,33 @@ Response:
 }
 ```
 
+## YOLO Annotation Import Contract
+
+Request:
+
+```json
+{
+  "files": [
+    {
+      "sample_filename": "cup.jpg",
+      "content": "1 0.250000 0.400000 0.300000 0.400000\n"
+    }
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "dataset_id": "ds_01hxyz",
+  "imported_count": 1
+}
+```
+
+The YOLO line format is `class_id x_center y_center width height` with normalized values.
+The API stores annotations as normalized top-left `x`, `y`, `width`, `height`.
+
 ## Inference Contract
 
 Request:

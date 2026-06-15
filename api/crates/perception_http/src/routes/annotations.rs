@@ -7,7 +7,7 @@ use axum::{
 };
 use perception_app::{
     AddAnnotationCommand, AddAnnotationUseCase, ExportYoloAnnotationsUseCase,
-    ListSampleAnnotationsUseCase, UseCaseError,
+    ImportYoloAnnotationsUseCase, ListSampleAnnotationsUseCase, UseCaseError,
 };
 use perception_domain::{DatasetId, SampleId};
 
@@ -16,6 +16,7 @@ use crate::{
         annotation::{AddAnnotationRequest, AnnotationResponse, ListAnnotationsResponse},
         error::ErrorResponse,
         yolo_export::YoloAnnotationExportResponse,
+        yolo_import::{YoloAnnotationImportRequest, YoloAnnotationImportResponse},
     },
     mappers,
     state::AnnotationHttpState,
@@ -27,6 +28,7 @@ pub fn routes(state: AnnotationHttpState) -> Router {
             "/samples/{sample_id}/annotations",
             post(add_annotation).get(list_annotations),
         )
+        .route("/datasets/{dataset_id}/import/yolo", post(import_yolo))
         .route("/datasets/{dataset_id}/export/yolo", get(export_yolo))
         .with_state(state)
 }
@@ -96,6 +98,32 @@ async fn export_yolo(
     Ok(Json(mappers::yolo_export::yolo_annotation_export_response(
         export,
     )))
+}
+
+async fn import_yolo(
+    State(state): State<AnnotationHttpState>,
+    Path(dataset_id): Path<String>,
+    Json(request): Json<YoloAnnotationImportRequest>,
+) -> Result<(StatusCode, Json<YoloAnnotationImportResponse>), AnnotationRouteError> {
+    let dataset_id =
+        DatasetId::parse(dataset_id).map_err(|_| UseCaseError::Validation("invalid dataset id"))?;
+    let use_case = ImportYoloAnnotationsUseCase::new(
+        state.dataset_repository(),
+        state.sample_repository(),
+        state.annotation_repository(),
+    );
+    let result = use_case
+        .execute(mappers::yolo_import::yolo_annotation_import_command(
+            dataset_id, request,
+        ))
+        .await?;
+
+    Ok((
+        StatusCode::CREATED,
+        Json(mappers::yolo_import::yolo_annotation_import_response(
+            result,
+        )),
+    ))
 }
 
 struct AnnotationRouteError {

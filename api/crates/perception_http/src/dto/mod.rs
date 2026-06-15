@@ -10,3 +10,4 @@ pub mod sample;
 pub mod training_job;
 pub mod training_metric;
 pub mod yolo_export;
+pub mod yolo_import;
