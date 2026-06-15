@@ -191,6 +191,22 @@ Use `--base-url` before the command to target another API:
 npm run cli -- --base-url http://127.0.0.1:8080 health
 ```
 
+## Seed Demo Dataset
+
+The demo seed lives in `datasets/seed/` and contains one generated PNG sample, matching YOLO labels, and a manifest for `desk-objects-v1`.
+
+Validate the seed assets:
+
+```bash
+npm run validate:seed
+```
+
+With the API running, seed the local transient API:
+
+```bash
+sh scripts/seed_demo_dataset.sh
+```
+
 ## Product References
 
 - [Product spec](doc/specs/product-spec.md)

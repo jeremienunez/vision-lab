@@ -54,7 +54,7 @@
 - [x] Track metrics by class.
 - [x] Publish OpenAPI/Swagger documentation.
 - [x] Add simple CLI.
-- [ ] Add seed demo dataset.
+- [x] Add seed demo dataset.
 - [ ] Benchmark inference latency.
 - [ ] Choose final BDD runner and step definition stack during the technical QA pass.
 

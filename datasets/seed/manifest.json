@@ -1,0 +1,43 @@
+{
+  "dataset": {
+    "name": "desk-objects-v1",
+    "description": "Small local demo dataset for PerceptionLab smoke runs.",
+    "task_type": "object_detection",
+    "classes": ["cup", "book", "phone", "keyboard", "mouse"]
+  },
+  "version": {
+    "version_name": "v1",
+    "created_by": "seed-demo"
+  },
+  "samples": [
+    {
+      "filename": "desk-objects.png",
+      "path": "images/desk-objects.png",
+      "source_svg": "images/desk-objects.svg",
+      "yolo_label_path": "labels/desk-objects.txt",
+      "mime_type": "image/png",
+      "width": 640,
+      "height": 480,
+      "annotations": [
+        {
+          "class_name": "cup",
+          "class_id": 0,
+          "bbox": { "x": 0.12, "y": 0.34, "width": 0.18, "height": 0.35 },
+          "confidence": null
+        },
+        {
+          "class_name": "book",
+          "class_id": 1,
+          "bbox": { "x": 0.43, "y": 0.54, "width": 0.32, "height": 0.22 },
+          "confidence": null
+        },
+        {
+          "class_name": "phone",
+          "class_id": 2,
+          "bbox": { "x": 0.68, "y": 0.4, "width": 0.16, "height": 0.28 },
+          "confidence": null
+        }
+      ]
+    }
+  ]
+}
