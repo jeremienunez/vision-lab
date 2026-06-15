@@ -24,8 +24,8 @@
 - [x] Create `perception_app` crate with ports and first use case.
 - [x] Create initial PostgreSQL schema.
 - [x] Add `POST /datasets` and `GET /datasets`.
-- [ ] Add `POST /datasets/{dataset_id}/samples`.
-- [ ] Connect abstracted file/object storage.
+- [x] Add `POST /datasets/{dataset_id}/samples`.
+- [x] Connect abstracted file/object storage.
 - [ ] Add annotation endpoints.
 - [ ] Add `GET /datasets/{dataset_id}/stats`.
 - [ ] Add `POST /datasets/{dataset_id}/versions`.

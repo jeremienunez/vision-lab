@@ -66,6 +66,9 @@ impl IntoResponse for DatasetRouteError {
             UseCaseError::Validation(message) => {
                 (StatusCode::BAD_REQUEST, "validation_failed", message.to_owned())
             }
+            UseCaseError::NotFound(message) => {
+                (StatusCode::NOT_FOUND, "not_found", message.to_owned())
+            }
             UseCaseError::Repository(message) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "repository_failed",

@@ -22,4 +22,13 @@ async fn transient_dataset_repository_creates_and_lists_datasets() {
 
     assert_eq!(datasets.len(), 1);
     assert_eq!(datasets[0].name, "desk-objects-v1");
+    assert_eq!(
+        repository
+            .get(datasets[0].id)
+            .await
+            .expect("dataset lookup succeeds")
+            .expect("dataset exists")
+            .name,
+        "desk-objects-v1"
+    );
 }

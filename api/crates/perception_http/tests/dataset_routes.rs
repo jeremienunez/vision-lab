@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use axum::body::to_bytes;
 use axum::http::{Request, StatusCode};
 use perception_app::{DatasetDraft, DatasetRepository, UseCaseError};
+use perception_domain::DatasetId;
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
@@ -20,6 +21,16 @@ impl DatasetRepository for RouteDatasetRepository {
             .expect("repository mutex is available")
             .push(dataset.clone());
         Ok(dataset)
+    }
+
+    async fn get(&self, dataset_id: DatasetId) -> Result<Option<DatasetDraft>, UseCaseError> {
+        Ok(self
+            .datasets
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .find(|dataset| dataset.id == dataset_id)
+            .cloned())
     }
 
     async fn list(&self) -> Result<Vec<DatasetDraft>, UseCaseError> {

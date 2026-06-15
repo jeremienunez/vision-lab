@@ -8,13 +8,13 @@ license.workspace = true
 [dependencies]
 async-trait.workspace = true
 chrono.workspace = true
+hex.workspace = true
 perception_app = { path = "../perception_app" }
 perception_domain = { path = "../perception_domain" }
 serde_json.workspace = true
+sha2.workspace = true
 sqlx.workspace = true
 thiserror.workspace = true
+tokio.workspace = true
 tracing.workspace = true
 uuid.workspace = true
-
-[dev-dependencies]
-tokio.workspace = true

@@ -1,3 +1,7 @@
 pub mod dataset_repository;
+pub mod sample_repository;
+pub mod sample_storage;
 
 pub use dataset_repository::DatasetRepository;
+pub use sample_repository::SampleRepository;
+pub use sample_storage::{SampleStorage, SampleStorageCommand, StoredSample};

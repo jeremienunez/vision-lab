@@ -22,6 +22,19 @@ impl DatasetRepository for InMemoryDatasetRepository {
         Ok(dataset)
     }
 
+    async fn get(
+        &self,
+        dataset_id: perception_domain::DatasetId,
+    ) -> Result<Option<DatasetDraft>, UseCaseError> {
+        Ok(self
+            .datasets
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .find(|dataset| dataset.id == dataset_id)
+            .cloned())
+    }
+
     async fn list(&self) -> Result<Vec<DatasetDraft>, UseCaseError> {
         Ok(self
             .datasets

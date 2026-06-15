@@ -27,6 +27,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Application-layer dataset creation use case behind a repository port.
 - Initial PostgreSQL schema for datasets, annotations, immutable dataset versions, training jobs, queue rows, metrics, model registry, exports, inference runs, and artifacts.
 - Dataset creation and listing HTTP routes backed by the application repository port and a local transient repository adapter.
+- Sample upload use case and multipart HTTP route with abstracted sample repository and local file storage adapters.
 
 ### Changed
 

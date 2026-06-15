@@ -4,7 +4,7 @@
 use axum::Router;
 use std::sync::Arc;
 
-use perception_app::DatasetRepository;
+use perception_app::{DatasetRepository, SampleRepository, SampleStorage};
 
 pub mod dto;
 pub mod mappers;
@@ -21,4 +21,20 @@ pub fn router_with_dataset_repository(dataset_repository: Arc<dyn DatasetReposit
     routes::health::routes().merge(routes::datasets::routes(state::HttpState::new(
         dataset_repository,
     )))
+}
+
+pub fn router_with_application_ports(
+    dataset_repository: Arc<dyn DatasetRepository>,
+    sample_repository: Arc<dyn SampleRepository>,
+    sample_storage: Arc<dyn SampleStorage>,
+) -> Router {
+    routes::health::routes()
+        .merge(routes::datasets::routes(state::HttpState::new(
+            dataset_repository.clone(),
+        )))
+        .merge(routes::samples::routes(state::SampleHttpState::new(
+            dataset_repository,
+            sample_repository,
+            sample_storage,
+        )))
 }
