@@ -19,6 +19,7 @@ The initial PDF references are stored in `doc/references/`:
 - `doc/specs/modules.md` - product modules A-J and acceptance signals.
 - `doc/specs/requirements.md` - functional and non-functional requirements.
 - `doc/specs/roadmap.md` - MVP and portfolio roadmap.
+- `doc/specs/p2-spec.md` - P2 advanced platform scope and execution slices.
 - `doc/specs/demo-spec.md` - final demo target and portfolio proof.
 - `doc/specs/technical-pass-questions.md` - questions intentionally left for the technical pass.
 - `doc/specs/qa-bdd-spec.md` - QA strategy and BDD format.
