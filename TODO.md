@@ -39,7 +39,8 @@
 - [x] Persist training metrics.
 - [x] Add `GET /training-jobs/{job_id}/metrics`.
 - [x] Add minimal model registry.
-- [ ] Add `GET /models`.
+- [x] Add `GET /models`.
+- [x] Add `GET /models/{model_id}`.
 - [ ] Add `POST /models/{model_id}/infer`.
 - [ ] Add Docker Compose.
 - [ ] Add product-grade README quickstart.

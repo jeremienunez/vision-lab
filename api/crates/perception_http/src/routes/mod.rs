@@ -3,5 +3,6 @@ pub mod dataset_stats;
 pub mod dataset_versions;
 pub mod datasets;
 pub mod health;
+pub mod models;
 pub mod samples;
 pub mod training_jobs;

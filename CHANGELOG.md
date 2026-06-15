@@ -39,6 +39,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Training metric application use cases, repository port, domain id, and transient repository for persisted epoch metric records.
 - Training job metrics HTTP route returning persisted metric records ordered by epoch and step.
 - Minimal model registry use cases and transient repository for registering candidate models from succeeded training jobs.
+- Model registry HTTP routes for listing registered models and reading model detail.
 
 ### Changed
 

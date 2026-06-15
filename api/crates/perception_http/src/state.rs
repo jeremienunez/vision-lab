@@ -1,13 +1,29 @@
 use std::sync::Arc;
 
 use perception_app::{
-    AnnotationRepository, DatasetRepository, DatasetVersionRepository, SampleRepository,
-    SampleStorage, TrainingJobQueue, TrainingJobRepository, TrainingMetricRepository,
+    AnnotationRepository, DatasetRepository, DatasetVersionRepository, ModelRepository,
+    SampleRepository, SampleStorage, TrainingJobQueue, TrainingJobRepository,
+    TrainingMetricRepository,
 };
 
 #[derive(Clone)]
 pub struct HttpState {
     dataset_repository: Arc<dyn DatasetRepository>,
+}
+
+#[derive(Clone)]
+pub struct ModelHttpState {
+    model_repository: Arc<dyn ModelRepository>,
+}
+
+impl ModelHttpState {
+    pub fn new(model_repository: Arc<dyn ModelRepository>) -> Self {
+        Self { model_repository }
+    }
+
+    pub fn model_repository(&self) -> &dyn ModelRepository {
+        self.model_repository.as_ref()
+    }
 }
 
 impl HttpState {
