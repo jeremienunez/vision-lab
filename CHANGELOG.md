@@ -45,6 +45,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Docker Compose local stack for the Rust API and PostgreSQL schema bootstrap.
 - Product-grade README quickstart covering installation, quality gates, direct API run, Docker Compose, and P0 curl examples.
 - YOLO annotation export application use case that emits `classes.txt` and per-sample label files with normalized center-based boxes.
+- YOLO annotation export HTTP route at `GET /datasets/{dataset_id}/export/yolo`.
 
 ### Changed
 

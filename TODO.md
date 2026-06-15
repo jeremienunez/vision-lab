@@ -48,7 +48,7 @@
 ## P1 - Fortement Valorisant
 
 - [ ] Import annotations YOLO.
-- [ ] Export annotations YOLO.
+- [x] Export annotations YOLO.
 - [ ] Export model to ONNX.
 - [ ] Generate visual overlay image.
 - [ ] Track metrics by class.

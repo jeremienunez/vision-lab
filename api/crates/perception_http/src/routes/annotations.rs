@@ -3,17 +3,19 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::post,
+    routing::{get, post},
 };
 use perception_app::{
-    AddAnnotationCommand, AddAnnotationUseCase, ListSampleAnnotationsUseCase, UseCaseError,
+    AddAnnotationCommand, AddAnnotationUseCase, ExportYoloAnnotationsUseCase,
+    ListSampleAnnotationsUseCase, UseCaseError,
 };
-use perception_domain::SampleId;
+use perception_domain::{DatasetId, SampleId};
 
 use crate::{
     dto::{
         annotation::{AddAnnotationRequest, AnnotationResponse, ListAnnotationsResponse},
         error::ErrorResponse,
+        yolo_export::YoloAnnotationExportResponse,
     },
     mappers,
     state::AnnotationHttpState,
@@ -25,6 +27,7 @@ pub fn routes(state: AnnotationHttpState) -> Router {
             "/samples/{sample_id}/annotations",
             post(add_annotation).get(list_annotations),
         )
+        .route("/datasets/{dataset_id}/export/yolo", get(export_yolo))
         .with_state(state)
 }
 
@@ -74,6 +77,25 @@ async fn list_annotations(
             .map(mappers::annotation::annotation_response)
             .collect(),
     }))
+}
+
+async fn export_yolo(
+    State(state): State<AnnotationHttpState>,
+    Path(dataset_id): Path<String>,
+) -> Result<Json<YoloAnnotationExportResponse>, AnnotationRouteError> {
+    let dataset_id =
+        DatasetId::parse(dataset_id).map_err(|_| UseCaseError::Validation("invalid dataset id"))?;
+    let export = ExportYoloAnnotationsUseCase::new(
+        state.dataset_repository(),
+        state.sample_repository(),
+        state.annotation_repository(),
+    )
+    .execute(dataset_id)
+    .await?;
+
+    Ok(Json(mappers::yolo_export::yolo_annotation_export_response(
+        export,
+    )))
 }
 
 struct AnnotationRouteError {

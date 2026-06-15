@@ -7,3 +7,4 @@ pub mod model;
 pub mod sample;
 pub mod training_job;
 pub mod training_metric;
+pub mod yolo_export;
