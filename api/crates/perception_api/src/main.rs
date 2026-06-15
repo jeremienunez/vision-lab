@@ -23,18 +23,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc::new(perception_infra::TransientAnnotationRepository::default());
     let dataset_version_repository =
         Arc::new(perception_infra::TransientDatasetVersionRepository::default());
+    let training_job_repository =
+        Arc::new(perception_infra::TransientTrainingJobRepository::default());
     let storage_root = std::env::var("PERCEPTIONLAB_STORAGE_ROOT")
         .unwrap_or_else(|_| ".perceptionlab/storage".to_owned());
     let sample_storage = Arc::new(perception_infra::LocalSampleStorage::new(storage_root));
 
     axum::serve(
         listener,
-        perception_http::router_with_version_ports(
+        perception_http::router_with_p0_ports(
             dataset_repository,
             sample_repository,
             sample_storage,
             annotation_repository,
             dataset_version_repository,
+            training_job_repository,
         ),
     )
     .await?;

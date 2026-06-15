@@ -29,7 +29,7 @@
 - [x] Add annotation endpoints.
 - [x] Add `GET /datasets/{dataset_id}/stats`.
 - [x] Add `POST /datasets/{dataset_id}/versions`.
-- [ ] Add `POST /training-jobs`.
+- [x] Add `POST /training-jobs`.
 - [ ] Add training job lifecycle persistence and transitions.
 - [ ] Add queue-backed training orchestration.
 - [ ] Add minimal Python/PyTorch worker.

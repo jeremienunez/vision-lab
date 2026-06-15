@@ -5,3 +5,4 @@ pub mod dataset_version;
 pub mod error;
 pub mod health;
 pub mod sample;
+pub mod training_job;

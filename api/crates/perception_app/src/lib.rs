@@ -9,15 +9,17 @@ pub mod use_cases;
 pub use error::UseCaseError;
 pub use models::{
     AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, SampleDraft, TaskType,
+    TrainingJobDraft,
 };
 pub use ports::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, SampleRepository,
-    SampleStorage, SampleStorageCommand, StoredSample,
+    SampleStorage, SampleStorageCommand, StoredSample, TrainingJobRepository,
 };
 pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,
-    CreateDatasetVersionCommand, CreateDatasetVersionUseCase, DatasetStatsUseCase,
-    ListDatasetsUseCase, ListSampleAnnotationsUseCase, UploadSampleCommand, UploadSampleUseCase,
+    CreateDatasetVersionCommand, CreateDatasetVersionUseCase, CreateTrainingJobCommand,
+    CreateTrainingJobUseCase, DatasetStatsUseCase, ListDatasetsUseCase,
+    ListSampleAnnotationsUseCase, UploadSampleCommand, UploadSampleUseCase,
 };
 
 pub const CRATE_NAME: &str = "perception_app";
