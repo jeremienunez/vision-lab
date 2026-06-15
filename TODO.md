@@ -31,7 +31,7 @@
 - [x] Add `POST /datasets/{dataset_id}/versions`.
 - [x] Add `POST /training-jobs`.
 - [x] Add training job lifecycle persistence and transitions.
-- [ ] Add queue-backed training orchestration.
+- [x] Add queue-backed training orchestration.
 - [ ] Add minimal Python/PyTorch worker.
 - [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
 - [ ] Add strict worker contracts and strategy ports.

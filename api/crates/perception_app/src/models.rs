@@ -81,3 +81,31 @@ pub struct TrainingJobDraft {
     pub hyperparameters: TrainingHyperparameters,
     pub error_message: Option<String>,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrainingJobQueueStatus {
+    Queued,
+    Leased,
+    Completed,
+    Failed,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TrainingJobQueueEntry {
+    pub training_job_id: TrainingJobId,
+    pub status: TrainingJobQueueStatus,
+    pub locked_by: Option<String>,
+    pub attempts: u32,
+}
+
+impl TrainingJobQueueEntry {
+    pub fn queued(training_job_id: TrainingJobId) -> Self {
+        Self {
+            training_job_id,
+            status: TrainingJobQueueStatus::Queued,
+            locked_by: None,
+            attempts: 0,
+        }
+    }
+}

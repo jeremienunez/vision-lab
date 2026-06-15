@@ -9,11 +9,11 @@ pub mod use_cases;
 pub use error::UseCaseError;
 pub use models::{
     AnnotationDraft, DatasetDraft, DatasetStats, DatasetVersionDraft, SampleDraft, TaskType,
-    TrainingJobDraft,
+    TrainingJobDraft, TrainingJobQueueEntry, TrainingJobQueueStatus,
 };
 pub use ports::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, SampleRepository,
-    SampleStorage, SampleStorageCommand, StoredSample, TrainingJobRepository,
+    SampleStorage, SampleStorageCommand, StoredSample, TrainingJobQueue, TrainingJobRepository,
 };
 pub use use_cases::{
     AddAnnotationCommand, AddAnnotationUseCase, CreateDatasetCommand, CreateDatasetUseCase,

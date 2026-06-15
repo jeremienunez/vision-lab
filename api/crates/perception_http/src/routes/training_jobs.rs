@@ -29,9 +29,10 @@ async fn create_training_job(
 ) -> Result<(StatusCode, Json<TrainingJobResponse>), TrainingJobRouteError> {
     let dataset_version_id = DatasetVersionId::parse(request.dataset_version_id)
         .map_err(|_| UseCaseError::Validation("invalid dataset version id"))?;
-    let use_case = CreateTrainingJobUseCase::new(
+    let use_case = CreateTrainingJobUseCase::new_with_queue(
         state.dataset_version_repository(),
         state.training_job_repository(),
+        state.training_job_queue(),
     );
     let job = use_case
         .execute(CreateTrainingJobCommand {

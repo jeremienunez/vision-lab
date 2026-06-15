@@ -3,8 +3,9 @@ use std::{collections::BTreeMap, sync::Mutex};
 use async_trait::async_trait;
 use perception_app::{
     CreateTrainingJobCommand, CreateTrainingJobUseCase, DatasetVersionDraft,
-    DatasetVersionRepository, TrainingJobDraft, TrainingJobRepository,
-    TransitionTrainingJobCommand, TransitionTrainingJobUseCase, UseCaseError,
+    DatasetVersionRepository, TrainingJobDraft, TrainingJobQueue, TrainingJobQueueEntry,
+    TrainingJobQueueStatus, TrainingJobRepository, TransitionTrainingJobCommand,
+    TransitionTrainingJobUseCase, UseCaseError,
 };
 use perception_domain::{DatasetId, DatasetVersionId, TrainingJobId, TrainingJobStatus};
 
@@ -45,6 +46,11 @@ struct InMemoryTrainingJobRepository {
     jobs: Mutex<Vec<TrainingJobDraft>>,
 }
 
+#[derive(Default)]
+struct InMemoryTrainingJobQueue {
+    entries: Mutex<Vec<TrainingJobQueueEntry>>,
+}
+
 #[async_trait]
 impl TrainingJobRepository for InMemoryTrainingJobRepository {
     async fn create(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError> {
@@ -76,6 +82,38 @@ impl TrainingJobRepository for InMemoryTrainingJobRepository {
     }
 }
 
+#[async_trait]
+impl TrainingJobQueue for InMemoryTrainingJobQueue {
+    async fn enqueue(
+        &self,
+        entry: TrainingJobQueueEntry,
+    ) -> Result<TrainingJobQueueEntry, UseCaseError> {
+        self.entries
+            .lock()
+            .expect("queue mutex is available")
+            .push(entry.clone());
+        Ok(entry)
+    }
+
+    async fn lease_next(
+        &self,
+        worker_id: String,
+    ) -> Result<Option<TrainingJobQueueEntry>, UseCaseError> {
+        let mut entries = self.entries.lock().expect("queue mutex is available");
+        let Some(entry) = entries
+            .iter_mut()
+            .find(|entry| entry.status == TrainingJobQueueStatus::Queued)
+        else {
+            return Ok(None);
+        };
+
+        entry.status = TrainingJobQueueStatus::Leased;
+        entry.locked_by = Some(worker_id);
+        entry.attempts += 1;
+        Ok(Some(entry.clone()))
+    }
+}
+
 fn version_fixture() -> DatasetVersionDraft {
     DatasetVersionDraft {
         id: DatasetVersionId::new(),
@@ -93,12 +131,13 @@ fn version_fixture() -> DatasetVersionDraft {
 async fn create_training_job_queues_job_for_existing_dataset_version() {
     let versions = InMemoryDatasetVersionRepository::default();
     let jobs = InMemoryTrainingJobRepository::default();
+    let queue = InMemoryTrainingJobQueue::default();
     let version = versions
         .create(version_fixture())
         .await
         .expect("version is created");
 
-    let job = CreateTrainingJobUseCase::new(&versions, &jobs)
+    let job = CreateTrainingJobUseCase::new_with_queue(&versions, &jobs, &queue)
         .execute(CreateTrainingJobCommand {
             dataset_version_id: version.id,
             model_family: "yolo".to_owned(),
@@ -116,6 +155,17 @@ async fn create_training_job_queues_job_for_existing_dataset_version() {
     assert_eq!(job.base_model, Some("yolo11n".to_owned()));
     assert_eq!(job.status, TrainingJobStatus::Queued);
     assert_eq!(job.hyperparameters.epochs, 5);
+
+    let leased = queue
+        .lease_next("worker-1".to_owned())
+        .await
+        .expect("queue lease succeeds")
+        .expect("queue has job");
+
+    assert_eq!(leased.training_job_id, job.id);
+    assert_eq!(leased.status, TrainingJobQueueStatus::Leased);
+    assert_eq!(leased.locked_by, Some("worker-1".to_owned()));
+    assert_eq!(leased.attempts, 1);
 }
 
 #[tokio::test]

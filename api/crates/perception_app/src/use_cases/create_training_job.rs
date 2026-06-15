@@ -2,7 +2,10 @@ use perception_domain::{
     DatasetVersionId, TrainingHyperparameters, TrainingJobId, TrainingJobStatus,
 };
 
-use crate::{DatasetVersionRepository, TrainingJobDraft, TrainingJobRepository, UseCaseError};
+use crate::{
+    DatasetVersionRepository, TrainingJobDraft, TrainingJobQueue, TrainingJobQueueEntry,
+    TrainingJobRepository, UseCaseError,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreateTrainingJobCommand {
@@ -18,6 +21,7 @@ pub struct CreateTrainingJobCommand {
 pub struct CreateTrainingJobUseCase<'repository> {
     dataset_version_repository: &'repository dyn DatasetVersionRepository,
     training_job_repository: &'repository dyn TrainingJobRepository,
+    training_job_queue: Option<&'repository dyn TrainingJobQueue>,
 }
 
 impl<'repository> CreateTrainingJobUseCase<'repository> {
@@ -28,6 +32,19 @@ impl<'repository> CreateTrainingJobUseCase<'repository> {
         Self {
             dataset_version_repository,
             training_job_repository,
+            training_job_queue: None,
+        }
+    }
+
+    pub fn new_with_queue(
+        dataset_version_repository: &'repository dyn DatasetVersionRepository,
+        training_job_repository: &'repository dyn TrainingJobRepository,
+        training_job_queue: &'repository dyn TrainingJobQueue,
+    ) -> Self {
+        Self {
+            dataset_version_repository,
+            training_job_repository,
+            training_job_queue: Some(training_job_queue),
         }
     }
 
@@ -56,7 +73,8 @@ impl<'repository> CreateTrainingJobUseCase<'repository> {
         )
         .map_err(|_| UseCaseError::Validation("invalid training hyperparameters"))?;
 
-        self.training_job_repository
+        let job = self
+            .training_job_repository
             .create(TrainingJobDraft {
                 id: TrainingJobId::new(),
                 dataset_version_id: command.dataset_version_id,
@@ -69,6 +87,14 @@ impl<'repository> CreateTrainingJobUseCase<'repository> {
                 hyperparameters,
                 error_message: None,
             })
-            .await
+            .await?;
+
+        if let Some(training_job_queue) = self.training_job_queue {
+            training_job_queue
+                .enqueue(TrainingJobQueueEntry::queued(job.id))
+                .await?;
+        }
+
+        Ok(job)
     }
 }

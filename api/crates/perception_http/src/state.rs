@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use perception_app::{
     AnnotationRepository, DatasetRepository, DatasetVersionRepository, SampleRepository,
-    SampleStorage, TrainingJobRepository,
+    SampleStorage, TrainingJobQueue, TrainingJobRepository,
 };
 
 #[derive(Clone)]
@@ -163,16 +163,19 @@ impl DatasetVersionHttpState {
 pub struct TrainingJobHttpState {
     dataset_version_repository: Arc<dyn DatasetVersionRepository>,
     training_job_repository: Arc<dyn TrainingJobRepository>,
+    training_job_queue: Arc<dyn TrainingJobQueue>,
 }
 
 impl TrainingJobHttpState {
     pub fn new(
         dataset_version_repository: Arc<dyn DatasetVersionRepository>,
         training_job_repository: Arc<dyn TrainingJobRepository>,
+        training_job_queue: Arc<dyn TrainingJobQueue>,
     ) -> Self {
         Self {
             dataset_version_repository,
             training_job_repository,
+            training_job_queue,
         }
     }
 
@@ -182,5 +185,9 @@ impl TrainingJobHttpState {
 
     pub fn training_job_repository(&self) -> &dyn TrainingJobRepository {
         self.training_job_repository.as_ref()
+    }
+
+    pub fn training_job_queue(&self) -> &dyn TrainingJobQueue {
+        self.training_job_queue.as_ref()
     }
 }
