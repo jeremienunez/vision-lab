@@ -26,6 +26,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Pure Rust domain foundation with typed IDs, normalized bbox validation, image dimensions, training hyperparameters, and lifecycle state machines.
 - Application-layer dataset creation use case behind a repository port.
 - Initial PostgreSQL schema for datasets, annotations, immutable dataset versions, training jobs, queue rows, metrics, model registry, exports, inference runs, and artifacts.
+- Dataset creation and listing HTTP routes backed by the application repository port and a local transient repository adapter.
 
 ### Changed
 

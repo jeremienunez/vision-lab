@@ -1237,6 +1237,7 @@ dependencies = [
 name = "perception_http"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "perception_app",
  "perception_domain",
@@ -1260,6 +1261,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "thiserror",
+ "tokio",
  "tracing",
  "uuid",
 ]

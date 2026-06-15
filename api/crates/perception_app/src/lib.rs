@@ -9,6 +9,6 @@ pub mod use_cases;
 pub use error::UseCaseError;
 pub use models::{DatasetDraft, TaskType};
 pub use ports::DatasetRepository;
-pub use use_cases::{CreateDatasetCommand, CreateDatasetUseCase};
+pub use use_cases::{CreateDatasetCommand, CreateDatasetUseCase, ListDatasetsUseCase};
 
 pub const CRATE_NAME: &str = "perception_app";

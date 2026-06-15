@@ -2,8 +2,8 @@ use std::sync::Mutex;
 
 use async_trait::async_trait;
 use perception_app::{
-    CreateDatasetCommand, CreateDatasetUseCase, DatasetDraft, DatasetRepository, TaskType,
-    UseCaseError,
+    CreateDatasetCommand, CreateDatasetUseCase, DatasetDraft, DatasetRepository,
+    ListDatasetsUseCase, TaskType, UseCaseError,
 };
 use perception_domain::DatasetStatus;
 
@@ -20,6 +20,14 @@ impl DatasetRepository for InMemoryDatasetRepository {
             .expect("repository mutex is available")
             .push(dataset.clone());
         Ok(dataset)
+    }
+
+    async fn list(&self) -> Result<Vec<DatasetDraft>, UseCaseError> {
+        Ok(self
+            .datasets
+            .lock()
+            .expect("repository mutex is available")
+            .clone())
     }
 }
 
@@ -58,4 +66,26 @@ async fn create_dataset_rejects_empty_name() {
         .await;
 
     assert_eq!(result, Err(UseCaseError::Validation("dataset name is required")));
+}
+
+#[tokio::test]
+async fn list_datasets_returns_repository_datasets() {
+    let repository = InMemoryDatasetRepository::default();
+    let create_use_case = CreateDatasetUseCase::new(&repository);
+    let list_use_case = ListDatasetsUseCase::new(&repository);
+
+    create_use_case
+        .execute(CreateDatasetCommand {
+            name: "desk-objects-v1".to_owned(),
+            description: None,
+            task_type: TaskType::ObjectDetection,
+            classes: vec!["cup".to_owned()],
+        })
+        .await
+        .expect("dataset is created");
+
+    let result = list_use_case.execute().await.expect("datasets are listed");
+
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].name, "desk-objects-v1");
 }

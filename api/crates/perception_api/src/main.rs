@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,7 +17,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = tokio::net::TcpListener::bind(address).await?;
     tracing::info!(%address, "perception_api listening");
 
-    axum::serve(listener, perception_http::router()).await?;
+    let dataset_repository = Arc::new(perception_infra::TransientDatasetRepository::default());
+
+    axum::serve(
+        listener,
+        perception_http::router_with_dataset_repository(dataset_repository),
+    )
+    .await?;
 
     Ok(())
 }

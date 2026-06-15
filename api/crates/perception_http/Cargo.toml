@@ -16,5 +16,6 @@ tracing.workspace = true
 utoipa.workspace = true
 
 [dev-dependencies]
+async-trait.workspace = true
 tokio.workspace = true
 tower.workspace = true

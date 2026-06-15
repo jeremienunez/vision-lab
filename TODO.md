@@ -23,7 +23,7 @@
 - [x] Create `perception_domain` crate with newtype ids, value objects, and state machines.
 - [x] Create `perception_app` crate with ports and first use case.
 - [x] Create initial PostgreSQL schema.
-- [ ] Add `POST /datasets` and `GET /datasets`.
+- [x] Add `POST /datasets` and `GET /datasets`.
 - [ ] Add `POST /datasets/{dataset_id}/samples`.
 - [ ] Connect abstracted file/object storage.
 - [ ] Add annotation endpoints.
