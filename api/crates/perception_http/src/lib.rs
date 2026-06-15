@@ -5,8 +5,8 @@ use axum::Router;
 use std::sync::Arc;
 
 use perception_app::{
-    AnnotationRepository, DatasetRepository, DatasetVersionRepository, ModelRepository,
-    SampleRepository, SampleStorage, TrainingJobQueue, TrainingJobRepository,
+    AnnotationRepository, DatasetRepository, DatasetVersionRepository, InferenceEngine,
+    ModelRepository, SampleRepository, SampleStorage, TrainingJobQueue, TrainingJobRepository,
     TrainingMetricRepository,
 };
 
@@ -109,9 +109,13 @@ pub fn router_with_training_job_ports(
     ))
 }
 
-pub fn router_with_model_repository(model_repository: Arc<dyn ModelRepository>) -> Router {
+pub fn router_with_model_ports(
+    model_repository: Arc<dyn ModelRepository>,
+    inference_engine: Arc<dyn InferenceEngine>,
+) -> Router {
     routes::health::routes().merge(routes::models::routes(state::ModelHttpState::new(
         model_repository,
+        inference_engine,
     )))
 }
 
@@ -125,6 +129,7 @@ pub fn router_with_p0_ports(
     training_job_queue: Arc<dyn TrainingJobQueue>,
     training_metric_repository: Arc<dyn TrainingMetricRepository>,
     model_repository: Arc<dyn ModelRepository>,
+    inference_engine: Arc<dyn InferenceEngine>,
 ) -> Router {
     router_with_version_ports(
         dataset_repository,
@@ -143,5 +148,6 @@ pub fn router_with_p0_ports(
     ))
     .merge(routes::models::routes(state::ModelHttpState::new(
         model_repository,
+        inference_engine,
     )))
 }

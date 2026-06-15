@@ -41,7 +41,7 @@
 - [x] Add minimal model registry.
 - [x] Add `GET /models`.
 - [x] Add `GET /models/{model_id}`.
-- [ ] Add `POST /models/{model_id}/infer`.
+- [x] Add `POST /models/{model_id}/infer`.
 - [ ] Add Docker Compose.
 - [ ] Add product-grade README quickstart.
 

@@ -6,8 +6,11 @@ use std::{
 use async_trait::async_trait;
 use axum::body::to_bytes;
 use axum::http::{Request, StatusCode};
-use perception_app::{ModelDraft, ModelRepository, UseCaseError};
-use perception_domain::{DatasetVersionId, ModelId, ModelStatus, TrainingJobId};
+use perception_app::{
+    DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, ModelDraft,
+    ModelRepository, UseCaseError,
+};
+use perception_domain::{DatasetVersionId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId};
 use serde_json::Value;
 use tower::ServiceExt;
 
@@ -15,6 +18,8 @@ use tower::ServiceExt;
 struct RouteModelRepository {
     models: Mutex<Vec<ModelDraft>>,
 }
+
+struct RouteInferenceEngine;
 
 #[async_trait]
 impl ModelRepository for RouteModelRepository {
@@ -45,6 +50,32 @@ impl ModelRepository for RouteModelRepository {
     }
 }
 
+#[async_trait]
+impl InferenceEngine for RouteInferenceEngine {
+    async fn infer(&self, request: InferenceRequest) -> Result<InferenceResult, UseCaseError> {
+        Ok(InferenceResult {
+            model_id: request.model.id,
+            latency_ms: 9,
+            detections: vec![
+                DetectionDraft {
+                    class_id: 0,
+                    class_name: "cup".to_owned(),
+                    confidence: 0.95,
+                    bbox: NormalizedBbox::new(0.1, 0.2, 0.3, 0.4).expect("bbox is valid"),
+                    distance_m: Some(0.4),
+                },
+                DetectionDraft {
+                    class_id: 1,
+                    class_name: "book".to_owned(),
+                    confidence: 0.42,
+                    bbox: NormalizedBbox::new(0.2, 0.3, 0.2, 0.2).expect("bbox is valid"),
+                    distance_m: None,
+                },
+            ],
+        })
+    }
+}
+
 async fn json_body(response: axum::response::Response) -> Value {
     let body = to_bytes(response.into_body(), 4096)
         .await
@@ -66,6 +97,22 @@ fn model_fixture() -> ModelDraft {
     }
 }
 
+fn inference_multipart_body(mime_type: &str, confidence_threshold: &str) -> (String, String) {
+    let boundary = "perceptionlab-infer-boundary";
+    let body = format!(
+        "--{boundary}\r\n\
+Content-Disposition: form-data; name=\"confidence_threshold\"\r\n\r\n\
+{confidence_threshold}\r\n\
+--{boundary}\r\n\
+Content-Disposition: form-data; name=\"image\"; filename=\"cup.jpg\"\r\n\
+Content-Type: {mime_type}\r\n\r\n\
+fake-jpeg-bytes\r\n\
+--{boundary}--\r\n"
+    );
+
+    (boundary.to_owned(), body)
+}
+
 #[tokio::test]
 async fn list_models_route_returns_registered_models() {
     let models = Arc::new(RouteModelRepository::default());
@@ -73,7 +120,7 @@ async fn list_models_route_returns_registered_models() {
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app = perception_http::router_with_model_repository(models);
+    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
 
     let response = app
         .oneshot(
@@ -106,7 +153,7 @@ async fn get_model_route_returns_model_detail() {
         .create(model_fixture())
         .await
         .expect("model is created");
-    let app = perception_http::router_with_model_repository(models);
+    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
 
     let response = app
         .oneshot(
@@ -129,4 +176,77 @@ async fn get_model_route_returns_model_detail() {
     );
     assert_eq!(body["model_family"], "tiny_torch");
     assert_eq!(body["metrics_summary"]["train_loss"], "0.32");
+}
+
+#[tokio::test]
+async fn infer_model_route_returns_detections_filtered_by_confidence() {
+    let models = Arc::new(RouteModelRepository::default());
+    let model = models
+        .create(model_fixture())
+        .await
+        .expect("model is created");
+    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
+    let (boundary, body) = inference_multipart_body("image/jpeg", "0.90");
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/models/{}/infer", model.id))
+                .header(
+                    "content-type",
+                    format!("multipart/form-data; boundary={boundary}"),
+                )
+                .body(axum::body::Body::from(body))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json_body(response).await;
+    assert_eq!(body["model_id"], model.id.to_string());
+    assert_eq!(body["latency_ms"], 9);
+    assert_eq!(
+        body["detections"]
+            .as_array()
+            .expect("detections are an array")
+            .len(),
+        1
+    );
+    assert_eq!(body["detections"][0]["class_name"], "cup");
+    assert!(
+        body["detections"][0]["confidence"]
+            .as_f64()
+            .expect("confidence is numeric")
+            >= 0.90
+    );
+}
+
+#[tokio::test]
+async fn infer_model_route_rejects_invalid_image_file() {
+    let models = Arc::new(RouteModelRepository::default());
+    let model = models
+        .create(model_fixture())
+        .await
+        .expect("model is created");
+    let app = perception_http::router_with_model_ports(models, Arc::new(RouteInferenceEngine));
+    let (boundary, body) = inference_multipart_body("text/plain", "0.25");
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/models/{}/infer", model.id))
+                .header(
+                    "content-type",
+                    format!("multipart/form-data; boundary={boundary}"),
+                )
+                .body(axum::body::Body::from(body))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
 }

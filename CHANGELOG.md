@@ -41,6 +41,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Minimal model registry use cases and transient repository for registering candidate models from succeeded training jobs.
 - Model registry HTTP routes for listing registered models and reading model detail.
 - Inference application use case, strategy port, and deterministic fake inference engine for local MVP execution.
+- Multipart model inference HTTP route with confidence filtering and unsupported media type handling.
 
 ### Changed
 
