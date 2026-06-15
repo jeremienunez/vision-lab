@@ -21,7 +21,7 @@
 - [x] Create Rust API with healthcheck.
 - [x] Create Cargo workspace under `api/`.
 - [x] Create `perception_domain` crate with newtype ids, value objects, and state machines.
-- [ ] Create `perception_app` crate with ports and first use case.
+- [x] Create `perception_app` crate with ports and first use case.
 - [ ] Create initial PostgreSQL schema.
 - [ ] Add `POST /datasets` and `GET /datasets`.
 - [ ] Add `POST /datasets/{dataset_id}/samples`.

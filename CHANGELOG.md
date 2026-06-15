@@ -24,6 +24,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - P0 dependency bootstrap with Cargo workspace, Python worker package, CPU PyTorch/Ultralytics sync, local absolute path generation, and validation commands.
 - Rust API healthcheck route with Axum router, JSON dependency status, and executable local server entrypoint.
 - Pure Rust domain foundation with typed IDs, normalized bbox validation, image dimensions, training hyperparameters, and lifecycle state machines.
+- Application-layer dataset creation use case behind a repository port.
 
 ### Changed
 

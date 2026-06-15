@@ -1219,6 +1219,7 @@ dependencies = [
  "async-trait",
  "perception_domain",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
