@@ -13,8 +13,13 @@ PerceptionLab is API-first ML infrastructure:
 
 ## Planned Components
 
-- `apps/api-rust/` - Rust API service, likely Axum during technical pass.
-- `workers/pytorch-trainer/` - Python worker for PyTorch training, inference, export, and overlays.
+- `api/crates/perception_domain/` - Rust domain crate for newtypes, value objects, entities, state machines, and domain errors.
+- `api/crates/perception_app/` - Rust application crate for ports and use cases.
+- `api/crates/perception_infra/` - Rust infrastructure crate for PostgreSQL, storage, queue, and config adapters.
+- `api/crates/perception_http/` - Rust HTTP crate for routes, DTOs, mappers, API errors, and OpenAPI.
+- `api/crates/perception_api/` - Rust executable crate for typed bootstrap.
+- `worker/perception_worker/` - Python worker for contracts, app services, ports, adapters, PyTorch training, inference, export, and entrypoints.
+- `contracts/` - OpenAPI and JSON schema contracts.
 - `infra/` - Docker Compose, database, storage, queue, and local operational notes.
 - `datasets/seed/` - minimal demo dataset for recruiter-friendly quickstart.
 - `doc/demo/` - expected input image, overlay, and JSON response artifacts.
@@ -29,6 +34,23 @@ The implementation should preserve these boundaries:
 - Delivery adapters expose HTTP, CLI, worker entrypoints, and OpenAPI.
 - Python worker contracts are explicit through queue payloads, database state, and artifact paths.
 
+Rust crate direction:
+
+```text
+perception_domain -> no project crate
+perception_app    -> perception_domain
+perception_infra  -> perception_app + perception_domain
+perception_http   -> perception_app + perception_domain
+perception_api    -> perception_http + perception_infra
+```
+
+Python worker direction:
+
+```text
+entrypoints -> app -> ports/domain/contracts
+adapters    -> ports/domain/contracts
+```
+
 ## SOLID Criteria
 
 - Single Responsibility: dataset, sample, annotation, job, model, export, and inference modules each have one reason to change.
@@ -39,18 +61,24 @@ The implementation should preserve these boundaries:
 
 ## Design Patterns
 
-- Port and adapter for storage, repositories, queue, artifact registry, training worker, and inference runtime.
-- Use case service for application workflows such as dataset creation, sample upload, version creation, job creation, and inference request.
-- Value object for dataset name, task type, class list, normalized bounding box, checksum, model status, and job status.
-- Repository only for real persistence behavior.
-- Factory only when creation rules branch by model family, export format, or storage backend.
+- Hexagonal architecture / Ports & Adapters for API, PostgreSQL, storage, queue, worker, inference, QA.
+- One use case per product intention: `create_dataset`, `upload_sample`, `add_annotation`, `create_dataset_version`, `create_training_job`, `run_inference`.
+- Newtypes for ids: `DatasetId`, `SampleId`, `AnnotationId`, `DatasetVersionId`, `TrainingJobId`, `ModelId`, `ArtifactId`.
+- Value objects for `NormalizedBbox`, `ImageDimensions`, `Checksum`, `ConfidenceScore`, `ArtifactUri`, `TrainingHyperparameters`.
+- Repository ports in application, SQLx adapters in infrastructure.
+- Unit of Work for dataset version creation, worker locking, training finalization, and model plus metrics writes.
+- Strategy for fake/tiny/real training, storage, inference, and export modes.
+- State machines for datasets, training jobs, models, and exports.
+- DTO + Mapper at HTTP, DB, worker, and OpenAPI boundaries.
+- Error mapping at public API and worker boundaries.
 
 ## Local Validation
 
-Dependency Cruiser currently validates the JavaScript policy tooling in `scripts/` and `tests/`. Rust and Python implementation checks must be added during the technical pass with the equivalent tools: `cargo test`, `cargo clippy`, Python tests, and integration checks.
+Dependency Cruiser currently validates the JavaScript policy tooling in `scripts/` and `tests/`. `npm run validate:conventions` validates the required architecture folders and blocks vague filenames before P0 implementation starts. Rust and Python implementation checks must be added during the technical pass with the equivalent tools: `cargo test`, `cargo clippy`, Python linting, and Python tests.
 
 Run:
 
 ```bash
+npm run validate:conventions
 npm run lint:architecture
 ```

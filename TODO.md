@@ -12,10 +12,15 @@
 - [x] Add Dependency Cruiser architecture rules.
 - [x] Align documentation with Product Owning PDF for PerceptionLab.
 - [x] Add QA/BDD feature structure and static BDD validation.
+- [x] Align folder structure and architecture guard with Design Patterns & Conventions PDF.
+- [x] Re-run preparatory coverage audit before P0.
 
 ## P0 - MVP Obligatoire
 
 - [ ] Create Rust API with healthcheck.
+- [ ] Create Cargo workspace under `api/`.
+- [ ] Create `perception_domain` crate with newtype ids, value objects, and state machines.
+- [ ] Create `perception_app` crate with ports and first use case.
 - [ ] Create initial PostgreSQL schema.
 - [ ] Add `POST /datasets` and `GET /datasets`.
 - [ ] Add `POST /datasets/{dataset_id}/samples`.
@@ -27,6 +32,7 @@
 - [ ] Add `training_jobs` table and job lifecycle.
 - [ ] Add queue-backed training orchestration.
 - [ ] Add minimal Python/PyTorch worker.
+- [ ] Create `worker/perception_worker` package with strict contracts and strategy ports.
 - [ ] Add training loop or wrapper model.
 - [ ] Persist training metrics.
 - [ ] Add minimal model registry.

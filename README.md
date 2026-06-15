@@ -42,11 +42,13 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 
 ## Project Layout
 
-- `apps/api-rust/` - planned Rust API service.
-- `workers/pytorch-trainer/` - planned Python/PyTorch worker.
+- `api/crates/` - Rust hexagonal workspace with `perception_domain`, `perception_app`, `perception_infra`, `perception_http`, and `perception_api`.
+- `worker/perception_worker/` - typed Python/PyTorch worker with domain, contracts, app, ports, adapters, and entrypoints.
+- `contracts/` - OpenAPI and JSON schemas for public and cross-component contracts.
 - `infra/` - local infrastructure notes and Docker Compose target.
 - `datasets/seed/` - planned minimal demo dataset.
 - `doc/` - product, architecture, QA, sprint, demo, and reference documentation.
+- `qa/` - Gherkin features, future step definitions, support utilities, and fixtures.
 - `scripts/` - local automation used by hooks and quality gates.
 - `tests/` - policy, unit, integration, and contract tests.
 - `.githooks/` - versioned Git hooks.
@@ -57,6 +59,8 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 npm install
 npm test
 npm run validate:docs
+npm run validate:bdd
+npm run validate:conventions
 npm run lint:architecture
 npm run quality
 npm run prepare:hooks
@@ -76,3 +80,5 @@ npm run prepare:hooks
 - [Demo spec](doc/specs/demo-spec.md)
 - [QA BDD](doc/quality/qa-bdd.md)
 - [Acceptance matrix](doc/quality/acceptance-matrix.md)
+- [Design patterns](doc/architecture/design-patterns.md)
+- [Architecture review checklist](doc/architecture/review-checklist.md)

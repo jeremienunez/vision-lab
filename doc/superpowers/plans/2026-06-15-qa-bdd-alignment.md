@@ -55,12 +55,11 @@ Expected: PASS.
 **Files:**
 - Create: `qa/README.md`
 - Create: `qa/features/*.feature`
-- Create: `qa/features/fixtures/README.md`
-- Create: `qa/features/reports/.gitkeep`
+- Create: `qa/fixtures/README.md`
 
 - [x] **Step 1: Create feature files**
 
-Create feature files for health, dataset management, sample ingestion, annotation management, dataset versioning, training jobs, metrics tracking, model registry, inference API, model export, visual overlay, artifacts storage, database integrity, observability, performance smoke, standard API errors, worker job locking, and the end-to-end pipeline.
+Create feature files for health, dataset management, sample ingestion, annotation management, dataset versioning, training jobs, metrics tracking, model registry, inference API, model export, visual overlay, artifacts storage, database integrity, observability, performance smoke, standard API errors, basic API security, worker job locking, ML pipeline consistency, and the end-to-end pipeline.
 
 - [x] **Step 2: Validate feature files**
 

@@ -15,11 +15,27 @@
 
 ## Patterns
 
-- Start with value objects for validated domain concepts.
-- Use ports for storage, queue, repositories, artifact registry, trainer, exporter, and inference runtime.
-- Add repositories only when persistence behavior exists.
-- Add factories only for real branching rules such as model family or export format.
-- Keep dashboard work out of the MVP until the API-first flow is credible.
+- Hexagonal architecture is mandatory.
+- Each product operation is a use case.
+- Each external system is an adapter.
+- Each critical primitive is a newtype or value object.
+- Each mutable lifecycle is a state machine.
+- Each public contract has a DTO and mapper.
+- Each multi-write operation uses an explicit transaction boundary.
+- Each exception to these rules requires an ADR.
+
+## Forbidden Names
+
+The following file or folder names are blocked by `npm run validate:conventions`:
+
+- `utils`
+- `helpers`
+- `misc`
+- `common`
+- `manager`
+- `service`
+
+Use specific names instead: `checksum_calculator`, `bbox_validation`, `metrics_mapper`, `api_client`, `storage_assertions`, `dataset_materializer`.
 
 ## Review Checklist
 
@@ -27,4 +43,8 @@
 - Does the use case depend on ports instead of adapters?
 - Can the Python worker contract be tested without running a full training job?
 - Are dataset versions immutable after creation?
+- Are state transitions done through domain methods?
+- Is SQL absent from handlers?
+- Are `torch` imports isolated to worker training/inference adapters?
+- Are public JSON contracts represented by DTOs and schemas?
 - Can a recruiter launch or understand the demo in under ten minutes?

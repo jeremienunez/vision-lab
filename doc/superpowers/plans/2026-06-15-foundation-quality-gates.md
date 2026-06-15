@@ -15,7 +15,7 @@
 - Create: `TODO.md` for tracked backlog.
 - Create: `CHANGELOG.md` for release history.
 - Create: `doc/` for specs, sprints, architecture notes, quality rules, and PDF references.
-- Create: `src/domain`, `src/application`, `src/infrastructure`, `src/presentation` for future implementation.
+- Create initial source boundary notes. These were later superseded by the Design Patterns pass, which makes `api/crates/` and `worker/perception_worker/` the canonical implementation roots.
 - Create: `tests/unit`, `tests/integration`, `tests/contract` for test levels.
 - Create: `scripts/commit-message-policy.mjs` for Conventional Commit validation.
 - Create: `scripts/sprint-document-policy.mjs` for BDD sprint validation.

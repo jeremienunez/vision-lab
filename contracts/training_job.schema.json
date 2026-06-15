@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TrainingJobPayload",
+  "type": "object",
+  "required": ["dataset_version_id", "model_family", "base_model", "hyperparameters"],
+  "additionalProperties": false,
+  "properties": {
+    "dataset_version_id": { "type": "string" },
+    "model_family": { "type": "string" },
+    "base_model": { "type": "string" },
+    "hyperparameters": { "type": "object" }
+  }
+}

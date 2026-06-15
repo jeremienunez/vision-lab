@@ -27,7 +27,11 @@ The initial PDF references are stored in `doc/references/`:
 - `doc/quality/qa-bdd.md` - QA/BDD strategy extracted from the QA reference PDF.
 - `doc/quality/test-strategy.md` - test pyramid, gates, and execution modes.
 - `doc/quality/acceptance-matrix.md` - product module to feature-file traceability.
+- `doc/quality/pre-p0-coverage-audit.md` - preparatory PDF coverage check before P0 implementation.
 - `doc/architecture/` - conventions and ADRs.
+- `doc/architecture/design-patterns.md` - mandatory patterns and forbidden anti-patterns.
+- `doc/architecture/review-checklist.md` - review checklist before P0 implementation.
 - `doc/demo/` - planned demo inputs, overlays, and API response examples.
 - `qa/features/` - Gherkin acceptance scenarios in English.
-- `fixtures/` - planned test fixtures mirrored from the QA/BDD reference.
+- `qa/fixtures/` - planned test fixtures mirrored from the QA/BDD reference.
+- `contracts/` - OpenAPI and JSON schemas for API and worker contracts.

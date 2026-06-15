@@ -18,7 +18,9 @@
 | Observability | `qa/features/observability.feature` | P1 |
 | Performance Smoke | `qa/features/performance_smoke.feature` | P1 |
 | Standard API Errors | `qa/features/standard_api_errors.feature` | P0 |
+| Basic API Security | `qa/features/basic_api_security.feature` | P0 |
 | Worker Job Locking | `qa/features/worker_job_locking.feature` | P0 |
+| ML Pipeline Consistency | `qa/features/ml_pipeline_consistency.feature` | P0 |
 | End-to-End Pipeline | `qa/features/end_to_end_pipeline.feature` | P0 |
 
 ## Critical Anti-Regression Set
@@ -37,3 +39,5 @@
 - Model registry is created.
 - Inference returns detections.
 - Storage and database stay consistent.
+- Model metadata preserves dataset version classes.
+- Unsafe filenames and content types are rejected.

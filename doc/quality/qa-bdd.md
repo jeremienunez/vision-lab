@@ -29,9 +29,9 @@ I can ingest visual data, annotate it, version it, train a model, register it, r
 
 - Feature files are written in English.
 - Feature files live in `qa/features/`.
-- Fixtures live in `qa/features/fixtures/` and top-level `fixtures/`.
-- Reports are expected in `qa/features/reports/`.
-- Tags use priority and domain labels: `@p0`, `@p1`, `@api`, `@database`, `@storage`, `@worker`, `@ml`, `@inference`, `@export`, `@nonfunctional`.
+- Fixtures live in `qa/fixtures/`.
+- Reports are expected in `qa/reports/` once the final BDD runner is selected.
+- Tags use priority and domain labels: `@p0`, `@p1`, `@p2`, `@api`, `@database`, `@storage`, `@worker`, `@ml`, `@inference`, `@export`, `@nonfunctional`, `@security`, `@e2e`.
 
 ## Criticality Levels
 

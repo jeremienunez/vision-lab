@@ -18,9 +18,14 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Dependency Cruiser architecture boundaries.
 - Node test suite for local policy scripts.
 - QA/BDD feature structure, fixtures, traceability docs, and static BDD validation command.
+- Design-pattern convention guard, normative Rust/Python folder structure, contracts folder, architecture ADRs, and review checklist.
+- Pre-P0 coverage audit across Product Owning, QA/BDD, and Design Patterns references.
+- BDD coverage for ML pipeline consistency and basic API security.
 
 ### Changed
 
 - Reframed the project from generic Vision Lab foundation to PerceptionLab, a Rust + PyTorch ML infrastructure platform.
 - Aligned product specs, roadmap, sprints, and validation criteria with the Product Owning reference PDF.
 - Aligned QA documentation and feature coverage with the QA & BDD reference PDF.
+- Aligned architecture documentation and implementation roots with the Design Patterns & Conventions reference PDF.
+- Removed the obsolete root `src/` foundation layout so P0 starts from `api/crates/` and `worker/perception_worker/`.

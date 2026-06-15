@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TrainingMetrics",
+  "type": "object",
+  "required": ["job_id", "epoch", "metrics"],
+  "additionalProperties": false,
+  "properties": {
+    "job_id": { "type": "string" },
+    "epoch": { "type": "integer", "minimum": 1 },
+    "metrics": { "type": "object" }
+  }
+}

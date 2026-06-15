@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "InferenceResponse",
+  "type": "object",
+  "required": ["model_id", "latency_ms", "detections"],
+  "additionalProperties": false,
+  "properties": {
+    "model_id": { "type": "string" },
+    "latency_ms": { "type": "number" },
+    "detections": { "type": "array" }
+  }
+}

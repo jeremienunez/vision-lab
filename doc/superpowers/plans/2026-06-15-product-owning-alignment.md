@@ -78,8 +78,8 @@ Expected: all sprint files pass goal, priority, dependencies, scope, BDD, and do
 
 **Files:**
 - Modify: `package.json`
-- Create: `apps/api-rust/README.md`
-- Create: `workers/pytorch-trainer/README.md`
+- Create: `api/README.md`
+- Create: `worker/README.md`
 - Create: `infra/README.md`
 - Create: `datasets/seed/README.md`
 - Create: `doc/demo/README.md`
