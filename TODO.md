@@ -77,7 +77,7 @@
 - [x] Add real YOLO image and webcam smoke commands.
 - [x] Connect real YOLO inference to the API product fire smoke.
 - [x] Add bounded live webcam YOLO detection command.
-- [ ] Add API key auth.
+- [x] Add API key auth.
 - [ ] Add minimal web dashboard only after API-first MVP.
 - [ ] Stream training logs.
 - [ ] Support video.
