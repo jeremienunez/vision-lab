@@ -197,6 +197,17 @@ PERCEPTIONLAB_SEED_DATASET_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets/cppe
 node scripts/seed-demo-dataset.mjs
 ```
 
+Consume one queued training job from PostgreSQL with the worker:
+
+```bash
+cd worker
+PERCEPTIONLAB_DATABASE_URL=postgres://perceptionlab:perceptionlab@127.0.0.1:55432/perceptionlab \
+PERCEPTIONLAB_ARTIFACT_ROOT=/media/jerem/ubuntu1/perceptionlab/artifacts \
+UV_CACHE_DIR=../.perceptionlab/cache/uv uv run perception-worker process-once \
+  --repository-backend postgres \
+  --trainer tiny_torch
+```
+
 ## API Smoke Flow
 
 Create a dataset:
@@ -249,6 +260,17 @@ curl -sS -X POST http://127.0.0.1:8080/training-jobs \
       "learning_rate": 0.01
     }
   }'
+```
+
+Process one queued job with the Python worker:
+
+```bash
+cd worker
+PERCEPTIONLAB_DATABASE_URL=postgres://perceptionlab:perceptionlab@127.0.0.1:55432/perceptionlab \
+PERCEPTIONLAB_ARTIFACT_ROOT=/media/jerem/ubuntu1/perceptionlab/artifacts \
+UV_CACHE_DIR=../.perceptionlab/cache/uv uv run perception-worker process-once \
+  --repository-backend postgres \
+  --trainer tiny_torch
 ```
 
 Transition a local demo job before registering a model:

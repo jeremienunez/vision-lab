@@ -37,6 +37,7 @@
 - [x] Add queue-backed training orchestration.
 - [x] Persist training jobs and queue entries through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add minimal Python/PyTorch worker.
+- [x] Connect Python worker to PostgreSQL training job queue.
 - [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
 - [x] Add strict worker contracts and strategy ports.
 - [x] Add training loop or wrapper model.

@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+from typer.testing import CliRunner
 
 from perception_worker.adapters.db.in_memory_job_repository import InMemoryTrainingJobRepository
 from perception_worker.adapters.training.fake_trainer import FakeTrainer
@@ -66,3 +67,15 @@ def test_training_worker_returns_false_when_queue_is_empty() -> None:
     )
 
     assert processor.run_once() is False
+
+
+def test_process_once_cli_rejects_missing_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    from perception_worker.entrypoints.cli import app
+
+    monkeypatch.delenv("PERCEPTIONLAB_DATABASE_URL", raising=False)
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["process-once", "--repository-backend", "postgres"])
+
+    assert result.exit_code == 1
+    assert "PERCEPTIONLAB_DATABASE_URL is required" in result.output

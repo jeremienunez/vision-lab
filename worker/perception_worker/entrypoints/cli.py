@@ -4,18 +4,23 @@ import contextlib
 import io
 import json
 import os
+import socket
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
+from perception_worker.adapters.db.postgres_job_repository import PostgresTrainingJobRepository
 from perception_worker.adapters.huggingface.dataset_client import HuggingFaceDatasetClient
 from perception_worker.adapters.inference.webcam_capture import OpenCvWebcamFrameCapture
 from perception_worker.adapters.inference.yolo_object_detector import YoloObjectDetector
 from perception_worker.adapters.storage.local_dataset_ingestion_store import (
     LocalDatasetIngestionStore,
 )
+from perception_worker.adapters.training.fake_trainer import FakeTrainer
+from perception_worker.adapters.training.tiny_torch_trainer import TinyTorchTrainer
 from perception_worker.app.ingest_dataset import DatasetIngestionService
+from perception_worker.app.process_training_job import TrainingJobProcessor
 from perception_worker.contracts.dataset_ingestion import DatasetIngestionCommand
 
 app = typer.Typer(add_completion=False)
@@ -59,6 +64,39 @@ def ingest_hf(
         f"ingested {result.sample_count} sample(s), "
         f"{result.annotation_count} annotation(s) into {result.dataset_root}"
     )
+
+
+@app.command("process-once")
+def process_once(
+    repository_backend: Annotated[str, typer.Option()] = "postgres",
+    trainer_name: Annotated[str, typer.Option("--trainer")] = "tiny_torch",
+    worker_id: Annotated[str | None, typer.Option()] = None,
+    artifact_root: Annotated[Path | None, typer.Option()] = None,
+) -> None:
+    if repository_backend != "postgres":
+        typer.echo("Only postgres repository backend is supported for process-once", err=True)
+        raise typer.Exit(1)
+
+    database_url = os.environ.get("PERCEPTIONLAB_DATABASE_URL")
+    if not database_url:
+        typer.echo("PERCEPTIONLAB_DATABASE_URL is required", err=True)
+        raise typer.Exit(1)
+
+    resolved_worker_id = worker_id or default_worker_id()
+    resolved_artifact_root = artifact_root or Path(
+        os.environ.get("PERCEPTIONLAB_ARTIFACT_ROOT", ".perceptionlab/artifacts")
+    )
+    repository = PostgresTrainingJobRepository(
+        database_url=database_url,
+        worker_id=resolved_worker_id,
+    )
+    processor = TrainingJobProcessor(
+        job_repository=repository,
+        trainer=build_trainer(trainer_name=trainer_name, artifact_root=resolved_artifact_root),
+    )
+    processed = processor.run_once()
+
+    typer.echo(json.dumps({"processed": processed, "worker_id": resolved_worker_id}, indent=2))
 
 
 @app.command("detect-image")
@@ -128,6 +166,18 @@ def detect_webcam(
 
 def parse_classes(value: str) -> tuple[str, ...]:
     return tuple(class_name.strip() for class_name in value.split(",") if class_name.strip())
+
+
+def default_worker_id() -> str:
+    return f"{socket.gethostname()}-{os.getpid()}"
+
+
+def build_trainer(trainer_name: str, artifact_root: Path) -> FakeTrainer | TinyTorchTrainer:
+    if trainer_name == "fake":
+        return FakeTrainer()
+    if trainer_name == "tiny_torch":
+        return TinyTorchTrainer(artifact_root=artifact_root / "models")
+    raise typer.BadParameter("trainer must be fake or tiny_torch")
 
 
 def main() -> None:
