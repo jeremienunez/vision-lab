@@ -26,6 +26,7 @@
 - [x] Add `POST /datasets` and `GET /datasets`.
 - [x] Persist datasets through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add `POST /datasets/{dataset_id}/samples`.
+- [x] Persist samples and annotations through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Connect abstracted file/object storage.
 - [x] Add annotation endpoints.
 - [x] Add `GET /datasets/{dataset_id}/stats`.

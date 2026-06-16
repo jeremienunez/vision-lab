@@ -53,6 +53,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Real YOLO image and webcam smoke commands through the worker CLI.
 - Real YOLO CLI inference adapter selectable by the API with `PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli`, including product fire smoke coverage through `POST /models/{model_id}/infer`.
 - SQLx-backed PostgreSQL dataset repository selectable with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
+- SQLx-backed PostgreSQL sample and annotation repositories used by the API in Postgres backend mode.
 
 ### Changed
 
