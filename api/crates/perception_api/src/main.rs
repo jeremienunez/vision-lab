@@ -118,26 +118,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let storage_root = std::env::var("PERCEPTIONLAB_STORAGE_ROOT")
         .unwrap_or_else(|_| ".perceptionlab/storage".to_owned());
     let sample_storage = Arc::new(perception_infra::LocalSampleStorage::new(storage_root));
+    let api_key_auth_config = perception_http::ApiKeyAuthConfig::from_env();
+    if api_key_auth_config.is_enabled() {
+        tracing::info!("api key auth enabled");
+    }
 
-    axum::serve(
-        listener,
-        perception_http::router_with_p0_ports(
-            dataset_repository,
-            sample_repository,
-            sample_storage,
-            annotation_repository,
-            dataset_version_repository,
-            training_job_repository,
-            training_job_queue,
-            training_metric_repository,
-            model_repository,
-            model_export_repository,
-            inference_run_repository,
-            overlay_renderer,
-            inference_engine,
-        ),
-    )
-    .await?;
+    let app = perception_http::router_with_p0_ports(
+        dataset_repository,
+        sample_repository,
+        sample_storage,
+        annotation_repository,
+        dataset_version_repository,
+        training_job_repository,
+        training_job_queue,
+        training_metric_repository,
+        model_repository,
+        model_export_repository,
+        inference_run_repository,
+        overlay_renderer,
+        inference_engine,
+    );
+    let app = perception_http::with_optional_api_key_auth(app, api_key_auth_config);
+
+    axum::serve(listener, app).await?;
 
     Ok(())
 }

@@ -3,6 +3,17 @@
 The published executable OpenAPI contract lives in `contracts/openapi.json`.
 Validate it with `npm run validate:openapi` or export it with `sh scripts/export_openapi.sh`.
 
+## Optional API Key Auth
+
+`PERCEPTIONLAB_API_KEY` enables portfolio-grade API key protection for local and CI runs.
+When it is unset or blank, the API remains open for local MVP ergonomics.
+
+- `GET /health` is always public.
+- Protected read and mutating routes require `x-api-key` when the key is configured.
+- Missing API keys return `401`.
+- Wrong API keys return `403`.
+- Local scripts read `PERCEPTIONLAB_API_KEY` and send `x-api-key` automatically.
+
 ## MVP Endpoints
 
 | Method | Path | Purpose |

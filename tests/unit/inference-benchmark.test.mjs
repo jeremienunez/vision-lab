@@ -30,6 +30,7 @@ describe('inference benchmark script', () => {
         '3',
       ],
       {
+        apiKey: 'local-secret',
         fetchImpl: async (url, options) => {
           calls.push([url, options]);
           return response({ run_id: `run_${calls.length}`, latency_ms: 9, detections: [] });
@@ -45,6 +46,7 @@ describe('inference benchmark script', () => {
     assert.equal(calls.length, 3);
     assert.equal(calls[0][0], 'http://api.local/models/mdl_01/infer');
     assert.equal(calls[0][1].method, 'POST');
+    assert.equal(calls[0][1].headers['x-api-key'], 'local-secret');
 
     const summary = JSON.parse(output);
     assert.equal(summary.model_id, 'mdl_01');

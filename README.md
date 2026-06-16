@@ -107,6 +107,23 @@ In another terminal:
 curl http://127.0.0.1:8080/health
 ```
 
+Optional API key protection:
+
+```bash
+PERCEPTIONLAB_API_KEY=local-secret \
+PERCEPTIONLAB_API_ADDR=127.0.0.1:8080 \
+cargo run --manifest-path api/Cargo.toml -p perception_api
+```
+
+When `PERCEPTIONLAB_API_KEY` is configured, `/health` remains public and protected API routes require `x-api-key`:
+
+```bash
+curl http://127.0.0.1:8080/health
+curl -H 'x-api-key: local-secret' http://127.0.0.1:8080/datasets
+```
+
+The local CLI, seed script, product fire smoke, and inference benchmark read `PERCEPTIONLAB_API_KEY` automatically. In CI, inject it as a secret environment variable and do not commit it to `.env.local`.
+
 Run the containerized local stack:
 
 ```bash

@@ -11,6 +11,7 @@
       "description": "Local development API"
     }
   ],
+  "security": [{ "ApiKeyAuth": [] }],
   "tags": [
     { "name": "Health" },
     { "name": "Datasets" },
@@ -28,6 +29,7 @@
       "get": {
         "operationId": "healthCheck",
         "tags": ["Health"],
+        "security": [],
         "summary": "Check API readiness.",
         "responses": {
           "200": {
@@ -587,6 +589,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Optional local API key required when PERCEPTIONLAB_API_KEY is configured."
+      }
+    },
     "parameters": {
       "DatasetId": {
         "name": "dataset_id",
@@ -646,6 +656,22 @@
       },
       "UnsupportedMediaTypeError": {
         "description": "Unsupported media type.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "UnauthorizedError": {
+        "description": "Missing API key.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "ForbiddenError": {
+        "description": "Invalid API key.",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ErrorResponse" }

@@ -12,6 +12,7 @@ const defaultImagePath = process.env.PERCEPTIONLAB_FIRE_IMAGE_PATH;
 const defaultModelArtifactUri =
   process.env.PERCEPTIONLAB_FIRE_MODEL_ARTIFACT_URI ?? 'file:///tmp/perceptionlab/demo-model.pt';
 const defaultConfidenceThreshold = process.env.PERCEPTIONLAB_FIRE_CONFIDENCE_THRESHOLD ?? '0.25';
+const defaultApiKey = process.env.PERCEPTIONLAB_API_KEY;
 
 export async function fireDemoProduct(dependencies = {}) {
   const {
@@ -20,6 +21,7 @@ export async function fireDemoProduct(dependencies = {}) {
     imagePath = defaultImagePath,
     modelArtifactUri = defaultModelArtifactUri,
     confidenceThreshold = defaultConfidenceThreshold,
+    apiKey = defaultApiKey,
     fetchImpl = globalThis.fetch,
     stdout = (value) => process.stdout.write(value),
   } = dependencies;
@@ -34,6 +36,7 @@ export async function fireDemoProduct(dependencies = {}) {
   await seedDemoDataset({
     baseUrl: apiBaseUrl,
     seedRoot,
+    apiKey,
     fetchImpl,
     stdout: (value) => {
       seedOutput += value;
@@ -50,16 +53,16 @@ export async function fireDemoProduct(dependencies = {}) {
       image_size: 64,
       learning_rate: 0.01,
     },
-  });
+  }, apiKey);
 
   await patchJson(fetchImpl, `${apiBaseUrl}/training-jobs/${trainingJob.id}/status`, {
     next_status: 'running',
     error_message: null,
-  });
+  }, apiKey);
   await patchJson(fetchImpl, `${apiBaseUrl}/training-jobs/${trainingJob.id}/status`, {
     next_status: 'succeeded',
     error_message: null,
-  });
+  }, apiKey);
 
   const model = await postJson(fetchImpl, `${apiBaseUrl}/models`, {
     training_job_id: trainingJob.id,
@@ -70,12 +73,13 @@ export async function fireDemoProduct(dependencies = {}) {
       mAP50: '0.91',
       classes: manifest.dataset.classes.join(','),
     },
-  });
+  }, apiKey);
   const inference = await postMultipart(
     fetchImpl,
     `${apiBaseUrl}/models/${model.id}/infer`,
     inferenceImage,
     confidenceThreshold,
+    apiKey,
   );
 
   if (!Array.isArray(inference.detections) || inference.detections.length === 0) {
@@ -86,6 +90,7 @@ export async function fireDemoProduct(dependencies = {}) {
     fetchImpl,
     `${apiBaseUrl}/inference-runs/${inference.run_id}/overlay`,
     {},
+    apiKey,
   );
   const summary = {
     dataset_id: seed.dataset_id,
@@ -158,35 +163,48 @@ async function getJson(fetchImpl, url) {
   return parseResponse(response, url);
 }
 
-async function postJson(fetchImpl, url, payload) {
+async function postJson(fetchImpl, url, payload, apiKey) {
   const response = await fetchImpl(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: jsonHeaders(apiKey),
     body: JSON.stringify(payload),
   });
   return parseResponse(response, url);
 }
 
-async function patchJson(fetchImpl, url, payload) {
+async function patchJson(fetchImpl, url, payload, apiKey) {
   const response = await fetchImpl(url, {
     method: 'PATCH',
-    headers: { 'content-type': 'application/json' },
+    headers: jsonHeaders(apiKey),
     body: JSON.stringify(payload),
   });
   return parseResponse(response, url);
 }
 
-async function postMultipart(fetchImpl, url, image, confidenceThreshold) {
+async function postMultipart(fetchImpl, url, image, confidenceThreshold, apiKey) {
   const bytes = await fs.readFile(image.path);
   const form = new FormData();
   form.append('confidence_threshold', String(confidenceThreshold));
   form.append('image', new Blob([bytes], { type: image.mime_type }), image.filename);
   const response = await fetchImpl(url, {
     method: 'POST',
+    headers: authHeaders(apiKey),
     body: form,
   });
 
   return parseResponse(response, image.path);
+}
+
+function jsonHeaders(apiKey) {
+  return {
+    'content-type': 'application/json',
+    ...authHeaders(apiKey),
+  };
+}
+
+function authHeaders(apiKey) {
+  const normalizedApiKey = apiKey?.trim();
+  return normalizedApiKey ? { 'x-api-key': normalizedApiKey } : {};
 }
 
 async function resolveInferenceImage(imagePath, seedRoot, manifest) {

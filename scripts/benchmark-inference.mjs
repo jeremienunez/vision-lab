@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 const defaultBaseUrl = process.env.PERCEPTIONLAB_API_BASE_URL ?? 'http://127.0.0.1:8080';
 const defaultImagePath =
   process.env.PERCEPTIONLAB_BENCHMARK_IMAGE ?? 'datasets/seed/images/desk-objects.png';
+const defaultApiKey = process.env.PERCEPTIONLAB_API_KEY;
 
 const usage = `Usage:
   node scripts/benchmark-inference.mjs --model-id MODEL_ID [--image PATH] [--iterations N] [--base-url URL] [--confidence-threshold N]
@@ -17,6 +18,7 @@ export async function runInferenceBenchmark(argv, dependencies = {}) {
     now = () => performance.now(),
     stdout = (value) => process.stdout.write(value),
     stderr = (value) => process.stderr.write(value),
+    apiKey = defaultApiKey,
   } = dependencies;
 
   const options = parseOptions(argv);
@@ -41,7 +43,11 @@ export async function runInferenceBenchmark(argv, dependencies = {}) {
     form.append('image', new Blob([imageBytes], { type: 'image/png' }), 'benchmark.png');
 
     const startedAt = now();
-    const response = await fetchImpl(url, { method: 'POST', body: form });
+    const response = await fetchImpl(url, {
+      method: 'POST',
+      headers: authHeaders(apiKey),
+      body: form,
+    });
     const elapsedMs = now() - startedAt;
     const body = await parseResponse(response, url);
 
@@ -133,6 +139,11 @@ function summarize(values) {
 
 function round(value) {
   return Math.round(value * 100) / 100;
+}
+
+function authHeaders(apiKey) {
+  const normalizedApiKey = apiKey?.trim();
+  return normalizedApiKey ? { 'x-api-key': normalizedApiKey } : {};
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

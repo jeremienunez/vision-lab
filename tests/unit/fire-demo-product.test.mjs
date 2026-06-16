@@ -22,6 +22,7 @@ describe('fire demo product script', () => {
 
     const code = await fireDemoProduct({
       baseUrl: 'http://api.local/',
+      apiKey: 'local-secret',
       fetchImpl: async (url, options) => {
         calls.push([url, options]);
 
@@ -106,6 +107,13 @@ describe('fire demo product script', () => {
         'http://api.local/models/mdl_01/infer',
         'http://api.local/inference-runs/irun_01/overlay',
       ],
+    );
+    assert.equal(calls[0][1], undefined);
+    assert.equal(
+      calls
+        .slice(1)
+        .every(([, options]) => options.headers['x-api-key'] === 'local-secret'),
+      true,
     );
     assert.deepEqual(JSON.parse(output), {
       dataset_id: 'ds_01',

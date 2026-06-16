@@ -11,10 +11,13 @@ use perception_app::{
     TrainingMetricRepository,
 };
 
+mod api_key_auth;
 pub mod dto;
 pub mod mappers;
 pub mod routes;
 pub mod state;
+
+pub use api_key_auth::{ApiKeyAuthConfig, with_optional_api_key_auth};
 
 pub const CRATE_NAME: &str = "perception_http";
 

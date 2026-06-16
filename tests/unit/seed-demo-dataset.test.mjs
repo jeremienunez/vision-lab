@@ -22,6 +22,7 @@ describe('seed demo dataset script', () => {
 
     const code = await seedDemoDataset({
       baseUrl: 'http://api.local/',
+      apiKey: 'local-secret',
       fetchImpl: async (url, options) => {
         calls.push([url, options]);
 
@@ -53,6 +54,10 @@ describe('seed demo dataset script', () => {
       3,
     );
     assert.equal(calls.at(-1)[0], 'http://api.local/datasets/ds_01/versions');
+    assert.equal(
+      calls.every(([, options]) => options.headers['x-api-key'] === 'local-secret'),
+      true,
+    );
     assert.deepEqual(JSON.parse(output), {
       dataset_id: 'ds_01',
       dataset_name: 'desk-objects-v1',

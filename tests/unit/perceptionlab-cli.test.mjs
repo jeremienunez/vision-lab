@@ -69,6 +69,23 @@ describe('PerceptionLab CLI', () => {
     });
   });
 
+  it('sends the configured API key to protected endpoints', async () => {
+    const calls = [];
+
+    const code = await runCli(['--base-url', 'http://api.local', 'datasets'], {
+      apiKey: 'local-secret',
+      fetchImpl: async (url, options) => {
+        calls.push([url, options]);
+        return response({ datasets: [] });
+      },
+      stdout: () => {},
+    });
+
+    assert.equal(code, 0);
+    assert.equal(calls[0][0], 'http://api.local/datasets');
+    assert.equal(calls[0][1].headers['x-api-key'], 'local-secret');
+  });
+
   it('prints the published OpenAPI contract without calling the API', async () => {
     let output = '';
     let called = false;

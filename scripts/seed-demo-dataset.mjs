@@ -7,22 +7,24 @@ import { loadSeedManifest } from './seed-dataset-policy.mjs';
 
 const defaultBaseUrl = process.env.PERCEPTIONLAB_API_BASE_URL ?? 'http://127.0.0.1:8080';
 const defaultSeedRoot = process.env.PERCEPTIONLAB_SEED_DATASET_ROOT ?? 'datasets/seed';
+const defaultApiKey = process.env.PERCEPTIONLAB_API_KEY;
 
 export async function seedDemoDataset(dependencies = {}) {
   const {
     baseUrl = defaultBaseUrl,
     seedRoot = defaultSeedRoot,
+    apiKey = defaultApiKey,
     fetchImpl = globalThis.fetch,
     stdout = (value) => process.stdout.write(value),
   } = dependencies;
 
   const apiBaseUrl = baseUrl.replace(/\/+$/, '');
   const manifest = loadSeedManifest(seedRoot);
-  const dataset = await postJson(fetchImpl, `${apiBaseUrl}/datasets`, manifest.dataset);
+  const dataset = await postJson(fetchImpl, `${apiBaseUrl}/datasets`, manifest.dataset, apiKey);
   const samples = [];
 
   for (const sample of manifest.samples) {
-    const uploadedSample = await postSample(fetchImpl, apiBaseUrl, seedRoot, dataset.id, sample);
+    const uploadedSample = await postSample(fetchImpl, apiBaseUrl, seedRoot, dataset.id, sample, apiKey);
     samples.push(uploadedSample);
 
     for (const annotation of sample.annotations) {
@@ -30,7 +32,7 @@ export async function seedDemoDataset(dependencies = {}) {
         class_name: annotation.class_name,
         bbox: annotation.bbox,
         confidence: annotation.confidence,
-      });
+      }, apiKey);
     }
   }
 
@@ -38,6 +40,7 @@ export async function seedDemoDataset(dependencies = {}) {
     fetchImpl,
     `${apiBaseUrl}/datasets/${dataset.id}/versions`,
     manifest.version,
+    apiKey,
   );
 
   stdout(
@@ -61,16 +64,16 @@ export async function seedDemoDataset(dependencies = {}) {
   return 0;
 }
 
-async function postJson(fetchImpl, url, payload) {
+async function postJson(fetchImpl, url, payload, apiKey) {
   const response = await fetchImpl(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: jsonHeaders(apiKey),
     body: JSON.stringify(payload),
   });
   return parseResponse(response, url);
 }
 
-async function postSample(fetchImpl, apiBaseUrl, seedRoot, datasetId, sample) {
+async function postSample(fetchImpl, apiBaseUrl, seedRoot, datasetId, sample, apiKey) {
   const bytes = await fs.readFile(path.join(seedRoot, sample.path));
   const form = new FormData();
   form.append('width', String(sample.width));
@@ -79,9 +82,22 @@ async function postSample(fetchImpl, apiBaseUrl, seedRoot, datasetId, sample) {
 
   const response = await fetchImpl(`${apiBaseUrl}/datasets/${datasetId}/samples`, {
     method: 'POST',
+    headers: authHeaders(apiKey),
     body: form,
   });
   return parseResponse(response, sample.path);
+}
+
+function jsonHeaders(apiKey) {
+  return {
+    'content-type': 'application/json',
+    ...authHeaders(apiKey),
+  };
+}
+
+function authHeaders(apiKey) {
+  const normalizedApiKey = apiKey?.trim();
+  return normalizedApiKey ? { 'x-api-key': normalizedApiKey } : {};
 }
 
 async function parseResponse(response, context) {

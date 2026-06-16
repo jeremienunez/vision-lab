@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const defaultBaseUrl = process.env.PERCEPTIONLAB_API_BASE_URL ?? 'http://127.0.0.1:8080';
+const defaultApiKey = process.env.PERCEPTIONLAB_API_KEY;
 
 const usage = `Usage:
   node scripts/perceptionlab-cli.mjs [--base-url URL] health
@@ -18,6 +19,7 @@ export async function runCli(argv, dependencies = {}) {
     stdout = (value) => process.stdout.write(value),
     stderr = (value) => process.stderr.write(value),
     readFile = (path) => fs.readFileSync(path, 'utf8'),
+    apiKey = defaultApiKey,
   } = dependencies;
 
   const parsed = parseCli(argv);
@@ -41,7 +43,7 @@ export async function runCli(argv, dependencies = {}) {
     return 1;
   }
 
-  const request = buildRequest(parsed);
+  const request = buildRequest(parsed, apiKey);
   if (request.error) {
     stderr(`${request.error}\n\n${usage}`);
     return 2;
@@ -106,7 +108,7 @@ function parseCommandOptions(args) {
   return options;
 }
 
-function buildRequest(parsed) {
+function buildRequest(parsed, apiKey) {
   if (parsed.commandOptions.error) {
     return { error: parsed.commandOptions.error };
   }
@@ -117,24 +119,24 @@ function buildRequest(parsed) {
     case 'health':
       return getRequest(`${baseUrl}/health`);
     case 'datasets':
-      return getRequest(`${baseUrl}/datasets`);
+      return getRequest(`${baseUrl}/datasets`, apiKey);
     case 'models':
-      return getRequest(`${baseUrl}/models`);
+      return getRequest(`${baseUrl}/models`, apiKey);
     case 'create-dataset':
-      return createDatasetRequest(baseUrl, parsed.commandOptions);
+      return createDatasetRequest(baseUrl, parsed.commandOptions, apiKey);
     default:
       return { error: `Unknown command: ${parsed.command}` };
   }
 }
 
-function getRequest(url) {
+function getRequest(url, apiKey) {
   return {
     url,
-    options: { method: 'GET' },
+    options: { method: 'GET', headers: authHeaders(apiKey) },
   };
 }
 
-function createDatasetRequest(baseUrl, options) {
+function createDatasetRequest(baseUrl, options, apiKey) {
   if (!options.name) {
     return { error: 'create-dataset requires --name' };
   }
@@ -154,7 +156,7 @@ function createDatasetRequest(baseUrl, options) {
     url: `${baseUrl}/datasets`,
     options: {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: jsonHeaders(apiKey),
       body: JSON.stringify({
         name: options.name,
         description: options.description ?? null,
@@ -163,6 +165,18 @@ function createDatasetRequest(baseUrl, options) {
       }),
     },
   };
+}
+
+function jsonHeaders(apiKey) {
+  return {
+    'content-type': 'application/json',
+    ...authHeaders(apiKey),
+  };
+}
+
+function authHeaders(apiKey) {
+  const normalizedApiKey = apiKey?.trim();
+  return normalizedApiKey ? { 'x-api-key': normalizedApiKey } : {};
 }
 
 function formatJsonText(text) {
