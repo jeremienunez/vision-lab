@@ -26,6 +26,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         training_job_queue,
         training_metric_repository,
         model_repository,
+        model_export_repository,
+        inference_run_repository,
     ): (
         Arc<dyn perception_app::DatasetRepository>,
         Arc<dyn perception_app::SampleRepository>,
@@ -35,10 +37,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc<dyn perception_app::TrainingJobQueue>,
         Arc<dyn perception_app::TrainingMetricRepository>,
         Arc<dyn perception_app::ModelRepository>,
+        Arc<dyn perception_app::ModelExportRepository>,
+        Arc<dyn perception_app::InferenceRunRepository>,
     ) = match perception_infra::RepositoryBackend::from_env() {
         perception_infra::RepositoryBackend::Postgres => {
             tracing::info!(
-                "using postgres dataset, sample, annotation, dataset version, training job, training queue, training metric, and model repositories"
+                "using postgres dataset, sample, annotation, dataset version, training job, training queue, training metric, model, model export, and inference run repositories"
             );
             let database_url = std::env::var("PERCEPTIONLAB_DATABASE_URL")?;
             let database_pool = sqlx::postgres::PgPoolOptions::new()
@@ -75,6 +79,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     database_pool.clone(),
                 )),
                 Arc::new(perception_infra::PostgresModelRepository::new(
+                    database_pool.clone(),
+                )),
+                Arc::new(perception_infra::PostgresModelExportRepository::new(
+                    database_pool.clone(),
+                )),
+                Arc::new(perception_infra::PostgresInferenceRunRepository::new(
                     database_pool,
                 )),
             )
@@ -88,12 +98,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::new(perception_infra::TransientTrainingJobQueue::default()),
             Arc::new(perception_infra::TransientTrainingMetricRepository::default()),
             Arc::new(perception_infra::TransientModelRepository::default()),
+            Arc::new(perception_infra::TransientModelExportRepository::default()),
+            Arc::new(perception_infra::TransientInferenceRunRepository::default()),
         ),
     };
-    let model_export_repository =
-        Arc::new(perception_infra::TransientModelExportRepository::default());
-    let inference_run_repository =
-        Arc::new(perception_infra::TransientInferenceRunRepository::default());
     let artifact_root = std::env::var("PERCEPTIONLAB_ARTIFACT_ROOT")
         .unwrap_or_else(|_| ".perceptionlab/artifacts".to_owned());
     let overlay_renderer = Arc::new(perception_infra::SvgOverlayRenderer::new(format!(

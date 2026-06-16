@@ -48,6 +48,7 @@
 - [x] Add `GET /models/{model_id}`.
 - [x] Persist training metrics and model registry through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add `POST /models/{model_id}/infer`.
+- [x] Persist model exports and inference runs through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add Docker Compose.
 - [x] Add product-grade README quickstart.
 

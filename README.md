@@ -22,7 +22,7 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 
 - Rust API service for ingestion, orchestration, dataset/version/model endpoints, and health checks.
 - Python/PyTorch worker for training, metrics writing, inference, and export jobs.
-- PostgreSQL for datasets, samples, annotations, versions, jobs, metrics, and models; exports and inference run persistence are the remaining adapter gaps.
+- PostgreSQL for datasets, samples, annotations, versions, jobs, metrics, models, exports, and inference runs.
 - Object storage or filesystem storage behind an adapter for images, model artifacts, exports, and overlays.
 - Queue-backed asynchronous training so HTTP requests never block on ML work.
 - Docker Compose local stack for the final MVP demo.
@@ -115,7 +115,7 @@ curl http://127.0.0.1:8080/health
 docker compose down
 ```
 
-The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, annotations, dataset versions, training jobs, the training job queue, training metrics, and models. The API applies `api/migrations/` at startup through SQLx. Model exports and inference runs still use transient adapters in the current tranche. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
+The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, annotations, dataset versions, training jobs, the training job queue, training metrics, models, model exports, and inference runs. The API applies `api/migrations/` at startup through SQLx. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
 
 Run the API directly against a local PostgreSQL database:
 
