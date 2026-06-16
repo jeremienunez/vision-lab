@@ -1259,6 +1259,7 @@ dependencies = [
  "hex",
  "perception_app",
  "perception_domain",
+ "serde",
  "serde_json",
  "sha2",
  "sqlx",

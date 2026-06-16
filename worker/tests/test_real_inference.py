@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from perception_worker.adapters.inference.webcam_capture import OpenCvWebcamFrameCapture
 from perception_worker.adapters.inference.yolo_object_detector import YoloObjectDetector
@@ -44,7 +45,7 @@ class FakeYoloModel:
 
 def test_yolo_object_detector_returns_detections_and_artifact_paths(tmp_path: Path) -> None:
     image_path = tmp_path / "capture.png"
-    image_path.write_bytes(b"png")
+    Image.new("RGB", (200, 400), color="white").save(image_path)
     model = FakeYoloModel()
     detector = YoloObjectDetector(model_loader=lambda _model_path: model)
 
@@ -57,6 +58,8 @@ def test_yolo_object_detector_returns_detections_and_artifact_paths(tmp_path: Pa
     )
 
     assert result.image_path == image_path
+    assert result.image_width == 200
+    assert result.image_height == 400
     assert result.output_dir == tmp_path / "runs" / "manual"
     assert result.annotated_image_path == tmp_path / "runs" / "manual" / "capture.jpg"
     assert result.label_path == tmp_path / "runs" / "manual" / "labels" / "capture.txt"

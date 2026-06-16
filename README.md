@@ -125,13 +125,22 @@ Run the full local smoke that proves the product inference path can execute an o
 npm run demo:fire
 ```
 
+The default smoke uses the deterministic local inference adapter so the product path stays fast and reproducible in CI.
+
 Use a captured phone or webcam image instead of the bundled seed image:
 
 ```bash
 npm run demo:fire -- --image /absolute/path/to/capture.jpg
 ```
 
-The command starts a transient API, seeds `datasets/seed`, creates a succeeded demo training job, registers a model, runs inference on the selected image, generates an overlay, and prints a JSON summary with detected classes and the overlay artifact URI. Supported custom image formats are `.jpg`, `.jpeg`, `.png`, and `.webp`. This is a product smoke with the local deterministic inference adapter; it validates the executable path, not real model accuracy. Override the port with `PERCEPTIONLAB_API_ADDR=127.0.0.1:18080` if `8080` is already used.
+Run the same product path with the real YOLO worker behind `POST /models/{model_id}/infer`:
+
+```bash
+PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli \
+npm run demo:fire -- --image /absolute/path/to/capture.jpg --confidence-threshold 0.25
+```
+
+The command starts a transient API, seeds `datasets/seed`, creates a succeeded demo training job, registers a model, runs inference on the selected image, generates an overlay, and prints a JSON summary with detected classes and the overlay artifact URI. Supported custom image formats are `.jpg`, `.jpeg`, `.png`, and `.webp`. In real YOLO mode the registered model artifact defaults to `.perceptionlab/models/yolo11n.pt`; override it with `PERCEPTIONLAB_FIRE_MODEL_ARTIFACT_URI=file:///absolute/path/to/model.pt`. Override the port with `PERCEPTIONLAB_API_ADDR=127.0.0.1:18080` if `8080` is already used.
 
 ## Real YOLO Smoke
 

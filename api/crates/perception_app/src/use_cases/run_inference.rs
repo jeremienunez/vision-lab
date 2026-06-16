@@ -61,6 +61,7 @@ impl<'repository> RunInferenceUseCase<'repository> {
                 filename: filename.clone(),
                 mime_type: mime_type.clone(),
                 image_bytes: command.image_bytes,
+                confidence_threshold: command.confidence_threshold,
             })
             .await?;
         result.run_id = run_id;

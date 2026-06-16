@@ -12,7 +12,14 @@ Run it against a captured phone or webcam image:
 npm run demo:fire -- --image /absolute/path/to/capture.jpg
 ```
 
-The command starts a transient API, seeds the bundled desk-object dataset, registers a demo model, runs inference, and generates an overlay artifact. It fails if the inference response contains no detections. Custom images must be `.jpg`, `.jpeg`, `.png`, or `.webp`. The current demo uses the local deterministic inference adapter, so it validates the product path rather than real model accuracy.
+Run the same API path with the real YOLO worker adapter:
+
+```bash
+PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli \
+npm run demo:fire -- --image /absolute/path/to/capture.jpg --confidence-threshold 0.25
+```
+
+The command starts a transient API, seeds the bundled desk-object dataset, registers a demo model, runs inference, and generates an overlay artifact. It fails if the inference response contains no detections. Custom images must be `.jpg`, `.jpeg`, `.png`, or `.webp`. The default demo uses the local deterministic inference adapter for repeatable product-path validation. With `PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli`, `POST /models/{model_id}/infer` shells through the worker environment and uses the registered model artifact, defaulting to `.perceptionlab/models/yolo11n.pt`.
 
 Primary inputs and outputs:
 

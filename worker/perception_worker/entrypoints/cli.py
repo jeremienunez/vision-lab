@@ -1,5 +1,7 @@
 """Command line entrypoint for the PerceptionLab worker."""
 
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -66,14 +68,26 @@ def detect_image(
     output_root: Annotated[Path, typer.Option()] = Path(".perceptionlab/real-inference"),
     run_name: Annotated[str, typer.Option()] = "image",
     confidence_threshold: Annotated[float, typer.Option("--confidence-threshold")] = 0.25,
+    json_only: Annotated[bool, typer.Option()] = False,
 ) -> None:
-    result = YoloObjectDetector().detect_image(
-        image_path=image_path,
-        model_path=model_path,
-        output_root=output_root,
-        run_name=run_name,
-        confidence_threshold=confidence_threshold,
-    )
+    detector = YoloObjectDetector()
+    if json_only:
+        with contextlib.redirect_stdout(io.StringIO()):
+            result = detector.detect_image(
+                image_path=image_path,
+                model_path=model_path,
+                output_root=output_root,
+                run_name=run_name,
+                confidence_threshold=confidence_threshold,
+            )
+    else:
+        result = detector.detect_image(
+            image_path=image_path,
+            model_path=model_path,
+            output_root=output_root,
+            run_name=run_name,
+            confidence_threshold=confidence_threshold,
+        )
     typer.echo(json.dumps(result.to_summary(), indent=2))
 
 
@@ -85,18 +99,30 @@ def detect_webcam(
     output_root: Annotated[Path, typer.Option()] = Path(".perceptionlab/real-inference"),
     run_name: Annotated[str, typer.Option()] = "webcam",
     confidence_threshold: Annotated[float, typer.Option("--confidence-threshold")] = 0.25,
+    json_only: Annotated[bool, typer.Option()] = False,
 ) -> None:
     captured_image_path = OpenCvWebcamFrameCapture().capture_frame(
         device_index=device_index,
         output_path=capture_path,
     )
-    result = YoloObjectDetector().detect_image(
-        image_path=captured_image_path,
-        model_path=model_path,
-        output_root=output_root,
-        run_name=run_name,
-        confidence_threshold=confidence_threshold,
-    )
+    detector = YoloObjectDetector()
+    if json_only:
+        with contextlib.redirect_stdout(io.StringIO()):
+            result = detector.detect_image(
+                image_path=captured_image_path,
+                model_path=model_path,
+                output_root=output_root,
+                run_name=run_name,
+                confidence_threshold=confidence_threshold,
+            )
+    else:
+        result = detector.detect_image(
+            image_path=captured_image_path,
+            model_path=model_path,
+            output_root=output_root,
+            run_name=run_name,
+            confidence_threshold=confidence_threshold,
+        )
     typer.echo(json.dumps(result.to_summary(), indent=2))
 
 

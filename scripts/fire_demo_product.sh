@@ -7,6 +7,11 @@ log_file="${PERCEPTIONLAB_TMP_ROOT:-.perceptionlab/tmp}/fire-demo-api.log"
 
 mkdir -p "$(dirname "$log_file")"
 
+if [ "${PERCEPTIONLAB_INFERENCE_ENGINE:-}" = "yolo_cli" ] || [ "${PERCEPTIONLAB_INFERENCE_ENGINE:-}" = "yolo" ]; then
+  : "${PERCEPTIONLAB_FIRE_MODEL_ARTIFACT_URI:=file://$(pwd)/.perceptionlab/models/yolo11n.pt}"
+  export PERCEPTIONLAB_FIRE_MODEL_ARTIFACT_URI
+fi
+
 PERCEPTIONLAB_API_ADDR="$api_addr" cargo run --manifest-path api/Cargo.toml -p perception_api >"$log_file" 2>&1 &
 api_pid="$!"
 

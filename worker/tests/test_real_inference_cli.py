@@ -22,6 +22,8 @@ class FakeDetector:
     ) -> RealInferenceResult:
         return RealInferenceResult(
             image_path=image_path,
+            image_width=200,
+            image_height=400,
             output_dir=output_root / run_name,
             annotated_image_path=output_root / run_name / "capture.jpg",
             label_path=output_root / run_name / "labels" / "capture.txt",
@@ -33,6 +35,26 @@ class FakeDetector:
                     bbox_xyxy=(10.0, 20.0, 110.0, 220.0),
                 ),
             ),
+        )
+
+
+class NoisyFakeDetector(FakeDetector):
+    def detect_image(
+        self,
+        *,
+        image_path: Path,
+        model_path: Path,
+        output_root: Path,
+        run_name: str,
+        confidence_threshold: float,
+    ) -> RealInferenceResult:
+        print("ultralytics progress log")
+        return super().detect_image(
+            image_path=image_path,
+            model_path=model_path,
+            output_root=output_root,
+            run_name=run_name,
+            confidence_threshold=confidence_threshold,
         )
 
 
@@ -70,6 +92,36 @@ def test_detect_image_cli_prints_json_summary(
     assert '"class_name": "person"' in result.output
     assert '"detection_count": 1' in result.output
     assert str(tmp_path / "runs" / "manual" / "capture.jpg") in result.output
+
+
+def test_detect_image_cli_can_emit_json_only(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    image_path = tmp_path / "capture.png"
+    image_path.write_bytes(b"png")
+    monkeypatch.setattr(cli, "YoloObjectDetector", lambda: NoisyFakeDetector())
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli.app,
+        [
+            "detect-image",
+            str(image_path),
+            "--output-root",
+            str(tmp_path / "runs"),
+            "--model-path",
+            str(tmp_path / "yolo11n.pt"),
+            "--run-name",
+            "manual",
+            "--json-only",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert result.output.startswith("{")
+    assert "ultralytics progress log" not in result.output
+    assert '"detection_count": 1' in result.output
 
 
 def test_detect_webcam_cli_captures_frame_then_detects(

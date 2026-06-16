@@ -23,6 +23,8 @@ class RealDetection:
 @dataclass(frozen=True)
 class RealInferenceResult:
     image_path: Path
+    image_width: int
+    image_height: int
     output_dir: Path
     annotated_image_path: Path
     label_path: Path
@@ -31,6 +33,8 @@ class RealInferenceResult:
     def to_summary(self) -> dict[str, object]:
         return {
             "image_path": str(self.image_path),
+            "image_width": self.image_width,
+            "image_height": self.image_height,
             "output_dir": str(self.output_dir),
             "annotated_image_path": str(self.annotated_image_path),
             "label_path": str(self.label_path),

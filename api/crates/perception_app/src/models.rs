@@ -196,6 +196,7 @@ pub struct InferenceRequest {
     pub filename: String,
     pub mime_type: String,
     pub image_bytes: Vec<u8>,
+    pub confidence_threshold: f32,
 }
 
 #[derive(Debug, Clone, PartialEq)]

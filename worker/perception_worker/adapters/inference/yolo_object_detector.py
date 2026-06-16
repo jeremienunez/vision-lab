@@ -5,6 +5,8 @@ import importlib
 from pathlib import Path
 from typing import Any
 
+from PIL import Image
+
 from perception_worker.domain.real_inference import RealDetection, RealInferenceResult
 
 
@@ -39,9 +41,12 @@ class YoloObjectDetector:
             verbose=False,
         )
         output_dir = output_root / run_name
+        image_width, image_height = read_image_size(resolved_image_path)
 
         return RealInferenceResult(
             image_path=resolved_image_path,
+            image_width=image_width,
+            image_height=image_height,
             output_dir=output_dir,
             annotated_image_path=output_dir / f"{resolved_image_path.stem}.jpg",
             label_path=output_dir / "labels" / f"{resolved_image_path.stem}.txt",
@@ -54,6 +59,11 @@ def load_ultralytics_model(model_path: str) -> Any:
     yolo_class = getattr(ultralytics, "YOLO")
 
     return yolo_class(model_path)
+
+
+def read_image_size(image_path: Path) -> tuple[int, int]:
+    with Image.open(image_path) as image:
+        return image.size
 
 
 def parse_detections(predictions: Any) -> list[RealDetection]:

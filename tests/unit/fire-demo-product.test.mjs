@@ -59,6 +59,7 @@ describe('fire demo product script', () => {
           );
         }
         if (url === 'http://api.local/models/mdl_01/infer') {
+          assert.equal(options.body.get('confidence_threshold'), '0.25');
           return response({
             run_id: 'irun_01',
             model_id: 'mdl_01',
@@ -122,6 +123,7 @@ describe('fire demo product script', () => {
     await assert.rejects(
       fireDemoProduct({
         baseUrl: 'http://api.local/',
+        modelArtifactUri: 'file:///models/yolo11n.pt',
         fetchImpl: async (url) => {
           if (url === 'http://api.local/health') return response({ status: 'ok' });
           if (url === 'http://api.local/datasets') return response({ id: 'ds_01' }, 201);
@@ -198,6 +200,48 @@ describe('fire demo product script', () => {
     assert.equal(inferredFilename, 'phone-capture.png');
   });
 
+  it('registers a model with the configured artifact URI', async () => {
+    let registeredModelPayload = null;
+
+    await fireDemoProduct({
+      baseUrl: 'http://api.local/',
+      modelArtifactUri: 'file:///models/yolo11n.pt',
+      fetchImpl: async (url, options = {}) => {
+        if (url === 'http://api.local/health') return response({ status: 'ok' });
+        if (url === 'http://api.local/datasets') return response({ id: 'ds_01' }, 201);
+        if (url === 'http://api.local/datasets/ds_01/samples') {
+          return response({ id: 'smp_01' }, 201);
+        }
+        if (url === 'http://api.local/samples/smp_01/annotations') {
+          return response({ id: 'ann_01' }, 201);
+        }
+        if (url === 'http://api.local/datasets/ds_01/versions') {
+          return response({ id: 'dsv_01', version_name: 'v1' }, 201);
+        }
+        if (url === 'http://api.local/training-jobs') {
+          return response({ id: 'job_01', dataset_version_id: 'dsv_01', status: 'queued' }, 201);
+        }
+        if (url === 'http://api.local/training-jobs/job_01/status') {
+          return response({ id: 'job_01', status: 'succeeded' });
+        }
+        if (url === 'http://api.local/models') {
+          registeredModelPayload = JSON.parse(options.body);
+          return response({ id: 'mdl_01' }, 201);
+        }
+        if (url === 'http://api.local/models/mdl_01/infer') {
+          return response({ run_id: 'irun_01', detections: [{ class_name: 'person' }] });
+        }
+        if (url === 'http://api.local/inference-runs/irun_01/overlay') {
+          return response({ artifact_uri: 'file:///tmp/overlay.svg' }, 201);
+        }
+        throw new Error(`Unexpected request: ${url}`);
+      },
+      stdout: () => {},
+    });
+
+    assert.equal(registeredModelPayload.artifact_uri, 'file:///models/yolo11n.pt');
+  });
+
   it('rejects a missing custom image before calling the API', async () => {
     let calls = 0;
 
@@ -219,6 +263,12 @@ describe('fire demo product script', () => {
   it('parses the custom image CLI option', () => {
     assert.deepEqual(parseFireDemoOptions(['--image', '/tmp/capture.jpg']), {
       imagePath: '/tmp/capture.jpg',
+    });
+  });
+
+  it('parses the confidence threshold CLI option', () => {
+    assert.deepEqual(parseFireDemoOptions(['--confidence-threshold', '0.40']), {
+      confidenceThreshold: '0.40',
     });
   });
 });

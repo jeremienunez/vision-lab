@@ -27,6 +27,7 @@ async fn fake_inference_engine_returns_deterministic_detection_for_model() {
             filename: "cup.jpg".to_owned(),
             mime_type: "image/jpeg".to_owned(),
             image_bytes: vec![1, 2, 3],
+            confidence_threshold: 0.25,
         })
         .await
         .expect("inference succeeds");
@@ -49,6 +50,7 @@ async fn fake_inference_engine_returns_model_declared_classes_for_demo_models() 
             filename: "desk-objects.png".to_owned(),
             mime_type: "image/png".to_owned(),
             image_bytes: vec![1, 2, 3],
+            confidence_threshold: 0.25,
         })
         .await
         .expect("inference succeeds");

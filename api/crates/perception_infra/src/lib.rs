@@ -14,6 +14,7 @@ mod transient_sample_repository;
 mod transient_training_job_queue;
 mod transient_training_job_repository;
 mod transient_training_metric_repository;
+mod yolo_cli_inference_engine;
 
 pub use fake_inference_engine::FakeInferenceEngine;
 pub use local_sample_storage::LocalSampleStorage;
@@ -28,5 +29,9 @@ pub use transient_sample_repository::TransientSampleRepository;
 pub use transient_training_job_queue::TransientTrainingJobQueue;
 pub use transient_training_job_repository::TransientTrainingJobRepository;
 pub use transient_training_metric_repository::TransientTrainingMetricRepository;
+pub use yolo_cli_inference_engine::{
+    YoloCliCommand, YoloCliCommandOutput, YoloCliCommandRunner, YoloCliInferenceConfig,
+    YoloCliInferenceEngine,
+};
 
 pub const CRATE_NAME: &str = "perception_infra";

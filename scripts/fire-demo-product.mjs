@@ -9,12 +9,17 @@ import { seedDemoDataset } from './seed-demo-dataset.mjs';
 const defaultBaseUrl = process.env.PERCEPTIONLAB_API_BASE_URL ?? 'http://127.0.0.1:8080';
 const defaultSeedRoot = process.env.PERCEPTIONLAB_SEED_DATASET_ROOT ?? 'datasets/seed';
 const defaultImagePath = process.env.PERCEPTIONLAB_FIRE_IMAGE_PATH;
+const defaultModelArtifactUri =
+  process.env.PERCEPTIONLAB_FIRE_MODEL_ARTIFACT_URI ?? 'file:///tmp/perceptionlab/demo-model.pt';
+const defaultConfidenceThreshold = process.env.PERCEPTIONLAB_FIRE_CONFIDENCE_THRESHOLD ?? '0.25';
 
 export async function fireDemoProduct(dependencies = {}) {
   const {
     baseUrl = defaultBaseUrl,
     seedRoot = defaultSeedRoot,
     imagePath = defaultImagePath,
+    modelArtifactUri = defaultModelArtifactUri,
+    confidenceThreshold = defaultConfidenceThreshold,
     fetchImpl = globalThis.fetch,
     stdout = (value) => process.stdout.write(value),
   } = dependencies;
@@ -60,7 +65,7 @@ export async function fireDemoProduct(dependencies = {}) {
     training_job_id: trainingJob.id,
     name: 'desk-objects-demo',
     version: 'v1',
-    artifact_uri: 'file:///tmp/perceptionlab/demo-model.pt',
+    artifact_uri: modelArtifactUri,
     metrics_summary: {
       mAP50: '0.91',
       classes: manifest.dataset.classes.join(','),
@@ -70,6 +75,7 @@ export async function fireDemoProduct(dependencies = {}) {
     fetchImpl,
     `${apiBaseUrl}/models/${model.id}/infer`,
     inferenceImage,
+    confidenceThreshold,
   );
 
   if (!Array.isArray(inference.detections) || inference.detections.length === 0) {
@@ -122,6 +128,25 @@ export function parseFireDemoOptions(argv) {
       continue;
     }
 
+    if (arg === '--confidence-threshold') {
+      const confidenceThreshold = argv[index + 1];
+      if (!confidenceThreshold || confidenceThreshold.startsWith('--')) {
+        throw new Error('Missing value for --confidence-threshold');
+      }
+      options.confidenceThreshold = confidenceThreshold;
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--confidence-threshold=')) {
+      const confidenceThreshold = arg.slice('--confidence-threshold='.length);
+      if (!confidenceThreshold) {
+        throw new Error('Missing value for --confidence-threshold');
+      }
+      options.confidenceThreshold = confidenceThreshold;
+      continue;
+    }
+
     throw new Error(`Unknown fire demo option: ${arg}`);
   }
 
@@ -151,10 +176,10 @@ async function patchJson(fetchImpl, url, payload) {
   return parseResponse(response, url);
 }
 
-async function postMultipart(fetchImpl, url, image) {
+async function postMultipart(fetchImpl, url, image, confidenceThreshold) {
   const bytes = await fs.readFile(image.path);
   const form = new FormData();
-  form.append('confidence_threshold', '0.50');
+  form.append('confidence_threshold', String(confidenceThreshold));
   form.append('image', new Blob([bytes], { type: image.mime_type }), image.filename);
   const response = await fetchImpl(url, {
     method: 'POST',

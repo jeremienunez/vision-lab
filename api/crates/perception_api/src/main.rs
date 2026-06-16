@@ -38,7 +38,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let overlay_renderer = Arc::new(perception_infra::SvgOverlayRenderer::new(format!(
         "{artifact_root}/overlays"
     )));
-    let inference_engine = Arc::new(perception_infra::FakeInferenceEngine);
+    let inference_engine: Arc<dyn perception_app::InferenceEngine> =
+        match std::env::var("PERCEPTIONLAB_INFERENCE_ENGINE").as_deref() {
+            Ok("yolo_cli") | Ok("yolo") => {
+                tracing::info!("using yolo cli inference engine");
+                Arc::new(perception_infra::YoloCliInferenceEngine::from_env())
+            }
+            _ => Arc::new(perception_infra::FakeInferenceEngine),
+        };
     let storage_root = std::env::var("PERCEPTIONLAB_STORAGE_ROOT")
         .unwrap_or_else(|_| ".perceptionlab/storage".to_owned());
     let sample_storage = Arc::new(perception_infra::LocalSampleStorage::new(storage_root));

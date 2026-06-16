@@ -258,7 +258,14 @@ Use a custom image captured from a phone or webcam:
 npm run demo:fire -- --image /absolute/path/to/capture.jpg
 ```
 
-The command starts a transient API, seeds `datasets/seed`, creates a succeeded tiny training job, registers a demo model, runs inference on the selected image, generates an overlay, and exits non-zero if no detections are returned. Custom images must be `.jpg`, `.jpeg`, `.png`, or `.webp`. It validates the local executable path with the deterministic inference adapter; real model accuracy is validated separately once a production inference adapter is wired.
+Run the same API contract through the real YOLO worker adapter:
+
+```bash
+PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli \
+npm run demo:fire -- --image /absolute/path/to/capture.jpg --confidence-threshold 0.25
+```
+
+The command starts a transient API, seeds `datasets/seed`, creates a succeeded tiny training job, registers a demo model, runs inference on the selected image, generates an overlay, and exits non-zero if no detections are returned. Custom images must be `.jpg`, `.jpeg`, `.png`, or `.webp`. By default it validates the executable product path with the deterministic inference adapter. With `PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli`, the same `POST /models/{model_id}/infer` route executes the worker YOLO detector and maps pixel detections back to the normalized API contract.
 
 ## Model Export Contract
 
