@@ -49,6 +49,29 @@ Validation signals:
 - Correct API key allows protected requests.
 - Healthcheck remains public.
 
+### P2E - External Dataset Ingestion
+
+Purpose: make the platform testable with real external datasets while keeping local storage explicit and secrets out of logs.
+
+Scope:
+
+- Add a Hugging Face dataset ingestion adapter in the Python worker.
+- Read `HF_TOKEN` from the local environment, never from committed config.
+- Materialize image samples and object-detection annotations into a local YOLO-style layout.
+- Write ingested datasets under `PERCEPTIONLAB_DATA_ROOT`, which can point to `/media/jerem/ubuntu1/perceptionlab/datasets`.
+- Keep tests deterministic through a fake dataset source and injected loader.
+
+Primary command:
+
+- `perception-worker ingest-hf <source_dataset> --target-name <name> --classes cup,book --max-samples 10`
+
+Validation signals:
+
+- Missing `HF_TOKEN` fails before any network call.
+- Loader errors are redacted and do not retain the token in exception causes.
+- Materialized output contains `images/`, `labels/`, and `manifest.json`.
+- Tests run without a real Hugging Face key or network access.
+
 ### P2C - Operations UX
 
 Purpose: expose platform state through a minimal dashboard and streamable logs.
@@ -84,9 +107,10 @@ Validation signals:
 ## Execution Order
 
 1. P2A first: it builds directly on P1 model export, metrics, dataset versions, and model registry.
-2. P2B second: secure the API once advanced registry operations exist.
-3. P2C third: dashboard and logs depend on stable APIs.
-4. P2D last: video and depth introduce new media semantics and should not be mixed with registry work.
+2. P2E second: make the platform testable with external datasets before broader UX work.
+3. P2B third: secure the API once advanced registry and ingestion operations exist.
+4. P2C fourth: dashboard and logs depend on stable APIs.
+5. P2D last: video and depth introduce new media semantics and should not be mixed with registry work.
 
 ## Out Of Scope For The First P2 Slice
 

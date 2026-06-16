@@ -8,3 +8,4 @@ adapters    -> ports/domain/contracts
 ```
 
 PyTorch is only allowed in `adapters/training` and `adapters/inference`.
+Hugging Face access is isolated in `adapters/huggingface`.

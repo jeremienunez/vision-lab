@@ -64,6 +64,7 @@
 - [x] Add configurable train/validation/test split.
 - [x] Compare models.
 - [x] Promote model.
+- [x] Add Hugging Face dataset ingestion.
 - [ ] Add API key auth.
 - [ ] Add minimal web dashboard only after API-first MVP.
 - [ ] Stream training logs.

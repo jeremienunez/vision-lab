@@ -40,6 +40,7 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 - Model registry use cases and `GET /models` / `GET /models/{model_id}`.
 - Multipart model inference contract at `POST /models/{model_id}/infer`.
 - Model comparison, promotion, and ONNX/CoreML export endpoints.
+- Hugging Face dataset ingestion into local `images/`, `labels/`, and `manifest.json`.
 - Python worker contracts, fake trainer, and tiny deterministic PyTorch trainer.
 - Docker Compose stack for the Rust API and PostgreSQL schema bootstrap.
 
@@ -206,6 +207,28 @@ Use `--base-url` before the command to target another API:
 ```bash
 npm run cli -- --base-url http://127.0.0.1:8080 health
 ```
+
+## Hugging Face Dataset Ingestion
+
+Keep the Hugging Face token in local environment only:
+
+```bash
+HF_TOKEN=<redacted>
+PERCEPTIONLAB_DATA_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets
+```
+
+Materialize a small external dataset slice through the worker:
+
+```bash
+cd worker
+UV_CACHE_DIR=../.perceptionlab/cache/uv uv run perception-worker ingest-hf owner/desk-objects \
+  --target-name desk-objects-hf \
+  --classes cup,book \
+  --split train \
+  --max-samples 10
+```
+
+The command writes `images/`, `labels/`, and `manifest.json` under `PERCEPTIONLAB_DATA_ROOT/<target-name>`.
 
 ## Seed Demo Dataset
 
