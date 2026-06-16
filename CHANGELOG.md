@@ -46,6 +46,9 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Product-grade README quickstart covering installation, quality gates, direct API run, Docker Compose, and P0 curl examples.
 - YOLO annotation export application use case that emits `classes.txt` and per-sample label files with normalized center-based boxes.
 - YOLO annotation export HTTP route at `GET /datasets/{dataset_id}/export/yolo`.
+- Training job status transition HTTP route for local orchestration and product smoke validation.
+- Model registration HTTP route for creating candidate models from succeeded training jobs.
+- One-command object-recognition fire smoke via `npm run demo:fire`.
 
 ### Changed
 

@@ -9,10 +9,11 @@ use axum::http::{Request, StatusCode};
 use perception_app::{
     DetectionDraft, InferenceEngine, InferenceRequest, InferenceResult, InferenceRunDraft,
     InferenceRunRepository, ModelDraft, ModelExportDraft, ModelExportRepository, ModelRepository,
-    OverlayArtifact, OverlayRenderer, UseCaseError,
+    OverlayArtifact, OverlayRenderer, TrainingJobDraft, TrainingJobRepository, UseCaseError,
 };
 use perception_domain::{
-    DatasetVersionId, InferenceRunId, ModelId, ModelStatus, NormalizedBbox, TrainingJobId,
+    DatasetVersionId, InferenceRunId, ModelId, ModelStatus, NormalizedBbox,
+    TrainingHyperparameters, TrainingJobId, TrainingJobStatus,
 };
 use serde_json::Value;
 use tower::ServiceExt;
@@ -30,6 +31,11 @@ struct RouteModelExportRepository {
 #[derive(Default)]
 struct RouteInferenceRunRepository {
     runs: Mutex<Vec<InferenceRunDraft>>,
+}
+
+#[derive(Default)]
+struct RouteTrainingJobRepository {
+    jobs: Mutex<Vec<TrainingJobDraft>>,
 }
 
 struct RouteInferenceEngine;
@@ -72,6 +78,37 @@ impl ModelRepository for RouteModelRepository {
             .ok_or(UseCaseError::NotFound("model not found"))?;
         *stored = model.clone();
         Ok(model)
+    }
+}
+
+#[async_trait]
+impl TrainingJobRepository for RouteTrainingJobRepository {
+    async fn create(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError> {
+        self.jobs
+            .lock()
+            .expect("repository mutex is available")
+            .push(job.clone());
+        Ok(job)
+    }
+
+    async fn get(&self, job_id: TrainingJobId) -> Result<Option<TrainingJobDraft>, UseCaseError> {
+        Ok(self
+            .jobs
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .find(|job| job.id == job_id)
+            .cloned())
+    }
+
+    async fn update(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError> {
+        let mut jobs = self.jobs.lock().expect("repository mutex is available");
+        let stored = jobs
+            .iter_mut()
+            .find(|stored_job| stored_job.id == job.id)
+            .ok_or(UseCaseError::NotFound("training job not found"))?;
+        *stored = job.clone();
+        Ok(job)
     }
 }
 
@@ -190,6 +227,19 @@ fn model_fixture() -> ModelDraft {
     }
 }
 
+fn succeeded_training_job_fixture() -> TrainingJobDraft {
+    TrainingJobDraft {
+        id: TrainingJobId::new(),
+        dataset_version_id: DatasetVersionId::new(),
+        model_family: "tiny_torch".to_owned(),
+        base_model: None,
+        status: TrainingJobStatus::Succeeded,
+        hyperparameters: TrainingHyperparameters::new(2, 1, 64, 0.01)
+            .expect("hyperparameters are valid"),
+        error_message: None,
+    }
+}
+
 fn inference_multipart_body(mime_type: &str, confidence_threshold: &str) -> (String, String) {
     let boundary = "perceptionlab-infer-boundary";
     let body = format!(
@@ -245,6 +295,53 @@ async fn list_models_route_returns_registered_models() {
     );
     assert_eq!(body["models"][0]["id"], model.id.to_string());
     assert_eq!(body["models"][0]["status"], "candidate");
+}
+
+#[tokio::test]
+async fn register_model_route_creates_candidate_model_from_succeeded_job() {
+    let jobs = Arc::new(RouteTrainingJobRepository::default());
+    let models = Arc::new(RouteModelRepository::default());
+    let job = jobs
+        .create(succeeded_training_job_fixture())
+        .await
+        .expect("job is created");
+    let app = perception_http::router_with_model_registration_ports(jobs, models.clone());
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/models")
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    serde_json::to_vec(&serde_json::json!({
+                        "training_job_id": job.id.to_string(),
+                        "name": "desk-objects-demo",
+                        "version": "v1",
+                        "artifact_uri": "file:///tmp/perceptionlab/demo-model.pt",
+                        "metrics_summary": {
+                            "mAP50": "0.91",
+                            "classes": "cup,book,phone"
+                        }
+                    }))
+                    .expect("request JSON is encoded"),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let model = json_body(response).await;
+    assert_eq!(model["training_job_id"], job.id.to_string());
+    assert_eq!(
+        model["dataset_version_id"],
+        job.dataset_version_id.to_string()
+    );
+    assert_eq!(model["model_family"], "tiny_torch");
+    assert_eq!(model["status"], "candidate");
+    assert_eq!(model["metrics_summary"]["classes"], "cup,book,phone");
+    assert_eq!(models.list().await.expect("models are listed").len(), 1);
 }
 
 #[tokio::test]

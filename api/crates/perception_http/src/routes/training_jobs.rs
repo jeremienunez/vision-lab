@@ -3,18 +3,21 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::{get, patch, post},
 };
 use perception_app::{
     CreateTrainingJobCommand, CreateTrainingJobUseCase, ListTrainingClassMetricsUseCase,
-    ListTrainingMetricsUseCase, UseCaseError,
+    ListTrainingMetricsUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
+    UseCaseError,
 };
-use perception_domain::{DatasetVersionId, TrainingJobId};
+use perception_domain::{DatasetVersionId, TrainingJobId, TrainingJobStatus};
 
 use crate::{
     dto::{
         error::ErrorResponse,
-        training_job::{CreateTrainingJobRequest, TrainingJobResponse},
+        training_job::{
+            CreateTrainingJobRequest, TrainingJobResponse, TransitionTrainingJobRequest,
+        },
         training_metric::{ListTrainingClassMetricsResponse, ListTrainingMetricsResponse},
     },
     mappers,
@@ -24,6 +27,10 @@ use crate::{
 pub fn routes(state: TrainingJobHttpState) -> Router {
     Router::new()
         .route("/training-jobs", post(create_training_job))
+        .route(
+            "/training-jobs/{training_job_id}/status",
+            patch(transition_training_job_status),
+        )
         .route(
             "/training-jobs/{training_job_id}/metrics",
             get(list_training_metrics),
@@ -64,6 +71,25 @@ async fn create_training_job(
     ))
 }
 
+async fn transition_training_job_status(
+    State(state): State<TrainingJobHttpState>,
+    Path(training_job_id): Path<String>,
+    Json(request): Json<TransitionTrainingJobRequest>,
+) -> Result<Json<TrainingJobResponse>, TrainingJobRouteError> {
+    let training_job_id = TrainingJobId::parse(training_job_id)
+        .map_err(|_| UseCaseError::Validation("invalid training job id"))?;
+    let next_status = parse_training_job_status(&request.next_status)?;
+    let job = TransitionTrainingJobUseCase::new(state.training_job_repository())
+        .execute(TransitionTrainingJobCommand {
+            job_id: training_job_id,
+            next_status,
+            error_message: request.error_message,
+        })
+        .await?;
+
+    Ok(Json(mappers::training_job::training_job_response(job)))
+}
+
 async fn list_training_metrics(
     State(state): State<TrainingJobHttpState>,
     Path(training_job_id): Path<String>,
@@ -102,6 +128,17 @@ async fn list_training_class_metrics(
             .map(mappers::training_metric::training_class_metric_response)
             .collect(),
     }))
+}
+
+fn parse_training_job_status(value: &str) -> Result<TrainingJobStatus, UseCaseError> {
+    match value.trim() {
+        "queued" => Ok(TrainingJobStatus::Queued),
+        "running" => Ok(TrainingJobStatus::Running),
+        "succeeded" => Ok(TrainingJobStatus::Succeeded),
+        "failed" => Ok(TrainingJobStatus::Failed),
+        "cancelled" => Ok(TrainingJobStatus::Cancelled),
+        _ => Err(UseCaseError::Validation("invalid training job status")),
+    }
 }
 
 struct TrainingJobRouteError {

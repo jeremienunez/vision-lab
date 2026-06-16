@@ -16,3 +16,9 @@ Feature: End-to-end computer vision pipeline
     Given an inference run exists with detections
     When I generate a visual overlay from the inference result
     Then an overlay image should be created in storage
+
+  @p2 @demo
+  Scenario: Fire the local object-recognition smoke
+    Given the local transient API can start
+    When I run the product fire smoke
+    Then the summary should include detected classes and an overlay artifact URI

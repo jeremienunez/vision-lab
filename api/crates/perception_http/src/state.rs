@@ -21,6 +21,32 @@ pub struct ModelHttpState {
     inference_engine: Arc<dyn InferenceEngine>,
 }
 
+#[derive(Clone)]
+pub struct ModelRegistrationHttpState {
+    training_job_repository: Arc<dyn TrainingJobRepository>,
+    model_repository: Arc<dyn ModelRepository>,
+}
+
+impl ModelRegistrationHttpState {
+    pub fn new(
+        training_job_repository: Arc<dyn TrainingJobRepository>,
+        model_repository: Arc<dyn ModelRepository>,
+    ) -> Self {
+        Self {
+            training_job_repository,
+            model_repository,
+        }
+    }
+
+    pub fn training_job_repository(&self) -> &dyn TrainingJobRepository {
+        self.training_job_repository.as_ref()
+    }
+
+    pub fn model_repository(&self) -> &dyn ModelRepository {
+        self.model_repository.as_ref()
+    }
+}
+
 impl ModelHttpState {
     pub fn new(
         model_repository: Arc<dyn ModelRepository>,

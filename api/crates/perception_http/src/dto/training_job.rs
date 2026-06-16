@@ -16,6 +16,12 @@ pub struct TrainingHyperparametersRequest {
     pub learning_rate: f32,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct TransitionTrainingJobRequest {
+    pub next_status: String,
+    pub error_message: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct TrainingJobResponse {
     pub id: String,

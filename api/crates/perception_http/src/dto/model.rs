@@ -2,6 +2,15 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Deserialize)]
+pub struct RegisterModelRequest {
+    pub training_job_id: String,
+    pub name: String,
+    pub version: String,
+    pub artifact_uri: String,
+    pub metrics_summary: BTreeMap<String, String>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ModelResponse {
     pub id: String,

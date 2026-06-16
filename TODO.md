@@ -65,6 +65,7 @@
 - [x] Compare models.
 - [x] Promote model.
 - [x] Add Hugging Face dataset ingestion.
+- [x] Add one-command object-recognition fire smoke.
 - [ ] Add API key auth.
 - [ ] Add minimal web dashboard only after API-first MVP.
 - [ ] Stream training logs.

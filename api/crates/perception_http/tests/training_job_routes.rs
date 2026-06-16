@@ -326,6 +326,51 @@ async fn create_training_job_route_enqueues_created_job() {
 }
 
 #[tokio::test]
+async fn transition_training_job_route_updates_job_status() {
+    let versions = Arc::new(RouteDatasetVersionRepository::default());
+    let jobs = Arc::new(RouteTrainingJobRepository::default());
+    let job = jobs
+        .create(training_job_fixture())
+        .await
+        .expect("job is created");
+    let app = perception_http::router_with_training_job_ports(
+        versions,
+        jobs.clone(),
+        Arc::new(RouteTrainingJobQueue::default()),
+        Arc::new(RouteTrainingMetricRepository::default()),
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("PATCH")
+                .uri(format!("/training-jobs/{}/status", job.id))
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    json!({
+                        "next_status": "succeeded",
+                        "error_message": null
+                    })
+                    .to_string(),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json_body(response).await;
+    assert_eq!(body["id"], job.id.to_string());
+    assert_eq!(body["status"], "succeeded");
+    let stored = jobs
+        .get(job.id)
+        .await
+        .expect("job lookup succeeds")
+        .expect("job exists");
+    assert_eq!(stored.status, TrainingJobStatus::Succeeded);
+}
+
+#[tokio::test]
 async fn list_training_job_metrics_route_returns_metrics_ordered_by_epoch() {
     let versions = Arc::new(RouteDatasetVersionRepository::default());
     let jobs = Arc::new(RouteTrainingJobRepository::default());

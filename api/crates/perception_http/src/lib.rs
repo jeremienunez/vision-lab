@@ -126,6 +126,15 @@ pub fn router_with_model_ports(
     )))
 }
 
+pub fn router_with_model_registration_ports(
+    training_job_repository: Arc<dyn TrainingJobRepository>,
+    model_repository: Arc<dyn ModelRepository>,
+) -> Router {
+    routes::health::routes().merge(routes::model_registration::routes(
+        state::ModelRegistrationHttpState::new(training_job_repository, model_repository),
+    ))
+}
+
 pub fn router_with_p0_ports(
     dataset_repository: Arc<dyn DatasetRepository>,
     sample_repository: Arc<dyn SampleRepository>,
@@ -151,10 +160,13 @@ pub fn router_with_p0_ports(
     .merge(routes::training_jobs::routes(
         state::TrainingJobHttpState::new(
             dataset_version_repository,
-            training_job_repository,
+            training_job_repository.clone(),
             training_job_queue,
             training_metric_repository,
         ),
+    ))
+    .merge(routes::model_registration::routes(
+        state::ModelRegistrationHttpState::new(training_job_repository, model_repository.clone()),
     ))
     .merge(routes::models::routes(state::ModelHttpState::new(
         model_repository,

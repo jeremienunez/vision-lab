@@ -117,6 +117,16 @@ docker compose down
 
 The Compose stack starts PostgreSQL and loads `api/migrations/0001_initial_schema.sql` on first boot. The current P0 HTTP process uses local transient adapters for fast demo feedback while the schema and repository ports define the database boundary.
 
+## Object Recognition Fire Smoke
+
+Run the full local smoke that proves the product inference path can execute an object-detection response on the seed image:
+
+```bash
+npm run demo:fire
+```
+
+The command starts a transient API, seeds `datasets/seed`, creates a succeeded demo training job, registers a model, runs inference on `datasets/seed/images/desk-objects.png`, generates an overlay, and prints a JSON summary with detected classes and the overlay artifact URI. This is a product smoke with the local deterministic inference adapter; it validates the executable path, not real model accuracy. Override the port with `PERCEPTIONLAB_API_ADDR=127.0.0.1:18080` if `8080` is already used.
+
 ## API Smoke Flow
 
 Create a dataset:
@@ -171,9 +181,29 @@ curl -sS -X POST http://127.0.0.1:8080/training-jobs \
   }'
 ```
 
+Transition a local demo job before registering a model:
+
+```bash
+curl -sS -X PATCH http://127.0.0.1:8080/training-jobs/<job_id>/status \
+  -H 'content-type: application/json' \
+  -d '{"next_status": "running", "error_message": null}'
+curl -sS -X PATCH http://127.0.0.1:8080/training-jobs/<job_id>/status \
+  -H 'content-type: application/json' \
+  -d '{"next_status": "succeeded", "error_message": null}'
+```
+
 Model registry and inference routes are wired for registered models:
 
 ```bash
+curl -sS -X POST http://127.0.0.1:8080/models \
+  -H 'content-type: application/json' \
+  -d '{
+    "training_job_id": "<job_id>",
+    "name": "desk-objects-demo",
+    "version": "v1",
+    "artifact_uri": "file:///tmp/perceptionlab/demo-model.pt",
+    "metrics_summary": { "mAP50": "0.91", "classes": "cup,book" }
+  }'
 curl -sS http://127.0.0.1:8080/models
 curl -sS -X POST http://127.0.0.1:8080/models/<model_id>/exports \
   -H 'content-type: application/json' \

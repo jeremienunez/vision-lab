@@ -21,8 +21,10 @@ Validate it with `npm run validate:openapi` or export it with `sh scripts/export
 | POST | `/training-jobs` | Create async training job. |
 | GET | `/training-jobs` | List training jobs. |
 | GET | `/training-jobs/{job_id}` | Read job status. |
+| PATCH | `/training-jobs/{job_id}/status` | Transition job status for local orchestration and smoke validation. |
 | GET | `/training-jobs/{job_id}/metrics` | Read job metrics. |
 | GET | `/training-jobs/{job_id}/metrics/by-class` | Read class-level job metrics. |
+| POST | `/models` | Register a candidate model from a succeeded training job. |
 | GET | `/models` | List registered models. |
 | GET | `/models/{model_id}` | Read model detail. |
 | POST | `/models/{model_id}/infer` | Run inference on an image. |
@@ -138,6 +140,36 @@ Response:
 }
 ```
 
+Transition request:
+
+```json
+{
+  "next_status": "succeeded",
+  "error_message": null
+}
+```
+
+`PATCH /training-jobs/{job_id}/status` applies the domain lifecycle rules. The local product smoke uses `queued -> running -> succeeded` before registering a candidate model.
+
+## Model Registration Contract
+
+Request:
+
+```json
+{
+  "training_job_id": "job_01hxyz",
+  "name": "desk-objects-demo",
+  "version": "v1",
+  "artifact_uri": "file:///tmp/perceptionlab/demo-model.pt",
+  "metrics_summary": {
+    "mAP50": "0.91",
+    "classes": "cup,book,phone,keyboard,mouse"
+  }
+}
+```
+
+`POST /models` requires a succeeded training job and returns the created `ModelResponse`. For the local fake inference adapter, the optional `classes` metric drives deterministic demo detections.
+
 ## YOLO Annotation Import Contract
 
 Request:
@@ -211,6 +243,16 @@ Response:
 ```
 
 Unknown inference run ids return `404`.
+
+## Product Fire Smoke
+
+Run the local object-recognition smoke from the repository root:
+
+```bash
+npm run demo:fire
+```
+
+The command starts a transient API, seeds `datasets/seed`, creates a succeeded tiny training job, registers a demo model, runs inference on `datasets/seed/images/desk-objects.png`, generates an overlay, and exits non-zero if no detections are returned. It validates the local executable path with the deterministic inference adapter; real model accuracy is validated separately once a production inference adapter is wired.
 
 ## Model Export Contract
 

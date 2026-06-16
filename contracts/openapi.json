@@ -282,6 +282,35 @@
         }
       }
     },
+    "/training-jobs/{training_job_id}/status": {
+      "patch": {
+        "operationId": "transitionTrainingJobStatus",
+        "tags": ["Training Jobs"],
+        "summary": "Transition a training job status.",
+        "parameters": [{ "$ref": "#/components/parameters/TrainingJobId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TransitionTrainingJobRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated training job.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TrainingJobResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
     "/models": {
       "get": {
         "operationId": "listModels",
@@ -296,6 +325,32 @@
               }
             }
           },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      },
+      "post": {
+        "operationId": "registerModel",
+        "tags": ["Models"],
+        "summary": "Register a model from a succeeded training job.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterModelRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered model.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ModelResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
           "500": { "$ref": "#/components/responses/RepositoryError" }
         }
       }
@@ -846,6 +901,18 @@
           "status": { "type": "string" }
         }
       },
+      "TransitionTrainingJobRequest": {
+        "type": "object",
+        "required": ["next_status", "error_message"],
+        "additionalProperties": false,
+        "properties": {
+          "next_status": {
+            "type": "string",
+            "enum": ["queued", "running", "succeeded", "failed", "cancelled"]
+          },
+          "error_message": { "type": ["string", "null"] }
+        }
+      },
       "TrainingMetricResponse": {
         "type": "object",
         "required": [
@@ -954,6 +1021,21 @@
           "models": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ModelResponse" }
+          }
+        }
+      },
+      "RegisterModelRequest": {
+        "type": "object",
+        "required": ["training_job_id", "name", "version", "artifact_uri", "metrics_summary"],
+        "additionalProperties": false,
+        "properties": {
+          "training_job_id": { "type": "string" },
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "artifact_uri": { "type": "string" },
+          "metrics_summary": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
           }
         }
       },
