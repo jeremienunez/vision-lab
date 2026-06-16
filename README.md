@@ -115,7 +115,17 @@ curl http://127.0.0.1:8080/health
 docker compose down
 ```
 
-The Compose stack starts PostgreSQL and loads `api/migrations/0001_initial_schema.sql` on first boot. The current P0 HTTP process uses local transient adapters for fast demo feedback while the schema and repository ports define the database boundary.
+The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for dataset creation/listing. The API applies `api/migrations/` at startup through SQLx. Other repository adapters are still transient in the current tranche. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
+
+Run the API directly against a local PostgreSQL database:
+
+```bash
+PERCEPTIONLAB_REPOSITORY_BACKEND=postgres \
+PERCEPTIONLAB_DATABASE_URL=postgres://perceptionlab:perceptionlab@127.0.0.1:55432/perceptionlab \
+PERCEPTIONLAB_MIGRATIONS_ROOT=/home/jerem/vision-lab/api/migrations \
+PERCEPTIONLAB_API_ADDR=127.0.0.1:8080 \
+cargo run --manifest-path api/Cargo.toml -p perception_api
+```
 
 ## Object Recognition Fire Smoke
 

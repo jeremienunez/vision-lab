@@ -13,6 +13,7 @@ perception_app = { path = "../perception_app" }
 perception_domain = { path = "../perception_domain" }
 perception_http = { path = "../perception_http" }
 perception_infra = { path = "../perception_infra" }
+sqlx.workspace = true
 tokio.workspace = true
 tower-http.workspace = true
 tracing.workspace = true

@@ -52,6 +52,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Custom image input for the fire smoke via `npm run demo:fire -- --image <path>`.
 - Real YOLO image and webcam smoke commands through the worker CLI.
 - Real YOLO CLI inference adapter selectable by the API with `PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli`, including product fire smoke coverage through `POST /models/{model_id}/infer`.
+- SQLx-backed PostgreSQL dataset repository selectable with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 
 ### Changed
 
@@ -62,3 +63,4 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Removed the obsolete root `src/` foundation layout so P0 starts from `api/crates/` and `worker/perception_worker/`.
 - Extended local quality gates to validate P0 bootstrap files, Rust workspace checks, and worker package tests.
 - Excluded internal agent planning docs from Git tracking and future adds before publishing.
+- Docker Compose now lets the API apply SQLx migrations, runs the API with the PostgreSQL dataset backend, and exposes Postgres on configurable host port `PERCEPTIONLAB_POSTGRES_PORT`, defaulting to `55432`.

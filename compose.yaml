@@ -8,10 +8,9 @@ services:
       POSTGRES_USER: perceptionlab
       POSTGRES_PASSWORD: perceptionlab
     ports:
-      - "5432:5432"
+      - "${PERCEPTIONLAB_POSTGRES_PORT:-55432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./api/migrations/0001_initial_schema.sql:/docker-entrypoint-initdb.d/0001_initial_schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U perceptionlab -d perceptionlab"]
       interval: 5s
@@ -31,6 +30,8 @@ services:
       - PERCEPTIONLAB_STORAGE_ROOT=/workspace/.perceptionlab/storage
       - PERCEPTIONLAB_ARTIFACT_ROOT=/workspace/.perceptionlab/artifacts
       - PERCEPTIONLAB_TMP_ROOT=/workspace/.perceptionlab/tmp
+      - PERCEPTIONLAB_REPOSITORY_BACKEND=postgres
+      - PERCEPTIONLAB_MIGRATIONS_ROOT=/workspace/api/migrations
       - PERCEPTIONLAB_DATABASE_URL=postgres://perceptionlab:perceptionlab@postgres:5432/perceptionlab
       - PERCEPTIONLAB_QUEUE_URL=postgres://perceptionlab:perceptionlab@postgres:5432/perceptionlab
       - PERCEPTIONLAB_OBJECT_STORAGE_BUCKET=perceptionlab

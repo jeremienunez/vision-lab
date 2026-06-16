@@ -24,6 +24,7 @@
 - [x] Create `perception_app` crate with ports and first use case.
 - [x] Create initial PostgreSQL schema.
 - [x] Add `POST /datasets` and `GET /datasets`.
+- [x] Persist datasets through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add `POST /datasets/{dataset_id}/samples`.
 - [x] Connect abstracted file/object storage.
 - [x] Add annotation endpoints.

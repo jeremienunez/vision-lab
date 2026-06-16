@@ -3,6 +3,8 @@
 
 mod fake_inference_engine;
 mod local_sample_storage;
+mod postgres_dataset_repository_sqlx;
+mod repository_backend;
 mod svg_overlay_renderer;
 mod transient_annotation_repository;
 mod transient_dataset_repository;
@@ -18,6 +20,8 @@ mod yolo_cli_inference_engine;
 
 pub use fake_inference_engine::FakeInferenceEngine;
 pub use local_sample_storage::LocalSampleStorage;
+pub use postgres_dataset_repository_sqlx::PostgresDatasetRepository;
+pub use repository_backend::RepositoryBackend;
 pub use svg_overlay_renderer::SvgOverlayRenderer;
 pub use transient_annotation_repository::TransientAnnotationRepository;
 pub use transient_dataset_repository::TransientDatasetRepository;
