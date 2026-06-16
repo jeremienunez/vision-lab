@@ -46,6 +46,7 @@
 - [x] Add minimal model registry.
 - [x] Add `GET /models`.
 - [x] Add `GET /models/{model_id}`.
+- [x] Persist training metrics and model registry through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add `POST /models/{model_id}/infer`.
 - [x] Add Docker Compose.
 - [x] Add product-grade README quickstart.

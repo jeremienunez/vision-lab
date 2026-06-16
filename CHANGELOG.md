@@ -56,6 +56,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - SQLx-backed PostgreSQL sample and annotation repositories used by the API in Postgres backend mode.
 - SQLx-backed PostgreSQL dataset version repository used by the API in Postgres backend mode.
 - SQLx-backed PostgreSQL training job repository and queue used by the API in Postgres backend mode.
+- SQLx-backed PostgreSQL training metric and model repositories used by the API in Postgres backend mode, including normalization for numeric worker metric summaries.
 - Hugging Face dataset ingestion now emits API-seedable manifests with samples, annotations, and dataset version metadata.
 - Worker-side PostgreSQL job repository and `process-once` CLI command for consuming queued training jobs and persisting metrics/model output.
 
