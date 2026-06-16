@@ -51,6 +51,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - One-command object-recognition fire smoke via `npm run demo:fire`.
 - Custom image input for the fire smoke via `npm run demo:fire -- --image <path>`.
 - Real YOLO image and webcam smoke commands through the worker CLI.
+- Bounded live webcam YOLO command that keeps the model loaded across frames via `npm run detect:webcam-live`.
 - Real YOLO CLI inference adapter selectable by the API with `PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli`, including product fire smoke coverage through `POST /models/{model_id}/infer`.
 - SQLx-backed PostgreSQL dataset repository selectable with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - SQLx-backed PostgreSQL sample and annotation repositories used by the API in Postgres backend mode.

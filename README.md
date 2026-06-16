@@ -166,7 +166,13 @@ Capture one webcam frame and run the same detector:
 npm run detect:webcam -- --device-index 0 --model-path .perceptionlab/models/yolo11n.pt
 ```
 
-Both commands write artifacts under `.perceptionlab/` and print JSON with `detection_count`, class names, confidences, and the annotated image path.
+Run a bounded live webcam loop while keeping YOLO loaded in memory:
+
+```bash
+npm run detect:webcam-live -- --device-index 0 --model-path .perceptionlab/models/yolo11n.pt --frame-limit 10 --confidence-threshold 0.10
+```
+
+These commands write artifacts under `.perceptionlab/` and print JSON with detection counts, class names, confidences, and annotated image paths.
 
 ## Download A Real Detection Dataset
 

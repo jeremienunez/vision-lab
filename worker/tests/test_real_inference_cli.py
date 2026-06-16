@@ -65,6 +65,40 @@ class FakeCapture:
         return output_path
 
 
+class FakeLiveWebcamDetector:
+    def run(
+        self,
+        *,
+        device_index: int,
+        capture_root: Path,
+        model_path: Path,
+        output_root: Path,
+        run_name: str,
+        confidence_threshold: float,
+        frame_limit: int | None,
+    ) -> object:
+        class Summary:
+            def to_summary(self) -> dict[str, object]:
+                return {
+                    "device_index": device_index,
+                    "frame_count": frame_limit,
+                    "frames": [
+                        {
+                            "frame_index": 1,
+                            "detection_count": 1,
+                            "detections": [{"class_name": "person"}],
+                        }
+                    ],
+                    "capture_root": str(capture_root),
+                    "output_root": str(output_root),
+                    "model_path": str(model_path),
+                    "run_name": run_name,
+                    "confidence_threshold": confidence_threshold,
+                }
+
+        return Summary()
+
+
 def test_detect_image_cli_prints_json_summary(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -149,4 +183,37 @@ def test_detect_webcam_cli_captures_frame_then_detects(
 
     assert result.exit_code == 0
     assert (tmp_path / "captures" / "webcam.png").read_bytes() == b"device:1"
+    assert '"class_name": "person"' in result.output
+
+
+def test_detect_webcam_live_cli_runs_limited_live_detection(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(cli, "LiveWebcamDetector", lambda: FakeLiveWebcamDetector())
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli.app,
+        [
+            "detect-webcam-live",
+            "--device-index",
+            "1",
+            "--capture-root",
+            str(tmp_path / "captures"),
+            "--output-root",
+            str(tmp_path / "runs"),
+            "--model-path",
+            str(tmp_path / "yolo11n.pt"),
+            "--run-name",
+            "webcam-live",
+            "--confidence-threshold",
+            "0.10",
+            "--frame-limit",
+            "3",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert '"frame_count": 3' in result.output
     assert '"class_name": "person"' in result.output

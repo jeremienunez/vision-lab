@@ -21,6 +21,7 @@ from perception_worker.adapters.training.fake_trainer import FakeTrainer
 from perception_worker.adapters.training.tiny_torch_trainer import TinyTorchTrainer
 from perception_worker.app.ingest_dataset import DatasetIngestionService
 from perception_worker.app.process_training_job import TrainingJobProcessor
+from perception_worker.app.run_live_webcam_detection import LiveWebcamDetector
 from perception_worker.contracts.dataset_ingestion import DatasetIngestionCommand
 
 app = typer.Typer(add_completion=False)
@@ -160,6 +161,42 @@ def detect_webcam(
             output_root=output_root,
             run_name=run_name,
             confidence_threshold=confidence_threshold,
+        )
+    typer.echo(json.dumps(result.to_summary(), indent=2))
+
+
+@app.command("detect-webcam-live")
+def detect_webcam_live(
+    device_index: Annotated[int, typer.Option()] = 0,
+    capture_root: Annotated[Path, typer.Option()] = Path(".perceptionlab/captures/live"),
+    model_path: Annotated[Path, typer.Option()] = Path(".perceptionlab/models/yolo11n.pt"),
+    output_root: Annotated[Path, typer.Option()] = Path(".perceptionlab/real-inference/live"),
+    run_name: Annotated[str, typer.Option()] = "webcam-live",
+    confidence_threshold: Annotated[float, typer.Option("--confidence-threshold")] = 0.25,
+    frame_limit: Annotated[int | None, typer.Option()] = None,
+    json_only: Annotated[bool, typer.Option()] = False,
+) -> None:
+    live_detector = LiveWebcamDetector()
+    if json_only:
+        with contextlib.redirect_stdout(io.StringIO()):
+            result = live_detector.run(
+                device_index=device_index,
+                capture_root=capture_root,
+                model_path=model_path,
+                output_root=output_root,
+                run_name=run_name,
+                confidence_threshold=confidence_threshold,
+                frame_limit=frame_limit,
+            )
+    else:
+        result = live_detector.run(
+            device_index=device_index,
+            capture_root=capture_root,
+            model_path=model_path,
+            output_root=output_root,
+            run_name=run_name,
+            confidence_threshold=confidence_threshold,
+            frame_limit=frame_limit,
         )
     typer.echo(json.dumps(result.to_summary(), indent=2))
 

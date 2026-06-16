@@ -14,11 +14,35 @@ class YoloObjectDetector:
     def __init__(self, model_loader: Callable[[str], Any] | None = None) -> None:
         self._model_loader = model_loader or load_ultralytics_model
 
+    def load(self, *, model_path: Path) -> "LoadedYoloObjectDetector":
+        model = self._model_loader(str(model_path.expanduser()))
+        return LoadedYoloObjectDetector(model=model)
+
     def detect_image(
         self,
         *,
         image_path: Path,
         model_path: Path,
+        output_root: Path,
+        run_name: str,
+        confidence_threshold: float,
+    ) -> RealInferenceResult:
+        return self.load(model_path=model_path).detect_image(
+            image_path=image_path,
+            output_root=output_root,
+            run_name=run_name,
+            confidence_threshold=confidence_threshold,
+        )
+
+
+class LoadedYoloObjectDetector:
+    def __init__(self, model: Any) -> None:
+        self._model = model
+
+    def detect_image(
+        self,
+        *,
+        image_path: Path,
         output_root: Path,
         run_name: str,
         confidence_threshold: float,
@@ -29,8 +53,7 @@ class YoloObjectDetector:
 
         output_root = output_root.expanduser().resolve()
         output_root.mkdir(parents=True, exist_ok=True)
-        model = self._model_loader(str(model_path.expanduser()))
-        predictions = model.predict(
+        predictions = self._model.predict(
             source=str(resolved_image_path),
             project=str(output_root),
             name=run_name,

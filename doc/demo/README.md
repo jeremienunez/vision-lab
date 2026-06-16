@@ -44,4 +44,10 @@ Capture a webcam frame and run YOLO:
 npm run detect:webcam -- --device-index 0 --model-path .perceptionlab/models/yolo11n.pt
 ```
 
+Run a bounded live webcam loop while keeping YOLO loaded in memory:
+
+```bash
+npm run detect:webcam-live -- --device-index 0 --model-path .perceptionlab/models/yolo11n.pt --frame-limit 10 --confidence-threshold 0.10
+```
+
 Outputs are stored under `.perceptionlab/real-inference/` and `.perceptionlab/captures/`.
