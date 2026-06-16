@@ -118,26 +118,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let storage_root = std::env::var("PERCEPTIONLAB_STORAGE_ROOT")
         .unwrap_or_else(|_| ".perceptionlab/storage".to_owned());
     let sample_storage = Arc::new(perception_infra::LocalSampleStorage::new(storage_root));
+    let api_key = std::env::var("PERCEPTIONLAB_API_KEY").ok();
 
-    axum::serve(
-        listener,
-        perception_http::router_with_p0_ports(
-            dataset_repository,
-            sample_repository,
-            sample_storage,
-            annotation_repository,
-            dataset_version_repository,
-            training_job_repository,
-            training_job_queue,
-            training_metric_repository,
-            model_repository,
-            model_export_repository,
-            inference_run_repository,
-            overlay_renderer,
-            inference_engine,
-        ),
-    )
-    .await?;
+    let router = perception_http::router_with_p0_ports(
+        dataset_repository,
+        sample_repository,
+        sample_storage,
+        annotation_repository,
+        dataset_version_repository,
+        training_job_repository,
+        training_job_queue,
+        training_metric_repository,
+        model_repository,
+        model_export_repository,
+        inference_run_repository,
+        overlay_renderer,
+        inference_engine,
+    );
+    let router = perception_http::auth::with_optional_api_key_auth(router, api_key);
+
+    axum::serve(listener, router).await?;
 
     Ok(())
 }
