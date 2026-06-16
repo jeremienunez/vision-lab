@@ -7,8 +7,8 @@ use axum::{
 };
 use perception_app::{
     CreateTrainingJobCommand, CreateTrainingJobUseCase, ListTrainingClassMetricsUseCase,
-    ListTrainingMetricsUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
-    UseCaseError,
+    ListTrainingJobsUseCase, ListTrainingMetricsUseCase, TransitionTrainingJobCommand,
+    TransitionTrainingJobUseCase, UseCaseError,
 };
 use perception_domain::{DatasetVersionId, TrainingJobId, TrainingJobStatus};
 
@@ -16,7 +16,8 @@ use crate::{
     dto::{
         error::ErrorResponse,
         training_job::{
-            CreateTrainingJobRequest, TrainingJobResponse, TransitionTrainingJobRequest,
+            CreateTrainingJobRequest, ListTrainingJobsResponse, TrainingJobResponse,
+            TransitionTrainingJobRequest,
         },
         training_metric::{ListTrainingClassMetricsResponse, ListTrainingMetricsResponse},
     },
@@ -26,7 +27,10 @@ use crate::{
 
 pub fn routes(state: TrainingJobHttpState) -> Router {
     Router::new()
-        .route("/training-jobs", post(create_training_job))
+        .route(
+            "/training-jobs",
+            post(create_training_job).get(list_training_jobs),
+        )
         .route(
             "/training-jobs/{training_job_id}/status",
             patch(transition_training_job_status),
@@ -40,6 +44,21 @@ pub fn routes(state: TrainingJobHttpState) -> Router {
             get(list_training_class_metrics),
         )
         .with_state(state)
+}
+
+async fn list_training_jobs(
+    State(state): State<TrainingJobHttpState>,
+) -> Result<Json<ListTrainingJobsResponse>, TrainingJobRouteError> {
+    let jobs = ListTrainingJobsUseCase::new(state.training_job_repository())
+        .execute()
+        .await?;
+
+    Ok(Json(ListTrainingJobsResponse {
+        training_jobs: jobs
+            .into_iter()
+            .map(mappers::training_job::training_job_response)
+            .collect(),
+    }))
 }
 
 async fn create_training_job(

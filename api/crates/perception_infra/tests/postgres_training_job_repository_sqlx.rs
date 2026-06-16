@@ -66,6 +66,15 @@ async fn postgres_training_job_repository_creates_gets_and_updates_jobs() {
         .await
         .expect("job is created");
 
+    assert!(
+        repository
+            .list()
+            .await
+            .expect("job list works")
+            .iter()
+            .any(|listed_job| listed_job.id == job.id)
+    );
+
     assert_eq!(
         repository
             .get(job.id)

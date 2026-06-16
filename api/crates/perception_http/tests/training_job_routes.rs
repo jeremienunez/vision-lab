@@ -75,6 +75,14 @@ impl TrainingJobRepository for RouteTrainingJobRepository {
         Ok(job)
     }
 
+    async fn list(&self) -> Result<Vec<TrainingJobDraft>, UseCaseError> {
+        Ok(self
+            .jobs
+            .lock()
+            .expect("repository mutex is available")
+            .clone())
+    }
+
     async fn get(&self, job_id: TrainingJobId) -> Result<Option<TrainingJobDraft>, UseCaseError> {
         Ok(self
             .jobs
@@ -323,6 +331,52 @@ async fn create_training_job_route_enqueues_created_job() {
 
     assert_eq!(leased.training_job_id.to_string(), job["id"]);
     assert_eq!(leased.status, TrainingJobQueueStatus::Leased);
+}
+
+#[tokio::test]
+async fn list_training_jobs_route_returns_created_jobs() {
+    let versions = Arc::new(RouteDatasetVersionRepository::default());
+    let jobs = Arc::new(RouteTrainingJobRepository::default());
+    let running_job = jobs
+        .create(training_job_fixture())
+        .await
+        .expect("running job is created");
+    let mut succeeded_job = training_job_fixture();
+    succeeded_job.status = TrainingJobStatus::Succeeded;
+    jobs.create(succeeded_job.clone())
+        .await
+        .expect("succeeded job is created");
+    let app = perception_http::router_with_training_job_ports(
+        versions,
+        jobs,
+        Arc::new(RouteTrainingJobQueue::default()),
+        Arc::new(RouteTrainingMetricRepository::default()),
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/training-jobs")
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json_body(response).await;
+    assert_eq!(
+        body["training_jobs"]
+            .as_array()
+            .expect("training jobs are an array")
+            .len(),
+        2
+    );
+    assert_eq!(body["training_jobs"][0]["id"], running_job.id.to_string());
+    assert_eq!(body["training_jobs"][0]["status"], "running");
+    assert_eq!(body["training_jobs"][1]["id"], succeeded_job.id.to_string());
+    assert_eq!(body["training_jobs"][1]["status"], "succeeded");
 }
 
 #[tokio::test]

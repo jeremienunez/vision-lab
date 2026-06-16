@@ -20,6 +20,7 @@ export const requiredArchitecturePaths = [
   'worker/perception_worker/adapters/inference',
   'worker/perception_worker/adapters/export',
   'worker/perception_worker/entrypoints',
+  'web/src/dashboard',
   'qa/features',
   'qa/steps',
   'qa/support',

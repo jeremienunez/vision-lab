@@ -42,6 +42,22 @@ impl TrainingJobRepository for PostgresTrainingJobRepository {
         Ok(job)
     }
 
+    async fn list(&self) -> Result<Vec<TrainingJobDraft>, UseCaseError> {
+        let rows = sqlx::query(
+            r#"
+            SELECT id, dataset_version_id, model_family, base_model,
+                   status, hyperparameters, error_message
+            FROM training_jobs
+            ORDER BY created_at ASC, id ASC
+            "#,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|_| UseCaseError::Repository("postgres training job list failed"))?;
+
+        rows.into_iter().map(row_to_training_job).collect()
+    }
+
     async fn get(&self, job_id: TrainingJobId) -> Result<Option<TrainingJobDraft>, UseCaseError> {
         let row = sqlx::query(
             r#"

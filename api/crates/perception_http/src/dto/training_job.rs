@@ -30,3 +30,8 @@ pub struct TrainingJobResponse {
     pub base_model: Option<String>,
     pub status: &'static str,
 }
+
+#[derive(Debug, Serialize)]
+pub struct ListTrainingJobsResponse {
+    pub training_jobs: Vec<TrainingJobResponse>,
+}

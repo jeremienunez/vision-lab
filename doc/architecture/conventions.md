@@ -10,6 +10,7 @@
 
 - Rust API owns HTTP, validation, persistence orchestration, and job creation.
 - Python worker owns PyTorch execution, dataset materialization, metrics writing, artifact creation, inference, and export.
+- The web dashboard owns operational presentation only; it reads public API contracts and must not duplicate application use cases.
 - Rust and Python communicate through explicit queue payloads, database state, and artifact URIs.
 - A failed job must always preserve a readable error message.
 

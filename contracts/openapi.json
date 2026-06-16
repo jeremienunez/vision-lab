@@ -215,6 +215,22 @@
       }
     },
     "/training-jobs": {
+      "get": {
+        "operationId": "listTrainingJobs",
+        "tags": ["Training Jobs"],
+        "summary": "List training jobs.",
+        "responses": {
+          "200": {
+            "description": "Training job list.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListTrainingJobsResponse" }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      },
       "post": {
         "operationId": "createTrainingJob",
         "tags": ["Training Jobs"],
@@ -925,6 +941,17 @@
           "model_family": { "type": "string" },
           "base_model": { "type": ["string", "null"] },
           "status": { "type": "string" }
+        }
+      },
+      "ListTrainingJobsResponse": {
+        "type": "object",
+        "required": ["training_jobs"],
+        "additionalProperties": false,
+        "properties": {
+          "training_jobs": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TrainingJobResponse" }
+          }
         }
       },
       "TransitionTrainingJobRequest": {

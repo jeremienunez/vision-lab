@@ -20,6 +20,13 @@ impl TrainingJobRepository for TransientTrainingJobRepository {
         Ok(job)
     }
 
+    async fn list(&self) -> Result<Vec<TrainingJobDraft>, UseCaseError> {
+        self.jobs
+            .read()
+            .map(|jobs| jobs.clone())
+            .map_err(|_| UseCaseError::Repository("training job repository lock poisoned"))
+    }
+
     async fn get(&self, job_id: TrainingJobId) -> Result<Option<TrainingJobDraft>, UseCaseError> {
         self.jobs
             .read()

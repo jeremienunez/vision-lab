@@ -48,6 +48,7 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 
 - `api/crates/` - Rust hexagonal workspace with `perception_domain`, `perception_app`, `perception_infra`, `perception_http`, and `perception_api`.
 - `worker/perception_worker/` - typed Python/PyTorch worker with domain, contracts, app, ports, adapters, and entrypoints.
+- `web/` - React/Vite operations dashboard for API health, datasets, training jobs, models, and metrics.
 - `contracts/` - OpenAPI and JSON schemas for public and cross-component contracts.
 - `infra/` - local infrastructure notes and Docker Compose target.
 - `datasets/seed/` - planned minimal demo dataset.
@@ -123,6 +124,18 @@ curl -H 'x-api-key: local-secret' http://127.0.0.1:8080/datasets
 ```
 
 The local CLI, seed script, product fire smoke, and inference benchmark read `PERCEPTIONLAB_API_KEY` automatically. In CI, inject it as a secret environment variable and do not commit it to `.env.local`.
+
+## Operations Dashboard
+
+Run the API, then start the dashboard:
+
+```bash
+npm run web:dev
+```
+
+The Vite dev server proxies `/api` to `http://127.0.0.1:8080` by default. Override the target with `PERCEPTIONLAB_API_BASE_URL=http://127.0.0.1:18080 npm run web:dev`.
+
+If the API runs with `PERCEPTIONLAB_API_KEY`, either enter the key in the dashboard configuration panel or expose it locally with `VITE_PERCEPTIONLAB_API_KEY=<redacted> npm run web:dev`.
 
 Run the containerized local stack:
 

@@ -27,11 +27,11 @@ pub use use_cases::{
     DatasetStatsUseCase, ExportModelCommand, ExportModelUseCase, ExportYoloAnnotationsUseCase,
     GenerateOverlayUseCase, GetModelUseCase, ImportYoloAnnotationsCommand,
     ImportYoloAnnotationsUseCase, ListDatasetsUseCase, ListModelExportsUseCase, ListModelsUseCase,
-    ListSampleAnnotationsUseCase, ListTrainingClassMetricsUseCase, ListTrainingMetricsUseCase,
-    PromoteModelCommand, PromoteModelUseCase, RecordTrainingMetricCommand,
-    RecordTrainingMetricUseCase, RegisterModelCommand, RegisterModelUseCase, RunInferenceCommand,
-    RunInferenceUseCase, TransitionTrainingJobCommand, TransitionTrainingJobUseCase,
-    UploadSampleCommand, UploadSampleUseCase,
+    ListSampleAnnotationsUseCase, ListTrainingClassMetricsUseCase, ListTrainingJobsUseCase,
+    ListTrainingMetricsUseCase, PromoteModelCommand, PromoteModelUseCase,
+    RecordTrainingMetricCommand, RecordTrainingMetricUseCase, RegisterModelCommand,
+    RegisterModelUseCase, RunInferenceCommand, RunInferenceUseCase, TransitionTrainingJobCommand,
+    TransitionTrainingJobUseCase, UploadSampleCommand, UploadSampleUseCase,
 };
 
 pub const CRATE_NAME: &str = "perception_app";

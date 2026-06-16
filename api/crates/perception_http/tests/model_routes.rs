@@ -91,6 +91,14 @@ impl TrainingJobRepository for RouteTrainingJobRepository {
         Ok(job)
     }
 
+    async fn list(&self) -> Result<Vec<TrainingJobDraft>, UseCaseError> {
+        Ok(self
+            .jobs
+            .lock()
+            .expect("repository mutex is available")
+            .clone())
+    }
+
     async fn get(&self, job_id: TrainingJobId) -> Result<Option<TrainingJobDraft>, UseCaseError> {
         Ok(self
             .jobs

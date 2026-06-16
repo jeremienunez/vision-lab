@@ -3,9 +3,9 @@ use std::{collections::BTreeMap, sync::Mutex};
 use async_trait::async_trait;
 use perception_app::{
     CreateTrainingJobCommand, CreateTrainingJobUseCase, DatasetVersionDraft,
-    DatasetVersionRepository, TrainingJobDraft, TrainingJobQueue, TrainingJobQueueEntry,
-    TrainingJobQueueStatus, TrainingJobRepository, TransitionTrainingJobCommand,
-    TransitionTrainingJobUseCase, UseCaseError,
+    DatasetVersionRepository, ListTrainingJobsUseCase, TrainingJobDraft, TrainingJobQueue,
+    TrainingJobQueueEntry, TrainingJobQueueStatus, TrainingJobRepository,
+    TransitionTrainingJobCommand, TransitionTrainingJobUseCase, UseCaseError,
 };
 use perception_domain::{DatasetId, DatasetVersionId, TrainingJobId, TrainingJobStatus};
 
@@ -59,6 +59,14 @@ impl TrainingJobRepository for InMemoryTrainingJobRepository {
             .expect("repository mutex is available")
             .push(job.clone());
         Ok(job)
+    }
+
+    async fn list(&self) -> Result<Vec<TrainingJobDraft>, UseCaseError> {
+        Ok(self
+            .jobs
+            .lock()
+            .expect("repository mutex is available")
+            .clone())
     }
 
     async fn get(&self, job_id: TrainingJobId) -> Result<Option<TrainingJobDraft>, UseCaseError> {
@@ -166,6 +174,35 @@ async fn create_training_job_queues_job_for_existing_dataset_version() {
     assert_eq!(leased.status, TrainingJobQueueStatus::Leased);
     assert_eq!(leased.locked_by, Some("worker-1".to_owned()));
     assert_eq!(leased.attempts, 1);
+}
+
+#[tokio::test]
+async fn list_training_jobs_returns_repository_jobs() {
+    let versions = InMemoryDatasetVersionRepository::default();
+    let jobs = InMemoryTrainingJobRepository::default();
+    let version = versions
+        .create(version_fixture())
+        .await
+        .expect("version is created");
+    let created = CreateTrainingJobUseCase::new(&versions, &jobs)
+        .execute(CreateTrainingJobCommand {
+            dataset_version_id: version.id,
+            model_family: "tiny_torch".to_owned(),
+            base_model: None,
+            epochs: 2,
+            batch_size: 1,
+            image_size: 64,
+            learning_rate: 0.01,
+        })
+        .await
+        .expect("job is created");
+
+    let listed = ListTrainingJobsUseCase::new(&jobs)
+        .execute()
+        .await
+        .expect("jobs list succeeds");
+
+    assert_eq!(listed, vec![created]);
 }
 
 #[tokio::test]

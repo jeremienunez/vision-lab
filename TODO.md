@@ -78,7 +78,7 @@
 - [x] Connect real YOLO inference to the API product fire smoke.
 - [x] Add bounded live webcam YOLO detection command.
 - [x] Add API key auth.
-- [ ] Add minimal web dashboard only after API-first MVP.
+- [x] Add minimal web dashboard only after API-first MVP.
 - [ ] Stream training logs.
 - [ ] Support video.
 - [ ] Support depth metadata.

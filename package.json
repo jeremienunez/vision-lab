@@ -17,6 +17,9 @@
     "bootstrap:env": "node scripts/bootstrap-local-env.mjs",
     "cli": "node scripts/perceptionlab-cli.mjs",
     "benchmark:inference": "node scripts/benchmark-inference.mjs",
+    "web:dev": "vite --config web/vite.config.mjs",
+    "web:build": "vite build --config web/vite.config.mjs",
+    "web:preview": "vite preview --config web/vite.config.mjs",
     "demo:fire": "sh scripts/fire_demo_product.sh",
     "detect:image": "UV_CACHE_DIR=.perceptionlab/cache/uv uv run --project worker perception-worker detect-image",
     "detect:webcam": "UV_CACHE_DIR=.perceptionlab/cache/uv uv run --project worker perception-worker detect-webcam",
@@ -27,12 +30,21 @@
     "install:deps": "npm run bootstrap:env && npm run install:rust && npm run install:worker:ml",
     "check:rust": "cargo check --manifest-path api/Cargo.toml --workspace",
     "check:worker": "cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv run pytest",
-    "lint:architecture": "depcruise scripts tests --config .dependency-cruiser.cjs",
-    "quality": "npm test && npm run validate:docs && npm run validate:openapi && npm run validate:seed && npm run validate:bdd && npm run validate:bdd-runner && npm run validate:conventions && npm run validate:p0-bootstrap && npm run validate:migrations && npm run check:rust && npm run check:worker && npm run lint:architecture",
+    "check:web": "npm run web:build",
+    "lint:architecture": "depcruise scripts tests web/src --config .dependency-cruiser.cjs",
+    "quality": "npm test && npm run validate:docs && npm run validate:openapi && npm run validate:seed && npm run validate:bdd && npm run validate:bdd-runner && npm run validate:conventions && npm run validate:p0-bootstrap && npm run validate:migrations && npm run check:rust && npm run check:worker && npm run check:web && npm run lint:architecture",
     "prepare:hooks": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^13.0.0",
-    "dependency-cruiser": "^17.4.3"
+    "@vitejs/plugin-react": "^6.0.2",
+    "dependency-cruiser": "^17.4.3",
+    "playwright": "^1.61.0",
+    "vite": "^8.0.16"
+  },
+  "dependencies": {
+    "lucide-react": "^1.20.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   }
 }

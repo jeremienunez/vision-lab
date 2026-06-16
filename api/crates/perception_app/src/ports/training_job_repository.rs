@@ -7,6 +7,8 @@ use crate::{TrainingJobDraft, UseCaseError};
 pub trait TrainingJobRepository: Send + Sync {
     async fn create(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError>;
 
+    async fn list(&self) -> Result<Vec<TrainingJobDraft>, UseCaseError>;
+
     async fn get(&self, job_id: TrainingJobId) -> Result<Option<TrainingJobDraft>, UseCaseError>;
 
     async fn update(&self, job: TrainingJobDraft) -> Result<TrainingJobDraft, UseCaseError>;

@@ -25,6 +25,17 @@ async fn transient_training_job_repository_creates_and_gets_jobs() {
 
     assert_eq!(
         repository
+            .list()
+            .await
+            .expect("job list succeeds")
+            .into_iter()
+            .map(|job| job.id)
+            .collect::<Vec<_>>(),
+        vec![job_id]
+    );
+
+    assert_eq!(
+        repository
             .get(job_id)
             .await
             .expect("job lookup succeeds")

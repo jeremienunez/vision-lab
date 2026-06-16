@@ -151,6 +151,22 @@ Response:
 }
 ```
 
+List response:
+
+```json
+{
+  "training_jobs": [
+    {
+      "id": "job_01hxyz",
+      "status": "queued",
+      "dataset_version_id": "dsv_01hxyz",
+      "model_family": "yolo",
+      "base_model": "yolo11n"
+    }
+  ]
+}
+```
+
 Transition request:
 
 ```json

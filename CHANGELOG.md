@@ -55,6 +55,8 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Real YOLO CLI inference adapter selectable by the API with `PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli`, including product fire smoke coverage through `POST /models/{model_id}/infer`.
 - Optional API key middleware enabled by `PERCEPTIONLAB_API_KEY`, with `/health` public and `x-api-key` required for protected routes when configured.
 - API key support in the local CLI, seed script, product fire smoke, and inference benchmark.
+- Minimal React/Vite operations dashboard for API health, datasets, training jobs, model registry, and latest metrics.
+- Training job listing API at `GET /training-jobs` for operations dashboard state.
 - SQLx-backed PostgreSQL dataset repository selectable with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - SQLx-backed PostgreSQL sample and annotation repositories used by the API in Postgres backend mode.
 - SQLx-backed PostgreSQL dataset version repository used by the API in Postgres backend mode.
