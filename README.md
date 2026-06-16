@@ -133,6 +133,22 @@ npm run demo:fire -- --image /absolute/path/to/capture.jpg
 
 The command starts a transient API, seeds `datasets/seed`, creates a succeeded demo training job, registers a model, runs inference on the selected image, generates an overlay, and prints a JSON summary with detected classes and the overlay artifact URI. Supported custom image formats are `.jpg`, `.jpeg`, `.png`, and `.webp`. This is a product smoke with the local deterministic inference adapter; it validates the executable path, not real model accuracy. Override the port with `PERCEPTIONLAB_API_ADDR=127.0.0.1:18080` if `8080` is already used.
 
+## Real YOLO Smoke
+
+Run a real local YOLO prediction on an existing image:
+
+```bash
+npm run detect:image -- image.png --model-path .perceptionlab/models/yolo11n.pt --run-name manual
+```
+
+Capture one webcam frame and run the same detector:
+
+```bash
+npm run detect:webcam -- --device-index 0 --model-path .perceptionlab/models/yolo11n.pt
+```
+
+Both commands write artifacts under `.perceptionlab/` and print JSON with `detection_count`, class names, confidences, and the annotated image path.
+
 ## API Smoke Flow
 
 Create a dataset:

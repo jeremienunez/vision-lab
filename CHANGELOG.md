@@ -50,6 +50,7 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Model registration HTTP route for creating candidate models from succeeded training jobs.
 - One-command object-recognition fire smoke via `npm run demo:fire`.
 - Custom image input for the fire smoke via `npm run demo:fire -- --image <path>`.
+- Real YOLO image and webcam smoke commands through the worker CLI.
 
 ### Changed
 

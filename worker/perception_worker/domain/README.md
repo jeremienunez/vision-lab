@@ -6,3 +6,4 @@ Worker domain objects:
 - `training_result.py`
 - `metrics.py`
 - `model_artifact.py`
+- `real_inference.py`

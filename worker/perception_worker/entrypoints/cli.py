@@ -1,5 +1,6 @@
 """Command line entrypoint for the PerceptionLab worker."""
 
+import json
 import os
 from pathlib import Path
 from typing import Annotated
@@ -7,6 +8,8 @@ from typing import Annotated
 import typer
 
 from perception_worker.adapters.huggingface.dataset_client import HuggingFaceDatasetClient
+from perception_worker.adapters.inference.webcam_capture import OpenCvWebcamFrameCapture
+from perception_worker.adapters.inference.yolo_object_detector import YoloObjectDetector
 from perception_worker.adapters.storage.local_dataset_ingestion_store import (
     LocalDatasetIngestionStore,
 )
@@ -54,6 +57,47 @@ def ingest_hf(
         f"ingested {result.sample_count} sample(s), "
         f"{result.annotation_count} annotation(s) into {result.dataset_root}"
     )
+
+
+@app.command("detect-image")
+def detect_image(
+    image_path: Annotated[Path, typer.Argument()],
+    model_path: Annotated[Path, typer.Option()] = Path(".perceptionlab/models/yolo11n.pt"),
+    output_root: Annotated[Path, typer.Option()] = Path(".perceptionlab/real-inference"),
+    run_name: Annotated[str, typer.Option()] = "image",
+    confidence_threshold: Annotated[float, typer.Option("--confidence-threshold")] = 0.25,
+) -> None:
+    result = YoloObjectDetector().detect_image(
+        image_path=image_path,
+        model_path=model_path,
+        output_root=output_root,
+        run_name=run_name,
+        confidence_threshold=confidence_threshold,
+    )
+    typer.echo(json.dumps(result.to_summary(), indent=2))
+
+
+@app.command("detect-webcam")
+def detect_webcam(
+    device_index: Annotated[int, typer.Option()] = 0,
+    capture_path: Annotated[Path, typer.Option()] = Path(".perceptionlab/captures/webcam.png"),
+    model_path: Annotated[Path, typer.Option()] = Path(".perceptionlab/models/yolo11n.pt"),
+    output_root: Annotated[Path, typer.Option()] = Path(".perceptionlab/real-inference"),
+    run_name: Annotated[str, typer.Option()] = "webcam",
+    confidence_threshold: Annotated[float, typer.Option("--confidence-threshold")] = 0.25,
+) -> None:
+    captured_image_path = OpenCvWebcamFrameCapture().capture_frame(
+        device_index=device_index,
+        output_path=capture_path,
+    )
+    result = YoloObjectDetector().detect_image(
+        image_path=captured_image_path,
+        model_path=model_path,
+        output_root=output_root,
+        run_name=run_name,
+        confidence_threshold=confidence_threshold,
+    )
+    typer.echo(json.dumps(result.to_summary(), indent=2))
 
 
 def parse_classes(value: str) -> tuple[str, ...]:

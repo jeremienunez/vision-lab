@@ -18,6 +18,8 @@
     "cli": "node scripts/perceptionlab-cli.mjs",
     "benchmark:inference": "node scripts/benchmark-inference.mjs",
     "demo:fire": "sh scripts/fire_demo_product.sh",
+    "detect:image": "UV_CACHE_DIR=.perceptionlab/cache/uv uv run --project worker perception-worker detect-image",
+    "detect:webcam": "UV_CACHE_DIR=.perceptionlab/cache/uv uv run --project worker perception-worker detect-webcam",
     "bdd:dry-run": "cucumber-js \"qa/features/**/*.feature\" --import \"qa/steps/**/*.mjs\" --import \"qa/support/**/*.mjs\" --format json:qa/reports/cucumber-report.json --dry-run",
     "install:rust": "cargo fetch --manifest-path api/Cargo.toml",
     "install:worker:ml": "cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv sync --extra ml --group dev",

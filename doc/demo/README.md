@@ -22,3 +22,19 @@ Primary inputs and outputs:
 - Overlay output: local artifact URI returned by `POST /inference-runs/{run_id}/overlay`
 
 These artifacts make the object-recognition value visible without requiring a long manual API sequence first.
+
+## Real Detector Smoke
+
+Run YOLO through the worker environment on an existing image:
+
+```bash
+npm run detect:image -- image.png --model-path .perceptionlab/models/yolo11n.pt --run-name manual
+```
+
+Capture a webcam frame and run YOLO:
+
+```bash
+npm run detect:webcam -- --device-index 0 --model-path .perceptionlab/models/yolo11n.pt
+```
+
+Outputs are stored under `.perceptionlab/real-inference/` and `.perceptionlab/captures/`.
