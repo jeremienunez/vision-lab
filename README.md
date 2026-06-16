@@ -115,7 +115,7 @@ curl http://127.0.0.1:8080/health
 docker compose down
 ```
 
-The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, and annotations. The API applies `api/migrations/` at startup through SQLx. Dataset versions, training jobs, metrics, models, exports, and inference runs still use transient adapters in the current tranche. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
+The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, annotations, and dataset versions. The API applies `api/migrations/` at startup through SQLx. Training jobs, metrics, models, exports, and inference runs still use transient adapters in the current tranche. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
 
 Run the API directly against a local PostgreSQL database:
 

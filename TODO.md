@@ -31,6 +31,7 @@
 - [x] Add annotation endpoints.
 - [x] Add `GET /datasets/{dataset_id}/stats`.
 - [x] Add `POST /datasets/{dataset_id}/versions`.
+- [x] Persist dataset versions through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add `POST /training-jobs`.
 - [x] Add training job lifecycle persistence and transitions.
 - [x] Add queue-backed training orchestration.

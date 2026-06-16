@@ -17,13 +17,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = tokio::net::TcpListener::bind(address).await?;
     tracing::info!(%address, "perception_api listening");
 
-    let (dataset_repository, sample_repository, annotation_repository): (
+    let (
+        dataset_repository,
+        sample_repository,
+        annotation_repository,
+        dataset_version_repository,
+    ): (
         Arc<dyn perception_app::DatasetRepository>,
         Arc<dyn perception_app::SampleRepository>,
         Arc<dyn perception_app::AnnotationRepository>,
+        Arc<dyn perception_app::DatasetVersionRepository>,
     ) = match perception_infra::RepositoryBackend::from_env() {
         perception_infra::RepositoryBackend::Postgres => {
-            tracing::info!("using postgres dataset, sample, and annotation repositories");
+            tracing::info!(
+                "using postgres dataset, sample, annotation, and dataset version repositories"
+            );
             let database_url = std::env::var("PERCEPTIONLAB_DATABASE_URL")?;
             let database_pool = sqlx::postgres::PgPoolOptions::new()
                 .max_connections(5)
@@ -44,6 +52,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     database_pool.clone(),
                 )),
                 Arc::new(perception_infra::PostgresAnnotationRepository::new(
+                    database_pool.clone(),
+                )),
+                Arc::new(perception_infra::PostgresDatasetVersionRepository::new(
                     database_pool,
                 )),
             )
@@ -52,10 +63,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::new(perception_infra::TransientDatasetRepository::default()),
             Arc::new(perception_infra::TransientSampleRepository::default()),
             Arc::new(perception_infra::TransientAnnotationRepository::default()),
+            Arc::new(perception_infra::TransientDatasetVersionRepository::default()),
         ),
     };
-    let dataset_version_repository =
-        Arc::new(perception_infra::TransientDatasetVersionRepository::default());
     let training_job_repository =
         Arc::new(perception_infra::TransientTrainingJobRepository::default());
     let training_job_queue = Arc::new(perception_infra::TransientTrainingJobQueue::default());
