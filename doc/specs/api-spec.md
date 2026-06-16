@@ -47,6 +47,51 @@ Validate it with `npm run validate:openapi` or export it with `sh scripts/export
 | POST | `/models/compare` | Compare registered models by a shared numeric metric. |
 | POST | `/models/{model_id}/promote` | Promote a model and demote competing promoted models for the same dataset version and family. |
 
+## P2B API Key Auth Contract
+
+API key protection is optional and controlled by `PERCEPTIONLAB_API_KEY`.
+
+When `PERCEPTIONLAB_API_KEY` is unset or blank, the API keeps the local development behavior: all routes remain reachable without an API key.
+
+When `PERCEPTIONLAB_API_KEY` is configured, `/health` stays public and every other route requires the `x-api-key` header.
+
+Protected request:
+
+```bash
+curl -H 'x-api-key: dev-secret' http://127.0.0.1:8080/datasets
+```
+
+Missing key response:
+
+```json
+{
+  "error": {
+    "code": "missing_api_key",
+    "message": "Missing x-api-key header"
+  }
+}
+```
+
+Wrong key response:
+
+```json
+{
+  "error": {
+    "code": "invalid_api_key",
+    "message": "Invalid x-api-key header"
+  }
+}
+```
+
+Expected status codes:
+
+| Condition | Status |
+| --- | --- |
+| `/health` without key | `200` |
+| Protected route without key | `401` |
+| Protected route with wrong key | `403` |
+| Protected route with matching key | Route-specific success/error |
+
 ## Dataset Creation Contract
 
 Request:
@@ -256,116 +301,4 @@ Use a custom image captured from a phone or webcam:
 
 ```bash
 npm run demo:fire -- --image /absolute/path/to/capture.jpg
-```
-
-Run the same API contract through the real YOLO worker adapter:
-
-```bash
-PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli \
-npm run demo:fire -- --image /absolute/path/to/capture.jpg --confidence-threshold 0.25
-```
-
-The command starts a transient API, seeds `datasets/seed`, creates a succeeded tiny training job, registers a demo model, runs inference on the selected image, generates an overlay, and exits non-zero if no detections are returned. Custom images must be `.jpg`, `.jpeg`, `.png`, or `.webp`. By default it validates the executable product path with the deterministic inference adapter. With `PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli`, the same `POST /models/{model_id}/infer` route executes the worker YOLO detector and maps pixel detections back to the normalized API contract.
-
-## Model Export Contract
-
-Request:
-
-```json
-{
-  "format": "coreml"
-}
-```
-
-Supported formats are `onnx` and `coreml`.
-
-Response:
-
-```json
-{
-  "id": "mexp_01hxyz",
-  "model_id": "mdl_01hxyz",
-  "format": "coreml",
-  "artifact_uri": "file:///tmp/model.mlpackage",
-  "status": "succeeded",
-  "error_message": null
-}
-```
-
-`GET /models/{model_id}/exports` returns:
-
-```json
-{
-  "exports": [
-    {
-      "id": "mexp_01hxyz",
-      "model_id": "mdl_01hxyz",
-      "format": "onnx",
-      "artifact_uri": "file:///tmp/model.onnx",
-      "status": "succeeded",
-      "error_message": null
-    }
-  ]
-}
-```
-
-## Model Comparison Contract
-
-Request:
-
-```json
-{
-  "model_ids": ["mdl_01baseline", "mdl_01challenger"],
-  "metric_name": "mAP50"
-}
-```
-
-Response:
-
-```json
-{
-  "metric_name": "mAP50",
-  "direction": "higher_is_better",
-  "best_model_id": "mdl_01challenger",
-  "models": [
-    {
-      "rank": 1,
-      "model_id": "mdl_01challenger",
-      "name": "challenger",
-      "version": "v1",
-      "metric_value": 0.81,
-      "metrics_summary": { "mAP50": "0.81" }
-    }
-  ]
-}
-```
-
-Every compared model must expose the requested metric as a numeric string in `metrics_summary`.
-
-## Model Promotion Contract
-
-`POST /models/{model_id}/promote` returns the promoted `ModelResponse`.
-
-Promoting a candidate or validated model sets it to `promoted` and demotes any competing promoted model with the same `dataset_version_id` and `model_family` back to `validated`. Archived models cannot be promoted.
-
-## Class Metrics Contract
-
-`GET /training-jobs/{job_id}/metrics/by-class` returns metrics whose metadata includes `class_name`.
-
-Response:
-
-```json
-{
-  "class_metrics": [
-    {
-      "training_job_id": "job_01hxyz",
-      "class_name": "cup",
-      "split_name": "validation",
-      "metric_name": "mAP50",
-      "metric_value": 0.82,
-      "step": null,
-      "epoch": 1
-    }
-  ]
-}
 ```
