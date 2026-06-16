@@ -11,6 +11,7 @@ use perception_app::{
     TrainingMetricRepository,
 };
 
+pub mod auth;
 pub mod dto;
 pub mod mappers;
 pub mod routes;
