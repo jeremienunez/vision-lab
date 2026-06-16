@@ -42,6 +42,26 @@ Scope:
 - Require `x-api-key` for mutating and protected read endpoints when `PERCEPTIONLAB_API_KEY` is configured.
 - Document local and CI usage.
 
+Implementation:
+
+- `PERCEPTIONLAB_API_KEY` controls the middleware at API bootstrap.
+- Empty or unset `PERCEPTIONLAB_API_KEY` keeps local development unprotected.
+- When configured, `/health` remains public and every other route requires `x-api-key`.
+- Requests without `x-api-key` return `401` with `missing_api_key`.
+- Requests with a non-matching `x-api-key` return `403` with `invalid_api_key`.
+- Requests with the matching key proceed to the protected route.
+
+Local usage:
+
+```bash
+PERCEPTIONLAB_API_KEY=dev-secret \
+PERCEPTIONLAB_API_ADDR=127.0.0.1:8080 \
+cargo run --manifest-path api/Cargo.toml -p perception_api
+
+curl http://127.0.0.1:8080/health
+curl -H 'x-api-key: dev-secret' http://127.0.0.1:8080/datasets
+```
+
 Validation signals:
 
 - Missing API key returns `401`.
