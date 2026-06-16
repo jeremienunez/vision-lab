@@ -8,17 +8,20 @@ import { seedDemoDataset } from './seed-demo-dataset.mjs';
 
 const defaultBaseUrl = process.env.PERCEPTIONLAB_API_BASE_URL ?? 'http://127.0.0.1:8080';
 const defaultSeedRoot = process.env.PERCEPTIONLAB_SEED_DATASET_ROOT ?? 'datasets/seed';
+const defaultImagePath = process.env.PERCEPTIONLAB_FIRE_IMAGE_PATH;
 
 export async function fireDemoProduct(dependencies = {}) {
   const {
     baseUrl = defaultBaseUrl,
     seedRoot = defaultSeedRoot,
+    imagePath = defaultImagePath,
     fetchImpl = globalThis.fetch,
     stdout = (value) => process.stdout.write(value),
   } = dependencies;
 
   const apiBaseUrl = baseUrl.replace(/\/+$/, '');
   const manifest = loadSeedManifest(seedRoot);
+  const inferenceImage = await resolveInferenceImage(imagePath, seedRoot, manifest);
 
   await getJson(fetchImpl, `${apiBaseUrl}/health`);
 
@@ -63,12 +66,10 @@ export async function fireDemoProduct(dependencies = {}) {
       classes: manifest.dataset.classes.join(','),
     },
   });
-  const sample = manifest.samples[0];
   const inference = await postMultipart(
     fetchImpl,
     `${apiBaseUrl}/models/${model.id}/infer`,
-    seedRoot,
-    sample,
+    inferenceImage,
   );
 
   if (!Array.isArray(inference.detections) || inference.detections.length === 0) {
@@ -96,6 +97,37 @@ export async function fireDemoProduct(dependencies = {}) {
   return 0;
 }
 
+export function parseFireDemoOptions(argv) {
+  const options = {};
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
+    if (arg === '--image') {
+      const imagePath = argv[index + 1];
+      if (!imagePath || imagePath.startsWith('--')) {
+        throw new Error('Missing value for --image');
+      }
+      options.imagePath = imagePath;
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--image=')) {
+      const imagePath = arg.slice('--image='.length);
+      if (!imagePath) {
+        throw new Error('Missing value for --image');
+      }
+      options.imagePath = imagePath;
+      continue;
+    }
+
+    throw new Error(`Unknown fire demo option: ${arg}`);
+  }
+
+  return options;
+}
+
 async function getJson(fetchImpl, url) {
   const response = await fetchImpl(url);
   return parseResponse(response, url);
@@ -119,17 +151,58 @@ async function patchJson(fetchImpl, url, payload) {
   return parseResponse(response, url);
 }
 
-async function postMultipart(fetchImpl, url, seedRoot, sample) {
-  const bytes = await fs.readFile(path.join(seedRoot, sample.path));
+async function postMultipart(fetchImpl, url, image) {
+  const bytes = await fs.readFile(image.path);
   const form = new FormData();
   form.append('confidence_threshold', '0.50');
-  form.append('image', new Blob([bytes], { type: sample.mime_type }), sample.filename);
+  form.append('image', new Blob([bytes], { type: image.mime_type }), image.filename);
   const response = await fetchImpl(url, {
     method: 'POST',
     body: form,
   });
 
-  return parseResponse(response, sample.path);
+  return parseResponse(response, image.path);
+}
+
+async function resolveInferenceImage(imagePath, seedRoot, manifest) {
+  if (!imagePath) {
+    const sample = manifest.samples[0];
+    return {
+      path: path.join(seedRoot, sample.path),
+      filename: sample.filename,
+      mime_type: sample.mime_type,
+    };
+  }
+
+  const absolutePath = path.resolve(imagePath);
+  let stats;
+  try {
+    stats = await fs.stat(absolutePath);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      throw new Error(`Input image not found: ${absolutePath}`);
+    }
+    throw error;
+  }
+
+  if (!stats.isFile()) {
+    throw new Error(`Input image is not a file: ${absolutePath}`);
+  }
+
+  return {
+    path: absolutePath,
+    filename: path.basename(absolutePath),
+    mime_type: mimeTypeForImagePath(absolutePath),
+  };
+}
+
+function mimeTypeForImagePath(imagePath) {
+  const extension = path.extname(imagePath).toLowerCase();
+  if (extension === '.jpg' || extension === '.jpeg') return 'image/jpeg';
+  if (extension === '.png') return 'image/png';
+  if (extension === '.webp') return 'image/webp';
+
+  throw new Error('Input image must be a .jpg, .jpeg, .png, or .webp file');
 }
 
 async function parseResponse(response, context) {
@@ -143,7 +216,7 @@ async function parseResponse(response, context) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    process.exitCode = await fireDemoProduct();
+    process.exitCode = await fireDemoProduct(parseFireDemoOptions(process.argv.slice(2)));
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;

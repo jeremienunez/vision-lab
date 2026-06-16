@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { fireDemoProduct } from '../../scripts/fire-demo-product.mjs';
+import { fireDemoProduct, parseFireDemoOptions } from '../../scripts/fire-demo-product.mjs';
 
 function response(body, status = 200) {
   return {
@@ -147,5 +150,75 @@ describe('fire demo product script', () => {
       }),
       /Object recognition smoke failed: no detections returned/,
     );
+  });
+
+  it('runs inference with a custom local image path', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'perceptionlab-fire-'));
+    const imagePath = path.join(tmpDir, 'phone-capture.png');
+    await fs.writeFile(imagePath, Buffer.from([137, 80, 78, 71]));
+    let inferredFilename = '';
+
+    await fireDemoProduct({
+      baseUrl: 'http://api.local/',
+      imagePath,
+      fetchImpl: async (url, options) => {
+        if (url === 'http://api.local/health') return response({ status: 'ok' });
+        if (url === 'http://api.local/datasets') return response({ id: 'ds_01' }, 201);
+        if (url === 'http://api.local/datasets/ds_01/samples') {
+          return response({ id: 'smp_01' }, 201);
+        }
+        if (url === 'http://api.local/samples/smp_01/annotations') {
+          return response({ id: 'ann_01' }, 201);
+        }
+        if (url === 'http://api.local/datasets/ds_01/versions') {
+          return response({ id: 'dsv_01', version_name: 'v1' }, 201);
+        }
+        if (url === 'http://api.local/training-jobs') {
+          return response({ id: 'job_01', dataset_version_id: 'dsv_01', status: 'queued' }, 201);
+        }
+        if (url === 'http://api.local/training-jobs/job_01/status') {
+          return response({ id: 'job_01', status: 'succeeded' });
+        }
+        if (url === 'http://api.local/models') return response({ id: 'mdl_01' }, 201);
+        if (url === 'http://api.local/models/mdl_01/infer') {
+          inferredFilename = options.body.get('image').name;
+          return response({
+            run_id: 'irun_01',
+            detections: [{ class_name: 'cup', confidence: 0.91 }],
+          });
+        }
+        if (url === 'http://api.local/inference-runs/irun_01/overlay') {
+          return response({ artifact_uri: 'file:///tmp/overlay.svg' }, 201);
+        }
+        throw new Error(`Unexpected request: ${url}`);
+      },
+      stdout: () => {},
+    });
+
+    assert.equal(inferredFilename, 'phone-capture.png');
+  });
+
+  it('rejects a missing custom image before calling the API', async () => {
+    let calls = 0;
+
+    await assert.rejects(
+      fireDemoProduct({
+        baseUrl: 'http://api.local/',
+        imagePath: '/tmp/perceptionlab-missing-image.png',
+        fetchImpl: async () => {
+          calls += 1;
+          return response({ status: 'ok' });
+        },
+        stdout: () => {},
+      }),
+      /Input image not found/,
+    );
+    assert.equal(calls, 0);
+  });
+
+  it('parses the custom image CLI option', () => {
+    assert.deepEqual(parseFireDemoOptions(['--image', '/tmp/capture.jpg']), {
+      imagePath: '/tmp/capture.jpg',
+    });
   });
 });

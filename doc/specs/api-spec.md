@@ -252,7 +252,13 @@ Run the local object-recognition smoke from the repository root:
 npm run demo:fire
 ```
 
-The command starts a transient API, seeds `datasets/seed`, creates a succeeded tiny training job, registers a demo model, runs inference on `datasets/seed/images/desk-objects.png`, generates an overlay, and exits non-zero if no detections are returned. It validates the local executable path with the deterministic inference adapter; real model accuracy is validated separately once a production inference adapter is wired.
+Use a custom image captured from a phone or webcam:
+
+```bash
+npm run demo:fire -- --image /absolute/path/to/capture.jpg
+```
+
+The command starts a transient API, seeds `datasets/seed`, creates a succeeded tiny training job, registers a demo model, runs inference on the selected image, generates an overlay, and exits non-zero if no detections are returned. Custom images must be `.jpg`, `.jpeg`, `.png`, or `.webp`. It validates the local executable path with the deterministic inference adapter; real model accuracy is validated separately once a production inference adapter is wired.
 
 ## Model Export Contract
 

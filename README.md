@@ -125,7 +125,13 @@ Run the full local smoke that proves the product inference path can execute an o
 npm run demo:fire
 ```
 
-The command starts a transient API, seeds `datasets/seed`, creates a succeeded demo training job, registers a model, runs inference on `datasets/seed/images/desk-objects.png`, generates an overlay, and prints a JSON summary with detected classes and the overlay artifact URI. This is a product smoke with the local deterministic inference adapter; it validates the executable path, not real model accuracy. Override the port with `PERCEPTIONLAB_API_ADDR=127.0.0.1:18080` if `8080` is already used.
+Use a captured phone or webcam image instead of the bundled seed image:
+
+```bash
+npm run demo:fire -- --image /absolute/path/to/capture.jpg
+```
+
+The command starts a transient API, seeds `datasets/seed`, creates a succeeded demo training job, registers a model, runs inference on the selected image, generates an overlay, and prints a JSON summary with detected classes and the overlay artifact URI. Supported custom image formats are `.jpg`, `.jpeg`, `.png`, and `.webp`. This is a product smoke with the local deterministic inference adapter; it validates the executable path, not real model accuracy. Override the port with `PERCEPTIONLAB_API_ADDR=127.0.0.1:18080` if `8080` is already used.
 
 ## API Smoke Flow
 

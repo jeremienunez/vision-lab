@@ -25,4 +25,4 @@ until curl -fsS "${api_base_url}/health" >/dev/null 2>&1; do
   sleep 1
 done
 
-PERCEPTIONLAB_API_BASE_URL="$api_base_url" node scripts/fire-demo-product.mjs
+PERCEPTIONLAB_API_BASE_URL="$api_base_url" node scripts/fire-demo-product.mjs "$@"
