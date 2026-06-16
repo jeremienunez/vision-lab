@@ -41,6 +41,16 @@ impl ModelRepository for InMemoryModelRepository {
             .find(|model| model.id == model_id)
             .cloned())
     }
+
+    async fn update(&self, model: ModelDraft) -> Result<ModelDraft, UseCaseError> {
+        let mut models = self.models.lock().expect("repository mutex is available");
+        let stored = models
+            .iter_mut()
+            .find(|stored_model| stored_model.id == model.id)
+            .ok_or(UseCaseError::NotFound("model not found"))?;
+        *stored = model.clone();
+        Ok(model)
+    }
 }
 
 #[derive(Default)]
@@ -134,7 +144,7 @@ async fn export_model_rejects_unsupported_format() {
     let result = ExportModelUseCase::new(&models, &exports)
         .execute(ExportModelCommand {
             model_id: model.id,
-            format: "coreml".to_owned(),
+            format: "tflite".to_owned(),
         })
         .await;
 
@@ -142,6 +152,33 @@ async fn export_model_rejects_unsupported_format() {
         result,
         Err(UseCaseError::Validation("unsupported model export format"))
     );
+}
+
+#[tokio::test]
+async fn export_model_creates_succeeded_coreml_export_for_existing_model() {
+    let models = InMemoryModelRepository::default();
+    let exports = InMemoryModelExportRepository::default();
+    let model = models
+        .create(model_fixture(ModelStatus::Validated))
+        .await
+        .expect("model is created");
+
+    let export = ExportModelUseCase::new(&models, &exports)
+        .execute(ExportModelCommand {
+            model_id: model.id,
+            format: "coreml".to_owned(),
+        })
+        .await
+        .expect("model export is created");
+
+    assert_eq!(export.model_id, model.id);
+    assert_eq!(export.format, "coreml");
+    assert_eq!(
+        export.artifact_uri,
+        Some("file:///tmp/model.mlpackage".to_owned())
+    );
+    assert_eq!(export.status, ExportStatus::Succeeded);
+    assert_eq!(export.error_message, None);
 }
 
 #[tokio::test]

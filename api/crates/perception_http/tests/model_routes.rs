@@ -63,6 +63,16 @@ impl ModelRepository for RouteModelRepository {
             .find(|model| model.id == model_id)
             .cloned())
     }
+
+    async fn update(&self, model: ModelDraft) -> Result<ModelDraft, UseCaseError> {
+        let mut models = self.models.lock().expect("repository mutex is available");
+        let stored = models
+            .iter_mut()
+            .find(|stored_model| stored_model.id == model.id)
+            .ok_or(UseCaseError::NotFound("model not found"))?;
+        *stored = model.clone();
+        Ok(model)
+    }
 }
 
 #[async_trait]
@@ -446,6 +456,173 @@ async fn export_model_route_creates_and_lists_onnx_exports() {
         .await
         .expect("exports are listed from repository");
     assert_eq!(listed.len(), 1);
+}
+
+#[tokio::test]
+async fn export_model_route_creates_coreml_export() {
+    let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
+    let model = models
+        .create(model_fixture())
+        .await
+        .expect("model is created");
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs,
+        Arc::new(RouteOverlayRenderer),
+        Arc::new(RouteInferenceEngine),
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/models/{}/exports", model.id))
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    serde_json::to_vec(&serde_json::json!({ "format": "coreml" }))
+                        .expect("request JSON is encoded"),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let export = json_body(response).await;
+    assert_eq!(export["model_id"], model.id.to_string());
+    assert_eq!(export["format"], "coreml");
+    assert_eq!(export["artifact_uri"], "file:///tmp/model.mlpackage");
+    assert_eq!(export["status"], "succeeded");
+    assert_eq!(export["error_message"], Value::Null);
+}
+
+#[tokio::test]
+async fn compare_models_route_ranks_models_by_metric() {
+    let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
+    let baseline = models
+        .create(ModelDraft {
+            metrics_summary: BTreeMap::from([("mAP50".to_owned(), "0.73".to_owned())]),
+            ..model_fixture()
+        })
+        .await
+        .expect("baseline is created");
+    let challenger = models
+        .create(ModelDraft {
+            name: "challenger".to_owned(),
+            metrics_summary: BTreeMap::from([("mAP50".to_owned(), "0.81".to_owned())]),
+            ..model_fixture()
+        })
+        .await
+        .expect("challenger is created");
+    let app = perception_http::router_with_model_ports(
+        models,
+        exports,
+        runs,
+        Arc::new(RouteOverlayRenderer),
+        Arc::new(RouteInferenceEngine),
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/models/compare")
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    serde_json::to_vec(&serde_json::json!({
+                        "model_ids": [baseline.id.to_string(), challenger.id.to_string()],
+                        "metric_name": "mAP50"
+                    }))
+                    .expect("request JSON is encoded"),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let comparison = json_body(response).await;
+    assert_eq!(comparison["metric_name"], "mAP50");
+    assert_eq!(comparison["direction"], "higher_is_better");
+    assert_eq!(comparison["best_model_id"], challenger.id.to_string());
+    assert_eq!(
+        comparison["models"][0]["model_id"],
+        challenger.id.to_string()
+    );
+    assert_eq!(comparison["models"][0]["rank"], 1);
+    assert_eq!(comparison["models"][0]["metric_value"], 0.81);
+    assert_eq!(comparison["models"][1]["model_id"], baseline.id.to_string());
+}
+
+#[tokio::test]
+async fn promote_model_route_promotes_target_and_demotes_competitor() {
+    let models = Arc::new(RouteModelRepository::default());
+    let exports = Arc::new(RouteModelExportRepository::default());
+    let runs = Arc::new(RouteInferenceRunRepository::default());
+    let dataset_version_id = DatasetVersionId::new();
+    let baseline = models
+        .create(ModelDraft {
+            dataset_version_id,
+            status: ModelStatus::Promoted,
+            ..model_fixture()
+        })
+        .await
+        .expect("baseline is created");
+    let challenger = models
+        .create(ModelDraft {
+            name: "challenger".to_owned(),
+            dataset_version_id,
+            status: ModelStatus::Validated,
+            ..model_fixture()
+        })
+        .await
+        .expect("challenger is created");
+    let app = perception_http::router_with_model_ports(
+        models.clone(),
+        exports,
+        runs,
+        Arc::new(RouteOverlayRenderer),
+        Arc::new(RouteInferenceEngine),
+    );
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/models/{}/promote", challenger.id))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let promoted = json_body(response).await;
+    assert_eq!(promoted["id"], challenger.id.to_string());
+    assert_eq!(promoted["status"], "promoted");
+
+    let stored_models = models.list().await.expect("models are listed");
+    assert_eq!(
+        stored_models
+            .iter()
+            .find(|model| model.id == baseline.id)
+            .expect("baseline is stored")
+            .status,
+        ModelStatus::Validated
+    );
+    assert_eq!(
+        stored_models
+            .iter()
+            .find(|model| model.id == challenger.id)
+            .expect("challenger is stored")
+            .status,
+        ModelStatus::Promoted
+    );
 }
 
 #[tokio::test]

@@ -42,6 +42,16 @@ impl ModelRepository for InMemoryModelRepository {
             .find(|model| model.id == model_id)
             .cloned())
     }
+
+    async fn update(&self, model: ModelDraft) -> Result<ModelDraft, UseCaseError> {
+        let mut models = self.models.lock().expect("repository mutex is available");
+        let stored = models
+            .iter_mut()
+            .find(|stored_model| stored_model.id == model.id)
+            .ok_or(UseCaseError::NotFound("model not found"))?;
+        *stored = model.clone();
+        Ok(model)
+    }
 }
 
 #[derive(Default)]

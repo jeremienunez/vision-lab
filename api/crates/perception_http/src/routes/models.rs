@@ -6,8 +6,9 @@ use axum::{
     routing::{get, post},
 };
 use perception_app::{
-    ExportModelCommand, ExportModelUseCase, GenerateOverlayUseCase, GetModelUseCase,
-    ListModelExportsUseCase, ListModelsUseCase, RunInferenceCommand, RunInferenceUseCase,
+    CompareModelsCommand, CompareModelsUseCase, ExportModelCommand, ExportModelUseCase,
+    GenerateOverlayUseCase, GetModelUseCase, ListModelExportsUseCase, ListModelsUseCase,
+    PromoteModelCommand, PromoteModelUseCase, RunInferenceCommand, RunInferenceUseCase,
     UseCaseError,
 };
 use perception_domain::{InferenceRunId, ModelId};
@@ -16,7 +17,7 @@ use crate::{
     dto::{
         error::ErrorResponse,
         inference::InferenceResponse,
-        model::{ListModelsResponse, ModelResponse},
+        model::{CompareModelsRequest, ListModelsResponse, ModelComparisonResponse, ModelResponse},
         model_export::{CreateModelExportRequest, ListModelExportsResponse, ModelExportResponse},
         overlay::OverlayResponse,
     },
@@ -27,7 +28,9 @@ use crate::{
 pub fn routes(state: ModelHttpState) -> Router {
     Router::new()
         .route("/models", get(list_models))
+        .route("/models/compare", post(compare_models))
         .route("/models/{model_id}", get(get_model))
+        .route("/models/{model_id}/promote", post(promote_model))
         .route("/models/{model_id}/infer", post(run_inference))
         .route(
             "/models/{model_id}/exports",
@@ -53,6 +56,40 @@ async fn list_models(
             .map(mappers::model::model_response)
             .collect(),
     }))
+}
+
+async fn compare_models(
+    State(state): State<ModelHttpState>,
+    Json(request): Json<CompareModelsRequest>,
+) -> Result<Json<ModelComparisonResponse>, ModelRouteError> {
+    let model_ids = request
+        .model_ids
+        .into_iter()
+        .map(|model_id| {
+            ModelId::parse(model_id).map_err(|_| UseCaseError::Validation("invalid model id"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let comparison = CompareModelsUseCase::new(state.model_repository())
+        .execute(CompareModelsCommand {
+            model_ids,
+            metric_name: request.metric_name,
+        })
+        .await?;
+
+    Ok(Json(mappers::model::model_comparison_response(comparison)))
+}
+
+async fn promote_model(
+    State(state): State<ModelHttpState>,
+    Path(model_id): Path<String>,
+) -> Result<Json<ModelResponse>, ModelRouteError> {
+    let model_id =
+        ModelId::parse(model_id).map_err(|_| UseCaseError::Validation("invalid model id"))?;
+    let model = PromoteModelUseCase::new(state.model_repository())
+        .execute(PromoteModelCommand { model_id })
+        .await?;
+
+    Ok(Json(mappers::model::model_response(model)))
 }
 
 async fn get_model(

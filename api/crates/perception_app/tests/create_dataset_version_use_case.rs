@@ -221,6 +221,7 @@ async fn create_dataset_version_captures_dataset_snapshot_counts_and_classes() {
         .execute(CreateDatasetVersionCommand {
             dataset_id: dataset.id,
             version_name: "v1".to_owned(),
+            split_config: BTreeMap::new(),
             created_by: "local-user".to_owned(),
         })
         .await
@@ -249,6 +250,7 @@ async fn create_dataset_version_rejects_dataset_without_samples() {
         .execute(CreateDatasetVersionCommand {
             dataset_id: dataset.id,
             version_name: "v1".to_owned(),
+            split_config: BTreeMap::new(),
             created_by: "local-user".to_owned(),
         })
         .await;
@@ -258,5 +260,72 @@ async fn create_dataset_version_rejects_dataset_without_samples() {
         Err(UseCaseError::Validation(
             "dataset version requires at least one sample"
         ))
+    );
+}
+
+#[tokio::test]
+async fn create_dataset_version_persists_valid_split_config() {
+    let datasets = InMemoryDatasetRepository::default();
+    let samples = InMemorySampleRepository::default();
+    let annotations = InMemoryAnnotationRepository::default();
+    let versions = InMemoryDatasetVersionRepository::default();
+    let dataset = datasets
+        .create(dataset_fixture())
+        .await
+        .expect("dataset is created");
+    samples
+        .create(sample_fixture(dataset.id))
+        .await
+        .expect("sample is created");
+    let split_config = BTreeMap::from([
+        ("train".to_owned(), "70".to_owned()),
+        ("validation".to_owned(), "20".to_owned()),
+        ("test".to_owned(), "10".to_owned()),
+    ]);
+
+    let version = CreateDatasetVersionUseCase::new(&datasets, &samples, &annotations, &versions)
+        .execute(CreateDatasetVersionCommand {
+            dataset_id: dataset.id,
+            version_name: "v2".to_owned(),
+            split_config: split_config.clone(),
+            created_by: "local-user".to_owned(),
+        })
+        .await
+        .expect("version is created");
+
+    assert_eq!(version.split_config, split_config);
+}
+
+#[tokio::test]
+async fn create_dataset_version_rejects_split_config_that_does_not_sum_to_100() {
+    let datasets = InMemoryDatasetRepository::default();
+    let samples = InMemorySampleRepository::default();
+    let annotations = InMemoryAnnotationRepository::default();
+    let versions = InMemoryDatasetVersionRepository::default();
+    let dataset = datasets
+        .create(dataset_fixture())
+        .await
+        .expect("dataset is created");
+    samples
+        .create(sample_fixture(dataset.id))
+        .await
+        .expect("sample is created");
+
+    let result = CreateDatasetVersionUseCase::new(&datasets, &samples, &annotations, &versions)
+        .execute(CreateDatasetVersionCommand {
+            dataset_id: dataset.id,
+            version_name: "v2".to_owned(),
+            split_config: BTreeMap::from([
+                ("train".to_owned(), "80".to_owned()),
+                ("validation".to_owned(), "20".to_owned()),
+                ("test".to_owned(), "20".to_owned()),
+            ]),
+            created_by: "local-user".to_owned(),
+        })
+        .await;
+
+    assert_eq!(
+        result,
+        Err(UseCaseError::Validation("dataset split must sum to 100"))
     );
 }

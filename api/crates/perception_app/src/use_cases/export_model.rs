@@ -45,8 +45,8 @@ impl<'repository> ExportModelUseCase<'repository> {
             .create(ModelExportDraft {
                 id: ModelExportId::new(),
                 model_id: model.id,
+                artifact_uri: Some(export_artifact_uri(&model.artifact_uri, &format)),
                 format,
-                artifact_uri: Some(onnx_artifact_uri(&model.artifact_uri)),
                 status: ExportStatus::Succeeded,
                 error_message: None,
             })
@@ -57,21 +57,25 @@ impl<'repository> ExportModelUseCase<'repository> {
 fn normalized_format(format: &str) -> Result<String, UseCaseError> {
     let normalized = format.trim().to_ascii_lowercase();
 
-    if normalized == "onnx" {
+    if matches!(normalized.as_str(), "onnx" | "coreml") {
         Ok(normalized)
     } else {
         Err(UseCaseError::Validation("unsupported model export format"))
     }
 }
 
-fn onnx_artifact_uri(model_artifact_uri: &str) -> String {
+fn export_artifact_uri(model_artifact_uri: &str, format: &str) -> String {
+    let extension = match format {
+        "coreml" => "mlpackage",
+        _ => "onnx",
+    };
     let model_artifact_uri = model_artifact_uri.trim();
 
     if let Some(stem) = model_artifact_uri.strip_suffix(".pt") {
-        format!("{stem}.onnx")
+        format!("{stem}.{extension}")
     } else if let Some(stem) = model_artifact_uri.strip_suffix(".pth") {
-        format!("{stem}.onnx")
+        format!("{stem}.{extension}")
     } else {
-        format!("{model_artifact_uri}.onnx")
+        format!("{model_artifact_uri}.{extension}")
     }
 }

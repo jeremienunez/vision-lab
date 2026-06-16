@@ -123,11 +123,13 @@ Purpose: convert a model to deployable formats.
 
 MVP format: `onnx`.
 
-Future formats: `coreml`, `torchscript`.
+P2A format: `coreml`.
+
+Future formats: `torchscript`.
 
 Acceptance signals:
 
-- ONNX export can be requested.
+- ONNX and CoreML exports can be requested.
 - Export artifact is saved.
 - Export status is available.
 - Failure stores readable error details.

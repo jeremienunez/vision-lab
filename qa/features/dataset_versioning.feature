@@ -7,6 +7,16 @@ Feature: Dataset versioning
     When I create dataset version "v1"
     Then the response status should be 201
 
+  Scenario: Dataset version captures split config
+    Given dataset "desk-objects-v1" contains annotated samples
+    When I create dataset version "v2" with train 70 validation 20 and test 10
+    Then the dataset version response contains the split configuration
+
+  Scenario: Invalid split config is rejected
+    Given dataset "desk-objects-v1" contains annotated samples
+    When I create dataset version "bad-split" with train 80 validation 20 and test 20
+    Then the response status should be 400
+
   Scenario: Dataset version is immutable after dataset changes
     Given dataset version "v1" exists
     When I upload a new image and annotation to the dataset

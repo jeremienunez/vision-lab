@@ -26,7 +26,7 @@ Then one observable outcome is true
 - Training job queue, status lifecycle, metrics, and failure message.
 - Model registry creation from successful jobs only.
 - Inference response with detections and latency.
-- ONNX export status and artifact availability.
+- ONNX/CoreML export status and artifact availability.
 - Overlay generation from detections.
 - ML pipeline consistency across dataset version classes, model metadata, metrics, and inference classes.
 - Basic API security for filenames, content types, and non-leaking internal errors.

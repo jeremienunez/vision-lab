@@ -43,6 +43,7 @@ async fn create_dataset_version(
         .execute(CreateDatasetVersionCommand {
             dataset_id,
             version_name: request.version_name,
+            split_config: request.split_config,
             created_by: request.created_by,
         })
         .await?;

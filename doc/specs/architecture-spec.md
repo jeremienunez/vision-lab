@@ -7,7 +7,7 @@ PerceptionLab is API-first ML infrastructure:
 - Rust API service orchestrates datasets, samples, annotations, versions, jobs, models, exports, and inference requests.
 - Python/PyTorch worker consumes queued jobs, materializes datasets, trains or fine-tunes models, writes metrics, and stores artifacts.
 - PostgreSQL stores business state and traceability data.
-- Object storage or filesystem storage stores images, checkpoints, model artifacts, ONNX exports, and overlays.
+- Object storage or filesystem storage stores images, checkpoints, model artifacts, ONNX/CoreML exports, and overlays.
 - A queue separates HTTP requests from long-running ML work.
 - Docker Compose is the local proof environment for the MVP.
 

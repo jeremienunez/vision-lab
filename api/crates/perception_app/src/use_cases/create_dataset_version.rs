@@ -11,6 +11,7 @@ use crate::{
 pub struct CreateDatasetVersionCommand {
     pub dataset_id: DatasetId,
     pub version_name: String,
+    pub split_config: BTreeMap<String, String>,
     pub created_by: String,
 }
 
@@ -67,6 +68,8 @@ impl<'repository> CreateDatasetVersionUseCase<'repository> {
             ));
         }
 
+        let split_config = validate_split_config(command.split_config)?;
+
         let annotations = self
             .annotation_repository
             .list_by_dataset(command.dataset_id)
@@ -80,9 +83,45 @@ impl<'repository> CreateDatasetVersionUseCase<'repository> {
                 sample_count: samples.len() as u64,
                 annotation_count: annotations.len() as u64,
                 classes_snapshot: dataset.classes,
-                split_config: BTreeMap::new(),
+                split_config,
                 created_by: command.created_by.trim().to_owned(),
             })
             .await
     }
+}
+
+fn validate_split_config(
+    split_config: BTreeMap<String, String>,
+) -> Result<BTreeMap<String, String>, UseCaseError> {
+    if split_config.is_empty() {
+        return Ok(split_config);
+    }
+
+    let mut normalized = BTreeMap::new();
+    let mut total = 0_u16;
+
+    for split_name in ["train", "validation", "test"] {
+        let percentage = split_config
+            .get(split_name)
+            .ok_or(UseCaseError::Validation(
+                "dataset split requires train validation and test",
+            ))?
+            .parse::<u16>()
+            .map_err(|_| UseCaseError::Validation("dataset split values must be percentages"))?;
+
+        if percentage == 0 || percentage > 100 {
+            return Err(UseCaseError::Validation(
+                "dataset split values must be between 1 and 100",
+            ));
+        }
+
+        total += percentage;
+        normalized.insert(split_name.to_owned(), percentage.to_string());
+    }
+
+    if total != 100 {
+        return Err(UseCaseError::Validation("dataset split must sum to 100"));
+    }
+
+    Ok(normalized)
 }

@@ -10,6 +10,7 @@ pub fn dataset_version_response(version: DatasetVersionDraft) -> DatasetVersionR
         sample_count: version.sample_count,
         annotation_count: version.annotation_count,
         classes_snapshot: version.classes_snapshot,
+        split_config: version.split_config,
         created_by: version.created_by,
     }
 }

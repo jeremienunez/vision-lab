@@ -147,6 +147,24 @@ pub struct ModelExportDraft {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ModelComparison {
+    pub metric_name: String,
+    pub direction: &'static str,
+    pub best_model_id: ModelId,
+    pub models: Vec<ModelComparisonEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModelComparisonEntry {
+    pub rank: u32,
+    pub model_id: ModelId,
+    pub name: String,
+    pub version: String,
+    pub metric_value: f64,
+    pub metrics_summary: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DetectionDraft {
     pub class_id: u32,
     pub class_name: String,

@@ -260,6 +260,11 @@ async fn create_dataset_version_route_returns_immutable_snapshot_metadata() {
                 .body(axum::body::Body::from(
                     json!({
                         "version_name": "v1",
+                        "split_config": {
+                            "train": "70",
+                            "validation": "20",
+                            "test": "10"
+                        },
                         "created_by": "local-user"
                     })
                     .to_string(),
@@ -276,5 +281,92 @@ async fn create_dataset_version_route_returns_immutable_snapshot_metadata() {
     assert_eq!(version["sample_count"], 1);
     assert_eq!(version["annotation_count"], 0);
     assert_eq!(version["classes_snapshot"], json!(["cup", "book"]));
+    assert_eq!(
+        version["split_config"],
+        json!({
+            "train": "70",
+            "validation": "20",
+            "test": "10"
+        })
+    );
     assert_eq!(version["created_by"], "local-user");
+}
+
+#[tokio::test]
+async fn create_dataset_version_route_rejects_invalid_split_config() {
+    let app = perception_http::router_with_version_ports(
+        Arc::new(RouteDatasetRepository::default()),
+        Arc::new(RouteSampleRepository::default()),
+        Arc::new(RouteSampleStorage),
+        Arc::new(RouteAnnotationRepository::default()),
+        Arc::new(RouteDatasetVersionRepository::default()),
+    );
+
+    let create_dataset_response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/datasets")
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    json!({
+                        "name": "desk-objects-v1",
+                        "description": null,
+                        "task_type": "object_detection",
+                        "classes": ["cup", "book"]
+                    })
+                    .to_string(),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+    let dataset = json_body(create_dataset_response).await;
+    let dataset_id = dataset["id"].as_str().expect("dataset id is present");
+    let (boundary, body) = multipart_body();
+    let upload_sample_response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/datasets/{dataset_id}/samples"))
+                .header(
+                    "content-type",
+                    format!("multipart/form-data; boundary={boundary}"),
+                )
+                .body(axum::body::Body::from(body))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+    assert_eq!(upload_sample_response.status(), StatusCode::CREATED);
+
+    let version_response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/datasets/{dataset_id}/versions"))
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    json!({
+                        "version_name": "bad-split",
+                        "split_config": {
+                            "train": "80",
+                            "validation": "20",
+                            "test": "20"
+                        },
+                        "created_by": "local-user"
+                    })
+                    .to_string(),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(version_response.status(), StatusCode::BAD_REQUEST);
+    let error = json_body(version_response).await;
+    assert_eq!(error["error"]["code"], "validation_failed");
+    assert_eq!(error["error"]["message"], "dataset split must sum to 100");
 }

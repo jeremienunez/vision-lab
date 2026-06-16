@@ -60,10 +60,10 @@
 
 ## P2 - Avance
 
-- [ ] Add CoreML export.
-- [ ] Add configurable train/validation/test split.
-- [ ] Compare models.
-- [ ] Promote model.
+- [x] Add CoreML export.
+- [x] Add configurable train/validation/test split.
+- [x] Compare models.
+- [x] Promote model.
 - [ ] Add API key auth.
 - [ ] Add minimal web dashboard only after API-first MVP.
 - [ ] Stream training logs.

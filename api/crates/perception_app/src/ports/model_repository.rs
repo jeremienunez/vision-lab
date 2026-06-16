@@ -10,4 +10,6 @@ pub trait ModelRepository: Send + Sync {
     async fn list(&self) -> Result<Vec<ModelDraft>, UseCaseError>;
 
     async fn get(&self, model_id: ModelId) -> Result<Option<ModelDraft>, UseCaseError>;
+
+    async fn update(&self, model: ModelDraft) -> Result<ModelDraft, UseCaseError>;
 }

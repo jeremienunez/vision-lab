@@ -38,6 +38,13 @@ Validate it with `npm run validate:openapi` or export it with `sh scripts/export
 | POST | `/inference-runs/{run_id}/overlay` | Generate visual overlay. |
 | GET | `/artifacts/{artifact_id}/download` | Download stored artifact. |
 
+## P2A Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/models/compare` | Compare registered models by a shared numeric metric. |
+| POST | `/models/{model_id}/promote` | Promote a model and demote competing promoted models for the same dataset version and family. |
+
 ## Dataset Creation Contract
 
 Request:
@@ -61,6 +68,43 @@ Response:
   "classes": ["cup", "book", "phone", "keyboard", "mouse"],
   "status": "draft",
   "created_at": "2026-06-15T12:00:00Z"
+}
+```
+
+## Dataset Version Contract
+
+Request:
+
+```json
+{
+  "version_name": "v2",
+  "split_config": {
+    "train": "70",
+    "validation": "20",
+    "test": "10"
+  },
+  "created_by": "local-user"
+}
+```
+
+`split_config` is optional for backward compatibility. When present, it must contain `train`, `validation`, and `test` percentages that sum to 100.
+
+Response:
+
+```json
+{
+  "id": "dsv_01hxyz",
+  "dataset_id": "ds_01hxyz",
+  "version_name": "v2",
+  "sample_count": 42,
+  "annotation_count": 128,
+  "classes_snapshot": ["cup", "book"],
+  "split_config": {
+    "train": "70",
+    "validation": "20",
+    "test": "10"
+  },
+  "created_by": "local-user"
 }
 ```
 
@@ -174,9 +218,80 @@ Request:
 
 ```json
 {
-  "format": "onnx"
+  "format": "coreml"
 }
 ```
+
+Supported formats are `onnx` and `coreml`.
+
+Response:
+
+```json
+{
+  "id": "mexp_01hxyz",
+  "model_id": "mdl_01hxyz",
+  "format": "coreml",
+  "artifact_uri": "file:///tmp/model.mlpackage",
+  "status": "succeeded",
+  "error_message": null
+}
+```
+
+`GET /models/{model_id}/exports` returns:
+
+```json
+{
+  "exports": [
+    {
+      "id": "mexp_01hxyz",
+      "model_id": "mdl_01hxyz",
+      "format": "onnx",
+      "artifact_uri": "file:///tmp/model.onnx",
+      "status": "succeeded",
+      "error_message": null
+    }
+  ]
+}
+```
+
+## Model Comparison Contract
+
+Request:
+
+```json
+{
+  "model_ids": ["mdl_01baseline", "mdl_01challenger"],
+  "metric_name": "mAP50"
+}
+```
+
+Response:
+
+```json
+{
+  "metric_name": "mAP50",
+  "direction": "higher_is_better",
+  "best_model_id": "mdl_01challenger",
+  "models": [
+    {
+      "rank": 1,
+      "model_id": "mdl_01challenger",
+      "name": "challenger",
+      "version": "v1",
+      "metric_value": 0.81,
+      "metrics_summary": { "mAP50": "0.81" }
+    }
+  ]
+}
+```
+
+Every compared model must expose the requested metric as a numeric string in `metrics_summary`.
+
+## Model Promotion Contract
+
+`POST /models/{model_id}/promote` returns the promoted `ModelResponse`.
+
+Promoting a candidate or validated model sets it to `promoted` and demotes any competing promoted model with the same `dataset_version_id` and `model_family` back to `validated`. Archived models cannot be promoted.
 
 ## Class Metrics Contract
 
@@ -195,36 +310,6 @@ Response:
       "metric_value": 0.82,
       "step": null,
       "epoch": 1
-    }
-  ]
-}
-```
-
-Response:
-
-```json
-{
-  "id": "mexp_01hxyz",
-  "model_id": "mdl_01hxyz",
-  "format": "onnx",
-  "artifact_uri": "file:///tmp/model.onnx",
-  "status": "succeeded",
-  "error_message": null
-}
-```
-
-`GET /models/{model_id}/exports` returns:
-
-```json
-{
-  "exports": [
-    {
-      "id": "mexp_01hxyz",
-      "model_id": "mdl_01hxyz",
-      "format": "onnx",
-      "artifact_uri": "file:///tmp/model.onnx",
-      "status": "succeeded",
-      "error_message": null
     }
   ]
 }

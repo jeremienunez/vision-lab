@@ -36,3 +36,26 @@ async fn transient_model_repository_creates_lists_and_gets_models() {
     assert_eq!(listed, vec![model.clone()]);
     assert_eq!(fetched, model);
 }
+
+#[tokio::test]
+async fn transient_model_repository_updates_existing_model() {
+    let repository = TransientModelRepository::default();
+    let mut model = repository
+        .create(model_fixture("desk-objects"))
+        .await
+        .expect("model is stored");
+    model.status = ModelStatus::Promoted;
+
+    let updated = repository
+        .update(model.clone())
+        .await
+        .expect("model is updated");
+    let fetched = repository
+        .get(model.id)
+        .await
+        .expect("model lookup succeeds")
+        .expect("model exists");
+
+    assert_eq!(updated.status, ModelStatus::Promoted);
+    assert_eq!(fetched, model);
+}

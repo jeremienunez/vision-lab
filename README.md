@@ -14,7 +14,7 @@ Upload data -> build dataset -> launch training -> track metrics -> export model
 
 ## Why This Project?
 
-Most computer vision demos stop at model inference. PerceptionLab focuses on the infrastructure required before and after the model: dataset ingestion, annotation storage, dataset versioning, async training jobs, metrics, model registry, inference API, visual overlays, and ONNX export.
+Most computer vision demos stop at model inference. PerceptionLab focuses on the infrastructure required before and after the model: dataset ingestion, annotation storage, dataset versioning, async training jobs, metrics, model registry, inference API, visual overlays, and ONNX/CoreML export.
 
 The portfolio signal is explicit: this is not a model demo, it is ML infrastructure.
 
@@ -33,11 +33,13 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 - Image upload with validation and metadata storage.
 - Bounding-box annotation management.
 - Immutable dataset versions.
+- Configurable train/validation/test splits for dataset versions.
 - Async training job creation and queueing.
 - Training job lifecycle transitions.
 - Training metrics persistence and `GET /training-jobs/{job_id}/metrics`.
 - Model registry use cases and `GET /models` / `GET /models/{model_id}`.
 - Multipart model inference contract at `POST /models/{model_id}/infer`.
+- Model comparison, promotion, and ONNX/CoreML export endpoints.
 - Python worker contracts, fake trainer, and tiny deterministic PyTorch trainer.
 - Docker Compose stack for the Rust API and PostgreSQL schema bootstrap.
 
@@ -143,7 +145,11 @@ Create a dataset version after at least one sample and annotation exist:
 ```bash
 curl -sS -X POST http://127.0.0.1:8080/datasets/<dataset_id>/versions \
   -H 'content-type: application/json' \
-  -d '{"version_name": "v1", "created_by": "local-user"}'
+  -d '{
+    "version_name": "v1",
+    "split_config": { "train": "70", "validation": "20", "test": "10" },
+    "created_by": "local-user"
+  }'
 ```
 
 Create a queued training job after replacing `<dataset_version_id>`:
@@ -168,6 +174,16 @@ Model registry and inference routes are wired for registered models:
 
 ```bash
 curl -sS http://127.0.0.1:8080/models
+curl -sS -X POST http://127.0.0.1:8080/models/<model_id>/exports \
+  -H 'content-type: application/json' \
+  -d '{"format": "coreml"}'
+curl -sS -X POST http://127.0.0.1:8080/models/compare \
+  -H 'content-type: application/json' \
+  -d '{
+    "model_ids": ["<baseline_model_id>", "<challenger_model_id>"],
+    "metric_name": "mAP50"
+  }'
+curl -sS -X POST http://127.0.0.1:8080/models/<model_id>/promote
 curl -sS -X POST http://127.0.0.1:8080/models/<model_id>/infer \
   -F 'confidence_threshold=0.25' \
   -F 'image=@<image.jpg>;type=image/jpeg'

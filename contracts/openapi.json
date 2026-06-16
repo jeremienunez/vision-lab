@@ -300,6 +300,34 @@
         }
       }
     },
+    "/models/compare": {
+      "post": {
+        "operationId": "compareModels",
+        "tags": ["Models"],
+        "summary": "Compare registered models by a shared numeric metric.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CompareModelsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Model comparison.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ModelComparisonResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
     "/models/{model_id}": {
       "get": {
         "operationId": "getModel",
@@ -309,6 +337,27 @@
         "responses": {
           "200": {
             "description": "Model detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ModelResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      }
+    },
+    "/models/{model_id}/promote": {
+      "post": {
+        "operationId": "promoteModel",
+        "tags": ["Models"],
+        "summary": "Promote a model and demote competing promoted models.",
+        "parameters": [{ "$ref": "#/components/parameters/ModelId" }],
+        "responses": {
+          "200": {
+            "description": "Promoted model.",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ModelResponse" }
@@ -729,6 +778,10 @@
         "additionalProperties": false,
         "properties": {
           "version_name": { "type": "string" },
+          "split_config": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
           "created_by": { "type": "string" }
         }
       },
@@ -741,6 +794,7 @@
           "sample_count",
           "annotation_count",
           "classes_snapshot",
+          "split_config",
           "created_by"
         ],
         "additionalProperties": false,
@@ -751,6 +805,10 @@
           "sample_count": { "type": "integer", "minimum": 0 },
           "annotation_count": { "type": "integer", "minimum": 0 },
           "classes_snapshot": { "type": "array", "items": { "type": "string" } },
+          "split_config": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
           "created_by": { "type": "string" }
         }
       },
@@ -899,12 +957,65 @@
           }
         }
       },
+      "CompareModelsRequest": {
+        "type": "object",
+        "required": ["model_ids", "metric_name"],
+        "additionalProperties": false,
+        "properties": {
+          "model_ids": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "string" }
+          },
+          "metric_name": { "type": "string" }
+        }
+      },
+      "ModelComparisonResponse": {
+        "type": "object",
+        "required": ["metric_name", "direction", "best_model_id", "models"],
+        "additionalProperties": false,
+        "properties": {
+          "metric_name": { "type": "string" },
+          "direction": {
+            "type": "string",
+            "enum": ["higher_is_better", "lower_is_better"]
+          },
+          "best_model_id": { "type": "string" },
+          "models": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ModelComparisonEntryResponse" }
+          }
+        }
+      },
+      "ModelComparisonEntryResponse": {
+        "type": "object",
+        "required": [
+          "rank",
+          "model_id",
+          "name",
+          "version",
+          "metric_value",
+          "metrics_summary"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1 },
+          "model_id": { "type": "string" },
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "metric_value": { "type": "number" },
+          "metrics_summary": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
       "CreateModelExportRequest": {
         "type": "object",
         "required": ["format"],
         "additionalProperties": false,
         "properties": {
-          "format": { "type": "string", "enum": ["onnx"] }
+          "format": { "type": "string", "enum": ["onnx", "coreml"] }
         }
       },
       "ModelExportResponse": {

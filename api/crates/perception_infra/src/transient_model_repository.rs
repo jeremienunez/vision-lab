@@ -33,4 +33,19 @@ impl ModelRepository for TransientModelRepository {
             .map(|models| models.iter().find(|model| model.id == model_id).cloned())
             .map_err(|_| UseCaseError::Repository("model repository lock poisoned"))
     }
+
+    async fn update(&self, model: ModelDraft) -> Result<ModelDraft, UseCaseError> {
+        let mut models = self
+            .models
+            .write()
+            .map_err(|_| UseCaseError::Repository("model repository lock poisoned"))?;
+        let stored = models
+            .iter_mut()
+            .find(|stored_model| stored_model.id == model.id)
+            .ok_or(UseCaseError::NotFound("model not found"))?;
+
+        *stored = model.clone();
+
+        Ok(model)
+    }
 }
