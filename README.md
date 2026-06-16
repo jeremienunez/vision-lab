@@ -91,9 +91,9 @@ cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv run mypy perception_work
 Current generated local paths on this Ubuntu filesystem are:
 
 - `PERCEPTIONLAB_PROJECT_ROOT=/home/jerem/vision-lab`
-- `PERCEPTIONLAB_DATA_ROOT=/home/jerem/vision-lab/datasets`
-- `PERCEPTIONLAB_STORAGE_ROOT=/home/jerem/vision-lab/.perceptionlab/storage`
-- `PERCEPTIONLAB_ARTIFACT_ROOT=/home/jerem/vision-lab/.perceptionlab/artifacts`
+- `PERCEPTIONLAB_DATA_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets`
+- `PERCEPTIONLAB_STORAGE_ROOT=/media/jerem/ubuntu1/perceptionlab/storage`
+- `PERCEPTIONLAB_ARTIFACT_ROOT=/media/jerem/ubuntu1/perceptionlab/artifacts`
 
 Run the Rust API directly:
 
@@ -115,7 +115,7 @@ curl http://127.0.0.1:8080/health
 docker compose down
 ```
 
-The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, annotations, and dataset versions. The API applies `api/migrations/` at startup through SQLx. Training jobs, metrics, models, exports, and inference runs still use transient adapters in the current tranche. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
+The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, annotations, dataset versions, training jobs, and the training job queue. The API applies `api/migrations/` at startup through SQLx. Training metrics, models, exports, and inference runs still use transient adapters in the current tranche. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
 
 Run the API directly against a local PostgreSQL database:
 
@@ -167,6 +167,35 @@ npm run detect:webcam -- --device-index 0 --model-path .perceptionlab/models/yol
 ```
 
 Both commands write artifacts under `.perceptionlab/` and print JSON with `detection_count`, class names, confidences, and the annotated image path.
+
+## Download A Real Detection Dataset
+
+Download a bounded CPPE-5 object-detection subset from Hugging Face into the configured data disk:
+
+```bash
+set -a
+. ./.env.local
+set +a
+export HF_HOME=/media/jerem/ubuntu1/perceptionlab/cache/huggingface
+export HF_HUB_CACHE=$HF_HOME/hub
+export HF_DATASETS_CACHE=$HF_HOME/datasets
+
+cd worker
+UV_CACHE_DIR=../.perceptionlab/cache/uv uv run perception-worker ingest-hf \
+  rishitdagli/cppe-5 \
+  --target-name cppe5-mvp-40 \
+  --classes Coverall,Face_Shield,Gloves,Goggles,Mask \
+  --split train \
+  --max-samples 40
+```
+
+Push the downloaded manifest into a running API:
+
+```bash
+PERCEPTIONLAB_API_BASE_URL=http://127.0.0.1:8080 \
+PERCEPTIONLAB_SEED_DATASET_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets/cppe5-mvp-40 \
+node scripts/seed-demo-dataset.mjs
+```
 
 ## API Smoke Flow
 

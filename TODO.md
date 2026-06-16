@@ -35,6 +35,7 @@
 - [x] Add `POST /training-jobs`.
 - [x] Add training job lifecycle persistence and transitions.
 - [x] Add queue-backed training orchestration.
+- [x] Persist training jobs and queue entries through PostgreSQL when `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres`.
 - [x] Add minimal Python/PyTorch worker.
 - [x] Create installable `worker/perception_worker` package with P0 dependency manifest.
 - [x] Add strict worker contracts and strategy ports.
@@ -68,6 +69,7 @@
 - [x] Compare models.
 - [x] Promote model.
 - [x] Add Hugging Face dataset ingestion.
+- [x] Download bounded CPPE-5 dataset locally for MVP product validation.
 - [x] Add one-command object-recognition fire smoke.
 - [x] Add real YOLO image and webcam smoke commands.
 - [x] Connect real YOLO inference to the API product fire smoke.

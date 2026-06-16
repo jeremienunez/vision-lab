@@ -1,8 +1,12 @@
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
-from perception_worker.adapters.huggingface.dataset_client import HuggingFaceDatasetClient
+from perception_worker.adapters.huggingface.dataset_client import (
+    HuggingFaceDatasetClient,
+    row_to_sample,
+)
 from perception_worker.adapters.storage.local_dataset_ingestion_store import (
     LocalDatasetIngestionStore,
 )
@@ -76,9 +80,14 @@ def test_ingests_hf_like_samples_to_local_yolo_layout(tmp_path: Path) -> None:
         "0 0.250000 0.400000 0.300000 0.400000\n"
     )
     assert result.manifest_path == dataset_root / "manifest.json"
-    assert '"source_dataset": "owner/desk-objects"' in result.manifest_path.read_text(
-        encoding="utf-8"
-    )
+    manifest = result.manifest_path.read_text(encoding="utf-8")
+    assert '"source_dataset": "owner/desk-objects"' in manifest
+    assert '"task_type": "object_detection"' in manifest
+    assert '"version_name": "v1"' in manifest
+    assert '"path": "images/cup.jpg"' in manifest
+    assert '"yolo_label_path": "labels/cup.txt"' in manifest
+    assert '"bbox": {' in manifest
+    assert '"x": 0.1' in manifest
 
 
 def test_ingestion_rejects_unknown_annotation_class(tmp_path: Path) -> None:
@@ -195,6 +204,48 @@ def test_huggingface_dataset_client_redacts_token_from_loader_errors() -> None:
     assert "hf_secret_token" not in str(error.value)
     assert str(error.value) == "failed to load Hugging Face dataset"
     assert error.value.__cause__ is None
+
+
+def test_huggingface_row_to_sample_encodes_formatless_cmyk_images_as_jpeg() -> None:
+    image = Image.new("CMYK", (100, 100))
+
+    sample = row_to_sample(
+        row={
+            "image": image,
+            "objects": {
+                "bbox": [[10, 20, 30, 40]],
+                "category": [0],
+            },
+        },
+        source_dataset="owner/cmyk-dataset",
+        index=0,
+        classes=("Mask",),
+    )
+
+    assert sample.filename == "owner_cmyk-dataset_000001.jpg"
+    assert sample.mime_type == "image/jpeg"
+    assert sample.image_bytes.startswith(b"\xff\xd8")
+
+
+def test_huggingface_row_to_sample_contracts_edge_touching_boxes_for_api_f32() -> None:
+    image = Image.new("RGB", (900, 450))
+
+    sample = row_to_sample(
+        row={
+            "image": image,
+            "objects": {
+                "bbox": [[518, 19, 121, 431]],
+                "category": [0],
+            },
+        },
+        source_dataset="owner/edge-dataset",
+        index=0,
+        classes=("Coverall",),
+    )
+
+    annotation = sample.annotations[0]
+    assert annotation.bbox_y + annotation.bbox_height < 1.0
+    assert annotation.bbox_height < 431 / 450
 
 
 class FakeImage:

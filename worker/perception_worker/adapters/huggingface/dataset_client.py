@@ -10,6 +10,8 @@ from perception_worker.domain.dataset_ingestion import (
     DatasetIngestionError,
 )
 
+NORMALIZED_BBOX_EDGE_EPSILON = 0.000001
+
 
 class HuggingFaceLoader(Protocol):
     def __call__(
@@ -85,7 +87,7 @@ def row_to_sample(
 
     width = int(getattr(image, "width"))
     height = int(getattr(image, "height"))
-    image_format = str(getattr(image, "format", "PNG") or "PNG").upper()
+    image_format = normalized_image_format(image)
     extension = "jpg" if image_format == "JPEG" else image_format.lower()
     image_bytes = encode_image(image=image, image_format=image_format)
     annotations = annotations_from_row(row=row, width=width, height=height, classes=classes)
@@ -102,9 +104,24 @@ def row_to_sample(
 
 def encode_image(image: object, image_format: str) -> bytes:
     buffer = BytesIO()
-    save = getattr(image, "save")
+    image_to_save = image
+    if image_format == "JPEG" and getattr(image, "mode", None) not in (None, "RGB", "L"):
+        convert = getattr(image, "convert", None)
+        if callable(convert):
+            image_to_save = convert("RGB")
+
+    save = getattr(image_to_save, "save")
     save(buffer, format=image_format)
     return buffer.getvalue()
+
+
+def normalized_image_format(image: object) -> str:
+    image_format = str(getattr(image, "format", None) or "JPEG").upper()
+    if image_format == "JPG":
+        return "JPEG"
+    if image_format not in {"JPEG", "PNG", "WEBP"}:
+        return "JPEG"
+    return image_format
 
 
 def annotations_from_row(
@@ -132,17 +149,53 @@ def annotations_from_row(
         class_index = int(category)
         class_name = classes[class_index]
         x, y, bbox_width, bbox_height = [float(value) for value in bbox[:4]]
+        bbox_x, bbox_y, normalized_width, normalized_height = normalized_bbox_for_api(
+            x=x,
+            y=y,
+            bbox_width=bbox_width,
+            bbox_height=bbox_height,
+            image_width=width,
+            image_height=height,
+        )
         annotations.append(
             DatasetAnnotation(
                 class_name=class_name,
-                bbox_x=x / width,
-                bbox_y=y / height,
-                bbox_width=bbox_width / width,
-                bbox_height=bbox_height / height,
+                bbox_x=bbox_x,
+                bbox_y=bbox_y,
+                bbox_width=normalized_width,
+                bbox_height=normalized_height,
             )
         )
 
     return tuple(annotations)
+
+
+def normalized_bbox_for_api(
+    x: float,
+    y: float,
+    bbox_width: float,
+    bbox_height: float,
+    image_width: int,
+    image_height: int,
+) -> tuple[float, float, float, float]:
+    bbox_x = bounded_origin(x / image_width)
+    bbox_y = bounded_origin(y / image_height)
+
+    return (
+        bbox_x,
+        bbox_y,
+        bounded_extent(origin=bbox_x, extent=bbox_width / image_width),
+        bounded_extent(origin=bbox_y, extent=bbox_height / image_height),
+    )
+
+
+def bounded_origin(value: float) -> float:
+    return min(max(value, 0.0), 1.0 - NORMALIZED_BBOX_EDGE_EPSILON)
+
+
+def bounded_extent(origin: float, extent: float) -> float:
+    max_extent = max(NORMALIZED_BBOX_EDGE_EPSILON, 1.0 - origin - NORMALIZED_BBOX_EDGE_EPSILON)
+    return min(max(extent, NORMALIZED_BBOX_EDGE_EPSILON), max_extent)
 
 
 def safe_dataset_name(source_dataset: str) -> str:

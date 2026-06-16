@@ -42,14 +42,12 @@ class LocalDatasetIngestionStore:
         manifest_path = dataset_root / "manifest.json"
         manifest_path.write_text(
             json.dumps(
-                {
-                    "source_dataset": command.source_dataset,
-                    "split": command.split,
-                    "target_name": command.target_name,
-                    "classes": list(command.classes),
-                    "sample_count": len(samples),
-                    "annotation_count": annotation_count,
-                },
+                ingestion_manifest(
+                    command=command,
+                    samples=samples,
+                    class_ids=class_ids,
+                    annotation_count=annotation_count,
+                ),
                 indent=2,
                 sort_keys=True,
             )
@@ -78,3 +76,57 @@ def yolo_line(annotation: DatasetAnnotation, class_ids: dict[str, int]) -> str:
         f"{annotation.bbox_width:.6f} "
         f"{annotation.bbox_height:.6f}\n"
     )
+
+
+def ingestion_manifest(
+    command: DatasetIngestionCommand,
+    samples: tuple[DatasetImageSample, ...],
+    class_ids: dict[str, int],
+    annotation_count: int,
+) -> dict[str, object]:
+    return {
+        "source_dataset": command.source_dataset,
+        "split": command.split,
+        "target_name": command.target_name,
+        "classes": list(command.classes),
+        "sample_count": len(samples),
+        "annotation_count": annotation_count,
+        "dataset": {
+            "name": command.target_name,
+            "description": (
+                f"Ingested from Hugging Face dataset {command.source_dataset} "
+                f"split {command.split}."
+            ),
+            "task_type": "object_detection",
+            "classes": list(command.classes),
+        },
+        "version": {
+            "version_name": "v1",
+            "created_by": "hf-ingest",
+        },
+        "samples": [
+            {
+                "filename": sample.filename,
+                "path": f"images/{sample.filename}",
+                "yolo_label_path": f"labels/{Path(sample.filename).stem}.txt",
+                "mime_type": sample.mime_type,
+                "width": sample.width,
+                "height": sample.height,
+                "annotations": [
+                    {
+                        "class_name": annotation.class_name,
+                        "class_id": class_ids[annotation.class_name],
+                        "bbox": {
+                            "x": annotation.bbox_x,
+                            "y": annotation.bbox_y,
+                            "width": annotation.bbox_width,
+                            "height": annotation.bbox_height,
+                        },
+                        "confidence": None,
+                    }
+                    for annotation in sample.annotations
+                ],
+            }
+            for sample in samples
+        ],
+    }
