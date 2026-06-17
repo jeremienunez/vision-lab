@@ -1,6 +1,6 @@
 # Documentation Index
 
-PerceptionLab documentation is organized around the Product Owning reference: product intent first, then architecture, QA, API contracts, roadmap, and sprint execution.
+PerceptionLab documentation is organized around the Product Owning reference: product intent first, then architecture, QA, API contracts, roadmap, sprint execution, frontend product surfaces, and experimental ML exploration.
 
 ## References
 
@@ -23,6 +23,10 @@ The initial PDF references are stored in `doc/references/`:
 - `doc/specs/demo-spec.md` - final demo target and portfolio proof.
 - `doc/specs/technical-pass-questions.md` - questions intentionally left for the technical pass.
 - `doc/specs/qa-bdd-spec.md` - QA strategy and BDD format.
+- `doc/frontend/frontend-architecture.md` - frontend architecture, route map, API client, live camera integration, and implementation order.
+- `doc/frontend/live-camera-spec.md` - browser live camera modes, frame capture, overlay mapping, backpressure, and BDD scenarios.
+- `doc/design/graphic-tokens.md` - color, typography, spacing, status, chart, camera, and detection overlay tokens.
+- `doc/research/experimental-finetuning-pass.md` - fine-tuning experiment protocol, dataset tracks, experiment matrix, metrics, artifacts, and model card template.
 - `doc/sprints/` - sprint plans with validation criteria.
 - `doc/quality/` - definition of done and BDD validation checklist.
 - `doc/quality/qa-bdd.md` - QA/BDD strategy extracted from the QA reference PDF.
