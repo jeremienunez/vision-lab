@@ -78,7 +78,19 @@
 - [x] Connect real YOLO inference to the API product fire smoke.
 - [x] Add bounded live webcam YOLO detection command.
 - [x] Add API key auth.
+- [x] Add frontend architecture spec.
+- [x] Add graphic token spec.
+- [x] Add live camera frontend spec.
+- [x] Add experimental fine-tuning pass.
 - [ ] Add minimal web dashboard only after API-first MVP.
+- [ ] Add `frontend/` app shell.
+- [ ] Add frontend design token files.
+- [ ] Add typed frontend API client with API key support.
+- [ ] Add dashboard read-only cards for datasets, jobs, models, and latest inference.
+- [ ] Add single-image inference lab.
+- [ ] Add live camera preview mode.
+- [ ] Add manual live camera frame inference.
+- [ ] Add bounded live camera interval inference.
 - [ ] Stream training logs.
 - [ ] Support video.
 - [ ] Support depth metadata.
@@ -92,3 +104,6 @@
 - [ ] Model drift report.
 - [ ] Human-in-the-loop correction.
 - [ ] Auto-labeling with existing model.
+- [ ] Run baseline detector evaluation on a fixed live-camera eval set.
+- [ ] Run first fine-tuned YOLO experiment through the worker and model registry.
+- [ ] Add experiment comparison table to the frontend.
