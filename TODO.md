@@ -82,6 +82,7 @@
 - [x] Add graphic token spec.
 - [x] Add live camera frontend spec.
 - [x] Add experimental fine-tuning pass.
+- [x] Add mobile quantization pass.
 - [ ] Add minimal web dashboard only after API-first MVP.
 - [ ] Add `frontend/` app shell.
 - [ ] Add frontend design token files.
@@ -91,6 +92,11 @@
 - [ ] Add live camera preview mode.
 - [ ] Add manual live camera frame inference.
 - [ ] Add bounded live camera interval inference.
+- [ ] Add quantization metadata to model registry summaries.
+- [ ] Add calibration dataset convention and validation script.
+- [ ] Add FP16 mobile export smoke.
+- [ ] Add PTQ INT8 compression smoke.
+- [ ] Add mobile benchmark summary format.
 - [ ] Stream training logs.
 - [ ] Support video.
 - [ ] Support depth metadata.
@@ -107,3 +113,6 @@
 - [ ] Run baseline detector evaluation on a fixed live-camera eval set.
 - [ ] Run first fine-tuned YOLO experiment through the worker and model registry.
 - [ ] Add experiment comparison table to the frontend.
+- [ ] Run teacher-student distillation with a larger teacher and mobile student.
+- [ ] Run QAT recovery pass if PTQ accuracy drop is too high.
+- [ ] Promote best mobile artifact for live camera demo.
