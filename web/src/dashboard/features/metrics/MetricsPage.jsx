@@ -22,16 +22,18 @@ export function MetricsPage() {
       {metrics.length === 0 ? (
         <EmptyState icon={Gauge} label="No metrics" />
       ) : (
-        <div className="flex h-56 items-end gap-3" aria-label="Latest training metrics">
+        <div className="flex h-56 gap-3" aria-label="Latest training metrics">
           {metrics.map((metric, index) => (
             <div
               key={`${metric.metric_name}-${metric.epoch}-${index}`}
-              className="flex flex-1 flex-col items-center justify-end gap-2"
+              className="flex flex-1 flex-col items-center gap-2"
             >
-              <span
-                className="w-full rounded-t-md bg-cyan/70"
-                style={{ height: `${Math.max((metric.metric_value / max) * 100, 8)}%` }}
-              />
+              <div className="flex w-full flex-1 items-end">
+                <span
+                  className="w-full rounded-t-md bg-cyan/70"
+                  style={{ height: `${Math.max((metric.metric_value / max) * 100, 8)}%` }}
+                />
+              </div>
               <small className="text-xs text-subtle">{metric.metric_name}</small>
               <strong className="text-xs text-ink">{formatMetricValue(metric)}</strong>
             </div>
