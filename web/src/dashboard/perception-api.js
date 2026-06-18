@@ -7,6 +7,20 @@ export function createPerceptionApi({ baseUrl, apiKey, fetchImpl = globalThis.fe
     const response = await fetchImpl(`${apiBaseUrl}${path}`, {
       headers: buildApiHeaders(apiKey),
     });
+    return readJsonResponse(response);
+  }
+
+  async function postMultipart(path, formData) {
+    const response = await fetchImpl(`${apiBaseUrl}${path}`, {
+      method: 'POST',
+      headers: buildApiHeaders(apiKey),
+      body: formData,
+    });
+
+    return readJsonResponse(response);
+  }
+
+  async function readJsonResponse(response) {
     const text = await response.text();
 
     if (!response.ok) {
@@ -43,6 +57,19 @@ export function createPerceptionApi({ baseUrl, apiKey, fetchImpl = globalThis.fe
         models,
         metricsByJob,
       };
+    },
+
+    async runModelInference({
+      modelId,
+      imageBlob,
+      filename = 'webcam-frame.jpg',
+      confidenceThreshold = 0.25,
+    }) {
+      const formData = new FormData();
+      formData.set('confidence_threshold', String(confidenceThreshold));
+      formData.set('image', imageBlob, filename);
+
+      return postMultipart(`/models/${modelId}/infer`, formData);
     },
   };
 }

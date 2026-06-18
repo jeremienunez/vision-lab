@@ -1,15 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
   Box,
   BrainCircuit,
+  Camera,
   CheckCircle2,
   Database,
   Gauge,
   GitBranch,
   KeyRound,
+  Play,
   RefreshCw,
+  ScanSearch,
+  Square,
   Server,
   Settings,
   ShieldCheck,
@@ -40,10 +44,13 @@ const NAV_ITEMS = [
   { label: 'Datasets', icon: Database, href: '#datasets' },
   { label: 'Training', icon: GitBranch, href: '#training' },
   { label: 'Models', icon: BrainCircuit, href: '#models' },
+  { label: 'Camera', icon: Camera, href: '#camera' },
   { label: 'Metrics', icon: Gauge, href: '#metrics' },
 ];
 
 const STATUS_ORDER = ['queued', 'running', 'succeeded', 'failed', 'cancelled'];
+const CAMERA_INTERVAL_MS = 10_000;
+const DEFAULT_CONFIDENCE_THRESHOLD = 0.25;
 
 export function Dashboard() {
   const [config, setConfig] = useState(loadConfig);
@@ -54,11 +61,30 @@ export function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState('all');
+  const [cameraModelId, setCameraModelId] = useState('');
+  const [cameraRunning, setCameraRunning] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [cameraStatus, setCameraStatus] = useState('Camera idle');
+  const [cameraInference, setCameraInference] = useState(null);
+  const [cameraBusy, setCameraBusy] = useState(false);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(DEFAULT_CONFIDENCE_THRESHOLD);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const captureInFlightRef = useRef(false);
 
   const viewModel = useMemo(() => buildDashboardViewModel(payload), [payload]);
   const chartMetrics = useMemo(
     () => metricSeriesForChart(payload.metricsByJob),
     [payload.metricsByJob],
+  );
+  const inferenceModels = useMemo(
+    () => payload.models.filter((model) => model.status !== 'archived'),
+    [payload.models],
+  );
+  const selectedCameraModel = useMemo(
+    () => inferenceModels.find((model) => model.id === cameraModelId) ?? inferenceModels[0] ?? null,
+    [cameraModelId, inferenceModels],
   );
   const visibleJobs = useMemo(() => {
     if (jobFilter === 'all') return payload.trainingJobs;
@@ -85,6 +111,113 @@ export function Dashboard() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!cameraModelId && inferenceModels[0]) {
+      setCameraModelId(inferenceModels[0].id);
+    }
+  }, [cameraModelId, inferenceModels]);
+
+  const stopCamera = useCallback((nextStatus = 'Camera stopped') => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraRunning(false);
+    setCameraBusy(false);
+    setCameraStatus(nextStatus);
+  }, []);
+
+  const captureAndInfer = useCallback(async () => {
+    if (captureInFlightRef.current || !videoRef.current || !selectedCameraModel) return;
+    if (!videoRef.current.videoWidth || !videoRef.current.videoHeight) return;
+
+    captureInFlightRef.current = true;
+    setCameraBusy(true);
+    setCameraError('');
+    setCameraStatus('Capturing frame');
+
+    try {
+      const canvas = canvasRef.current;
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const imageBlob = await canvasToBlob(canvas, 'image/jpeg', 0.86);
+      const api = createPerceptionApi(config);
+      const result = await api.runModelInference({
+        modelId: selectedCameraModel.id,
+        imageBlob,
+        filename: `webcam-frame-${Date.now()}.jpg`,
+        confidenceThreshold,
+      });
+
+      setCameraInference({
+        ...result,
+        capturedAt: new Date(),
+        modelName: selectedCameraModel.name,
+      });
+      setCameraStatus(`Last analyzed ${new Date().toLocaleTimeString()}`);
+    } catch (captureError) {
+      setCameraError(captureError.message);
+      setCameraStatus('Inference failed');
+    } finally {
+      captureInFlightRef.current = false;
+      setCameraBusy(false);
+    }
+  }, [config, confidenceThreshold, selectedCameraModel]);
+
+  const startCamera = useCallback(async () => {
+    setCameraError('');
+
+    try {
+      if (!selectedCameraModel) {
+        throw new Error('Select a model before starting camera inference.');
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera access is not available in this browser.');
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (!videoRef.current) {
+        throw new Error('Camera preview is not ready yet.');
+      }
+
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+      setCameraRunning(true);
+      setCameraStatus('Camera live');
+      setTimeout(() => {
+        captureAndInfer();
+      }, 250);
+    } catch (cameraStartError) {
+      setCameraError(cameraStartError.message);
+      stopCamera('Camera blocked');
+    }
+  }, [captureAndInfer, selectedCameraModel, stopCamera]);
+
+  useEffect(() => {
+    if (!cameraRunning) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      captureAndInfer();
+    }, CAMERA_INTERVAL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [cameraRunning, captureAndInfer]);
+
+  useEffect(() => () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }, []);
 
   function applyConfig(event) {
     event.preventDefault();
@@ -213,6 +346,32 @@ export function Dashboard() {
               wide
             >
               <ModelTable models={payload.models} />
+            </Panel>
+
+            <Panel
+              id="camera"
+              title="Camera inference"
+              action={cameraRunning ? '10 sec cadence' : 'manual start'}
+              icon={Camera}
+              wide
+            >
+              <CameraInferencePanel
+                videoRef={videoRef}
+                canvasRef={canvasRef}
+                models={inferenceModels}
+                selectedModelId={selectedCameraModel?.id ?? ''}
+                confidenceThreshold={confidenceThreshold}
+                running={cameraRunning}
+                busy={cameraBusy}
+                status={cameraStatus}
+                error={cameraError}
+                result={cameraInference}
+                onSelectModel={setCameraModelId}
+                onConfidenceChange={(value) => setConfidenceThreshold(normalizeConfidenceThreshold(value))}
+                onStart={startCamera}
+                onStop={() => stopCamera()}
+                onCapture={captureAndInfer}
+              />
             </Panel>
 
             <Panel
@@ -463,6 +622,134 @@ function MetricChart({ metrics }) {
   );
 }
 
+function CameraInferencePanel({
+  videoRef,
+  canvasRef,
+  models,
+  selectedModelId,
+  confidenceThreshold,
+  running,
+  busy,
+  status,
+  error,
+  result,
+  onSelectModel,
+  onConfidenceChange,
+  onStart,
+  onStop,
+  onCapture,
+}) {
+  const detections = result?.detections ?? [];
+
+  return (
+    <div className="camera-panel">
+      <div className="camera-stage">
+        <video
+          ref={videoRef}
+          className="camera-video"
+          aria-label="Live webcam preview"
+          autoPlay
+          muted
+          playsInline
+        />
+        <canvas ref={canvasRef} hidden />
+        <div className="camera-overlay">
+          <StatusBadge icon={ScanSearch} label={busy ? 'Analyzing frame' : status} tone={busy ? 'pending' : 'success'} />
+        </div>
+      </div>
+
+      <div className="camera-console">
+        <div className="camera-controls">
+          <label>
+            <span>Model</span>
+            <select
+              value={selectedModelId}
+              onChange={(event) => onSelectModel(event.target.value)}
+              disabled={running}
+            >
+              {models.length === 0 ? (
+                <option value="">No model available</option>
+              ) : (
+                models.map((model) => (
+                  <option value={model.id} key={model.id}>
+                    {model.name} / {model.status}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+
+          <label>
+            <span>Confidence</span>
+            <input
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value={confidenceThreshold}
+              onChange={(event) => onConfidenceChange(Number(event.target.value))}
+            />
+          </label>
+
+          <div className="camera-actions">
+            {running ? (
+              <button className="icon-button text-button" type="button" onClick={onStop}>
+                <Square size={16} aria-hidden="true" />
+                <span>Stop</span>
+              </button>
+            ) : (
+              <button
+                className="primary-button"
+                type="button"
+                onClick={onStart}
+                disabled={models.length === 0}
+              >
+                <Play size={16} aria-hidden="true" />
+                <span>Start camera</span>
+              </button>
+            )}
+            <button
+              className="icon-button text-button"
+              type="button"
+              onClick={onCapture}
+              disabled={!running || busy}
+            >
+              <ScanSearch size={16} aria-hidden="true" />
+              <span>Analyze now</span>
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="camera-error" role="status">
+            <AlertTriangle size={17} aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <div className="camera-result" aria-live="polite">
+          <div className="camera-result-header">
+            <strong>Last identification</strong>
+            <span>{result?.capturedAt ? result.capturedAt.toLocaleTimeString() : 'Pending'}</span>
+          </div>
+          {detections.length === 0 ? (
+            <EmptyState icon={ScanSearch} label="No analyzed frame yet" compact />
+          ) : (
+            <div className="detection-list">
+              {detections.map((detection, index) => (
+                <article className="detection-row" key={`${detection.class_name}-${index}`}>
+                  <span>{detection.class_name}</span>
+                  <strong>{Math.round(detection.confidence * 100)}%</strong>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DependencyList({ dependencies }) {
   const entries = Object.entries(dependencies);
 
@@ -509,4 +796,23 @@ function persistConfig(nextConfig) {
 
 function formatCardLabel(label) {
   return String(label ?? '').replaceAll('_', ' ');
+}
+
+function normalizeConfidenceThreshold(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return DEFAULT_CONFIDENCE_THRESHOLD;
+
+  return Math.min(1, Math.max(0, numericValue));
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject(new Error('Unable to capture webcam frame.'));
+      }
+    }, type, quality);
+  });
 }
