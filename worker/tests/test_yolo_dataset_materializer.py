@@ -53,9 +53,39 @@ def test_local_yolo_dataset_writer_materializes_ultralytics_layout(tmp_path: Pat
     assert result.data_yaml_path.read_text(encoding="utf-8") == (
         f"path: {result.root}\n"
         "train: images/train\n"
-        "val: images/validation\n"
+        "val: images/train\n"
         "test: images/test\n"
         "names:\n"
         '  0: "phone"\n'
         '  1: "person"\n'
     )
+
+
+def test_local_yolo_dataset_writer_uses_validation_split_when_present(tmp_path: Path) -> None:
+    source_image = tmp_path / "source-phone.png"
+    Image.new("RGB", (20, 10), color=(255, 255, 255)).save(source_image)
+    snapshot = YoloDatasetSnapshot(
+        dataset_version_id="dsv_001",
+        classes=("phone",),
+        samples=(
+            YoloDatasetSample(
+                sample_id="sample_001",
+                source_path=source_image,
+                filename="phone-train.png",
+                split_name="train",
+                annotations=(),
+            ),
+            YoloDatasetSample(
+                sample_id="sample_002",
+                source_path=source_image,
+                filename="phone-val.png",
+                split_name="validation",
+                annotations=(),
+            ),
+        ),
+    )
+    writer = LocalYoloDatasetWriter(root=tmp_path / "materialized")
+
+    result = writer.write(job_id="job_001", snapshot=snapshot)
+
+    assert "val: images/validation\n" in result.data_yaml_path.read_text(encoding="utf-8")

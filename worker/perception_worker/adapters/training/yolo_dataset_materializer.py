@@ -33,8 +33,10 @@ class LocalYoloDatasetWriter:
             (dataset_root / "labels" / split_name).mkdir(parents=True, exist_ok=True)
 
         annotation_count = 0
+        split_sample_counts = {split_name: 0 for split_name in YOLO_SPLITS}
         for sample in snapshot.samples:
             split_name = normalized_split_name(sample.split_name)
+            split_sample_counts[split_name] += 1
             filename = safe_filename(sample.filename)
             image_path = dataset_root / "images" / split_name / filename
             label_path = dataset_root / "labels" / split_name / f"{Path(filename).stem}.txt"
@@ -47,7 +49,11 @@ class LocalYoloDatasetWriter:
 
         data_yaml_path = dataset_root / "data.yaml"
         data_yaml_path.write_text(
-            data_yaml_content(dataset_root, snapshot.classes),
+            data_yaml_content(
+                dataset_root=dataset_root,
+                classes=snapshot.classes,
+                split_sample_counts=split_sample_counts,
+            ),
             encoding="utf-8",
         )
 
@@ -243,16 +249,26 @@ def yolo_line(annotation: YoloDatasetAnnotation) -> str:
     )
 
 
-def data_yaml_content(dataset_root: Path, classes: tuple[str, ...]) -> str:
+def data_yaml_content(
+    *,
+    dataset_root: Path,
+    classes: tuple[str, ...],
+    split_sample_counts: dict[str, int],
+) -> str:
     names = "".join(
         f"  {index}: {json.dumps(class_name)}\n"
         for index, class_name in enumerate(classes)
+    )
+    validation_path = (
+        "images/validation"
+        if split_sample_counts.get("validation", 0) > 0
+        else "images/train"
     )
 
     return (
         f"path: {dataset_root}\n"
         "train: images/train\n"
-        "val: images/validation\n"
+        f"val: {validation_path}\n"
         "test: images/test\n"
         "names:\n"
         f"{names}"
