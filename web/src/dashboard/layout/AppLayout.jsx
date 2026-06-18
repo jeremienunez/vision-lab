@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
 
 import { Sidebar } from './Sidebar.jsx';
 import { Topbar } from './Topbar.jsx';
 import { SettingsDrawer } from './SettingsDrawer.jsx';
+import { ErrorBanner } from '../components/ErrorBanner.jsx';
 import { usePerceptionDataContext } from '../context/PerceptionDataContext.jsx';
 
 export function AppLayout() {
@@ -18,16 +18,10 @@ export function AppLayout() {
         <Topbar settingsOpen={settingsOpen} onToggleSettings={() => setSettingsOpen((open) => !open)} />
 
         {error && (
-          <div
-            className="flex items-center gap-2 rounded-xl border border-red/30 bg-red-soft px-4 py-3 text-sm text-red"
-            role="status"
-          >
-            <AlertTriangle size={18} aria-hidden="true" />
-            <span>
-              <strong className="mr-2">API response</strong>
-              {error}
-            </span>
-          </div>
+          <ErrorBanner>
+            <strong className="mr-2">API response</strong>
+            {error}
+          </ErrorBanner>
         )}
 
         <div className={settingsOpen ? 'flex flex-col gap-6 lg:flex-row' : ''}>

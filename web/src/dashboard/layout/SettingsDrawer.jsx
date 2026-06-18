@@ -4,6 +4,9 @@ import { CheckCircle2, KeyRound, Server } from 'lucide-react';
 import { useConfigContext } from '../context/ConfigContext.jsx';
 import { usePerceptionDataContext } from '../context/PerceptionDataContext.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { Field } from '../components/Field.jsx';
+import { TextInput } from '../components/TextInput.jsx';
+import { Button } from '../components/Button.jsx';
 
 export function SettingsDrawer() {
   const { config, setConfig } = useConfigContext();
@@ -28,30 +31,22 @@ export function SettingsDrawer() {
       </div>
 
       <form className="flex flex-col gap-3" onSubmit={applyConfig}>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs font-medium text-muted">Base URL</span>
-          <input
-            className="rounded-lg border border-line bg-surface-soft px-3 py-2 text-sm outline-none focus:border-cyan"
+        <Field label="Base URL">
+          <TextInput
             value={draft.baseUrl}
             onChange={(event) => setDraft((current) => ({ ...current, baseUrl: event.target.value }))}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs font-medium text-muted">API key</span>
-          <input
+        </Field>
+        <Field label="API key">
+          <TextInput
             type="password"
-            className="rounded-lg border border-line bg-surface-soft px-3 py-2 text-sm outline-none focus:border-cyan"
             value={draft.apiKey}
             onChange={(event) => setDraft((current) => ({ ...current, apiKey: event.target.value }))}
           />
-        </label>
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-        >
-          <CheckCircle2 size={17} aria-hidden="true" />
-          <span>Apply</span>
-        </button>
+        </Field>
+        <Button type="submit" variant="primary" icon={CheckCircle2}>
+          Apply
+        </Button>
       </form>
 
       <div className="flex flex-col gap-2">
