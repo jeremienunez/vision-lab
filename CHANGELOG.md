@@ -65,6 +65,8 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - SQLx-backed PostgreSQL model export and inference run repositories used by the API in Postgres backend mode.
 - Hugging Face dataset ingestion now emits API-seedable manifests with samples, annotations, and dataset version metadata.
 - Worker-side PostgreSQL job repository and `process-once` CLI command for consuming queued training jobs and persisting metrics/model output.
+- Makefile launcher for the local operator stack covering PostgreSQL, Loki, Alloy, the Rust API, the dashboard, smoke checks, and one-shot worker processing.
+- Local Loki and Grafana Alloy configuration for Docker Compose log collection.
 
 ### Changed
 

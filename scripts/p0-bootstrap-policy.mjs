@@ -13,7 +13,10 @@ export const requiredP0BootstrapPaths = [
   'worker/pyproject.toml',
   'worker/perception_worker/__init__.py',
   'worker/tests/test_worker_package.py',
+  'Makefile',
   'compose.yaml',
+  'infra/loki/loki-config.yaml',
+  'infra/loki/alloy-config.alloy',
   '.env.example',
   'scripts/bootstrap-local-env.mjs',
 ];

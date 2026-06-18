@@ -25,7 +25,7 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 - PostgreSQL for datasets, samples, annotations, versions, jobs, metrics, models, exports, and inference runs.
 - Object storage or filesystem storage behind an adapter for images, model artifacts, exports, and overlays.
 - Queue-backed asynchronous training so HTTP requests never block on ML work.
-- Docker Compose local stack for the final MVP demo.
+- Docker Compose local stack for the final MVP demo with Loki/Alloy log collection.
 
 ## P0 MVP Surface
 
@@ -42,7 +42,7 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 - Model comparison, promotion, and ONNX/CoreML export endpoints.
 - Hugging Face dataset ingestion into local `images/`, `labels/`, and `manifest.json`.
 - Python worker contracts, fake trainer, and tiny deterministic PyTorch trainer.
-- Docker Compose stack for the Rust API and PostgreSQL schema bootstrap.
+- Docker Compose stack for the Rust API, PostgreSQL schema bootstrap, and local Loki observability.
 
 ## Project Layout
 
@@ -50,7 +50,7 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 - `worker/perception_worker/` - typed Python/PyTorch worker with domain, contracts, app, ports, adapters, and entrypoints.
 - `web/` - React/Vite operations dashboard for API health, datasets, training jobs, models, and metrics.
 - `contracts/` - OpenAPI and JSON schemas for public and cross-component contracts.
-- `infra/` - local infrastructure notes and Docker Compose target.
+- `infra/` - local infrastructure notes, Docker Compose target, and Loki/Alloy config.
 - `datasets/seed/` - planned minimal demo dataset.
 - `doc/` - product, architecture, QA, sprint, demo, and reference documentation.
 - `qa/` - Gherkin features, future step definitions, support utilities, and fixtures.
@@ -66,6 +66,7 @@ Prerequisites:
 - Rust toolchain compatible with `api/Cargo.toml`.
 - Python 3.12 and `uv`.
 - Docker with Compose v2 for the containerized stack.
+- GNU Make for one-command local orchestration.
 
 Install dependencies and local config:
 
@@ -127,17 +128,37 @@ The local CLI, seed script, product fire smoke, and inference benchmark read `PE
 
 ## Operations Dashboard
 
-Run the API, then start the dashboard:
+Launch the local operator stack with PostgreSQL, Loki, Alloy, the Rust API, and the dashboard:
 
 ```bash
-npm run web:dev
+make up
+```
+
+`make up` keeps the dashboard in the foreground. Stop it with `Ctrl+C`; the Compose services keep running until:
+
+```bash
+make down
+```
+
+Loki is exposed at `http://127.0.0.1:3100`, and Alloy is exposed at `http://127.0.0.1:12345`. Validate local log collection endpoints with:
+
+```bash
+make loki-ready
+make loki-query
+make logs-loki
 ```
 
 The Vite dev server proxies `/api` to `http://127.0.0.1:8080` by default. Override the target with `PERCEPTIONLAB_API_BASE_URL=http://127.0.0.1:18080 npm run web:dev`.
 
 If the API runs with `PERCEPTIONLAB_API_KEY`, either enter the key in the dashboard configuration panel or expose it locally with `VITE_PERCEPTIONLAB_API_KEY=<redacted> npm run web:dev`.
 
-Run the containerized local stack:
+Run only the dashboard when the API is already available:
+
+```bash
+npm run web:dev
+```
+
+Run the containerized API stack directly:
 
 ```bash
 docker compose up api
@@ -145,7 +166,7 @@ curl http://127.0.0.1:8080/health
 docker compose down
 ```
 
-The Compose stack starts PostgreSQL and runs the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, annotations, dataset versions, training jobs, the training job queue, training metrics, models, model exports, and inference runs. The API applies `api/migrations/` at startup through SQLx. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed.
+The Compose stack starts PostgreSQL, Loki, Alloy, and the API with `PERCEPTIONLAB_REPOSITORY_BACKEND=postgres` for datasets, samples, annotations, dataset versions, training jobs, the training job queue, training metrics, models, model exports, and inference runs. The API applies `api/migrations/` at startup through SQLx. The Postgres host port defaults to `55432` to avoid local `5432` conflicts; override with `PERCEPTIONLAB_POSTGRES_PORT=5432` if needed. Override `PERCEPTIONLAB_API_PORT`, `PERCEPTIONLAB_LOKI_PORT`, or `PERCEPTIONLAB_ALLOY_PORT` if local ports are already used.
 
 Run the API directly against a local PostgreSQL database:
 
@@ -234,6 +255,12 @@ node scripts/seed-demo-dataset.mjs
 ```
 
 Consume one queued training job from PostgreSQL with the worker:
+
+```bash
+make worker-once
+```
+
+Or run it manually:
 
 ```bash
 cd worker

@@ -79,6 +79,7 @@
 - [x] Add bounded live webcam YOLO detection command.
 - [x] Add API key auth.
 - [x] Add minimal web dashboard only after API-first MVP.
+- [x] Add Makefile launcher with local Loki/Alloy observability.
 - [ ] Stream training logs.
 - [ ] Support video.
 - [ ] Support depth metadata.

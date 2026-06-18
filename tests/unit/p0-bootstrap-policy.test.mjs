@@ -77,10 +77,52 @@ describe('P0 bootstrap policy', () => {
     assert.match(compose, /PERCEPTIONLAB_API_ADDR=0\.0\.0\.0:8080/);
   });
 
+  it('requires local Loki observability bootstrap files', () => {
+    assert.ok(requiredP0BootstrapPaths.includes('Makefile'));
+    assert.ok(requiredP0BootstrapPaths.includes('infra/loki/loki-config.yaml'));
+    assert.ok(requiredP0BootstrapPaths.includes('infra/loki/alloy-config.alloy'));
+  });
+
+  it('requires Docker Compose services for local log collection', () => {
+    const compose = readFileSync('compose.yaml', 'utf8');
+
+    assert.match(compose, /^  loki:/m);
+    assert.match(compose, /grafana\/loki:3\.7\.0/);
+    assert.match(compose, /^  alloy:/m);
+    assert.match(compose, /grafana\/alloy:/);
+    assert.match(compose, /--storage\.path=\/var\/lib\/alloy\/data/);
+    assert.match(compose, /\/var\/run\/docker\.sock:\/var\/run\/docker\.sock:ro/);
+    assert.match(compose, /alloy-data:\/var\/lib\/alloy/);
+    assert.match(compose, /^  alloy-data:/m);
+  });
+
+  it('keeps local Docker log collection scoped to the PerceptionLab Compose project', () => {
+    const alloyConfig = readFileSync('infra/loki/alloy-config.alloy', 'utf8');
+
+    assert.match(alloyConfig, /targets = discovery\.docker\.perceptionlab\.targets/);
+    assert.match(alloyConfig, /targets\s+= discovery\.relabel\.perceptionlab_logs\.output/);
+    assert.match(alloyConfig, /source_labels = \["__meta_docker_container_label_com_docker_compose_project"\]/);
+    assert.match(alloyConfig, /regex\s+= "perceptionlab"/);
+    assert.match(alloyConfig, /action\s+= "keep"/);
+  });
+
+  it('exposes Make targets for the full local stack and Loki checks', () => {
+    const makefile = readFileSync('Makefile', 'utf8');
+
+    assert.match(makefile, /^up:/m);
+    assert.match(makefile, /^infra:/m);
+    assert.match(makefile, /^loki-ready:/m);
+    assert.match(makefile, /^loki-query:/m);
+    assert.match(makefile, /docker compose/);
+    assert.match(makefile, /npm run web:dev/);
+  });
+
   it('documents the product-grade P0 quickstart commands', () => {
     const readme = readFileSync('README.md', 'utf8');
 
     assert.match(readme, /npm run quality/);
+    assert.match(readme, /make up/);
+    assert.match(readme, /make loki-ready/);
     assert.match(readme, /docker compose up api/);
     assert.match(readme, /POST http:\/\/127\.0\.0\.1:8080\/training-jobs/);
     assert.match(readme, /POST http:\/\/127\.0\.0\.1:8080\/models\/<model_id>\/infer/);
