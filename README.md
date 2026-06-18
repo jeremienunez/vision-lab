@@ -225,6 +225,23 @@ npm run detect:webcam-live -- --device-index 0 --model-path .perceptionlab/model
 
 These commands write artifacts under `.perceptionlab/` and print JSON with detection counts, class names, confidences, and annotated image paths.
 
+For live dashboard inference with the real detector, keep PostgreSQL/Loki/Alloy in Docker
+and run the API on the host so it can shell through the Python worker environment:
+
+```bash
+make api-real
+```
+
+Process one queued YOLO fine-tuning job and register the produced `best.pt` model:
+
+```bash
+make worker-yolo-once
+```
+
+Use `model_family: "yolo_finetune"` and `base_model: ".perceptionlab/models/yolo11n.pt"`
+when creating the training job. The worker materializes the dataset version into YOLO
+format, runs Ultralytics training, writes metrics, and creates a candidate model.
+
 ## Download A Real Detection Dataset
 
 Download a bounded CPPE-5 object-detection subset from Hugging Face into the configured data disk:

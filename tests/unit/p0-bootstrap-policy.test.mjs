@@ -130,6 +130,14 @@ describe('P0 bootstrap policy', () => {
     assert.match(makefile, /cargo run --manifest-path api\/Cargo\.toml -p perception_api/);
   });
 
+  it('exposes a worker target for YOLO fine-tuning jobs', () => {
+    const makefile = readFileSync('Makefile', 'utf8');
+
+    assert.match(makefile, /^worker-yolo-once:/m);
+    assert.match(makefile, /uv run --extra ml perception-worker process-once/);
+    assert.match(makefile, /--trainer yolo_finetune/);
+  });
+
   it('documents the product-grade P0 quickstart commands', () => {
     const readme = readFileSync('README.md', 'utf8');
 

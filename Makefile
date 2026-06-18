@@ -9,7 +9,7 @@ ALLOY_PORT ?= $(if $(PERCEPTIONLAB_ALLOY_PORT),$(PERCEPTIONLAB_ALLOY_PORT),12345
 ALLOY_URL ?= http://127.0.0.1:$(ALLOY_PORT)
 PERCEPTIONLAB_API_BASE_URL ?= $(API_URL)
 
-.PHONY: help up infra api api-real web worker-once seed smoke down ps logs logs-api logs-loki loki-ready loki-query alloy-ready quality
+.PHONY: help up infra api api-real web worker-once worker-yolo-once seed smoke down ps logs logs-api logs-loki loki-ready loki-query alloy-ready quality
 
 help:
 	@printf "PerceptionLab local commands\n"
@@ -19,6 +19,7 @@ help:
 	@printf "  make api-real     Start infra in Docker and API on host with YOLO inference\n"
 	@printf "  make web          Start the React/Vite operations dashboard\n"
 	@printf "  make worker-once  Process one queued training job from PostgreSQL\n"
+	@printf "  make worker-yolo-once  Process one queued YOLO fine-tune job\n"
 	@printf "  make seed         Seed the running API with the configured demo dataset\n"
 	@printf "  make smoke        Run the product object-recognition smoke flow\n"
 	@printf "  make loki-ready   Check Loki readiness\n"
@@ -45,6 +46,9 @@ web:
 
 worker-once:
 	cd worker && PERCEPTIONLAB_DATABASE_URL=$${PERCEPTIONLAB_DATABASE_URL:-postgres://perceptionlab:perceptionlab@127.0.0.1:55432/perceptionlab} PERCEPTIONLAB_ARTIFACT_ROOT=$${PERCEPTIONLAB_ARTIFACT_ROOT:-/media/jerem/ubuntu1/perceptionlab/artifacts} UV_CACHE_DIR=../.perceptionlab/cache/uv uv run perception-worker process-once --repository-backend postgres --trainer tiny_torch
+
+worker-yolo-once:
+	cd worker && PERCEPTIONLAB_DATABASE_URL=$${PERCEPTIONLAB_DATABASE_URL:-postgres://perceptionlab:perceptionlab@127.0.0.1:55432/perceptionlab} PERCEPTIONLAB_ARTIFACT_ROOT=$${PERCEPTIONLAB_ARTIFACT_ROOT:-/media/jerem/ubuntu1/perceptionlab/artifacts} UV_CACHE_DIR=../.perceptionlab/cache/uv uv run --extra ml perception-worker process-once --repository-backend postgres --trainer yolo_finetune
 
 seed:
 	PERCEPTIONLAB_API_BASE_URL=$(API_URL) node scripts/seed-demo-dataset.mjs

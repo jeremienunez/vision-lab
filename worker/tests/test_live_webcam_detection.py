@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, cast
 
 from perception_worker.app.run_live_webcam_detection import LiveWebcamDetector
 from perception_worker.domain.real_inference import RealDetection, RealInferenceResult
@@ -93,4 +94,7 @@ def test_live_webcam_detector_reuses_loaded_model_for_frame_limit(tmp_path: Path
     ]
     assert result.frame_count == 3
     assert result.frames[0].detection_count == 1
-    assert result.to_summary()["frames"][0]["detections"][0]["class_name"] == "person"
+    summary = cast(dict[str, Any], result.to_summary())
+    frames = cast(list[dict[str, Any]], summary["frames"])
+    detections = cast(list[dict[str, Any]], frames[0]["detections"])
+    assert detections[0]["class_name"] == "person"

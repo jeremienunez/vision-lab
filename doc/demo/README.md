@@ -51,3 +51,34 @@ npm run detect:webcam-live -- --device-index 0 --model-path .perceptionlab/model
 ```
 
 Outputs are stored under `.perceptionlab/real-inference/` and `.perceptionlab/captures/`.
+
+## YOLO Fine-Tuning Path
+
+When the live detector confuses a target object, such as reading a phone as `remote`,
+collect annotated samples for the target classes, create a dataset version, then create
+a queued training job with:
+
+```json
+{
+  "dataset_version_id": "<dataset_version_id>",
+  "model_family": "yolo_finetune",
+  "base_model": ".perceptionlab/models/yolo11n.pt",
+  "hyperparameters": {
+    "epochs": 20,
+    "batch_size": 4,
+    "image_size": 640,
+    "learning_rate": 0.001
+  }
+}
+```
+
+Run one fine-tune worker pass:
+
+```bash
+make worker-yolo-once
+```
+
+The worker writes a materialized YOLO dataset under the configured artifact root,
+trains with Ultralytics, and registers the resulting `best.pt` as a candidate model.
+Start inference with the real API path using `make api-real`, then select the new
+candidate model in the dashboard camera panel.

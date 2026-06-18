@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
@@ -79,3 +81,16 @@ def test_process_once_cli_rejects_missing_database_url(monkeypatch: pytest.Monke
 
     assert result.exit_code == 1
     assert "PERCEPTIONLAB_DATABASE_URL is required" in result.output
+
+
+def test_build_trainer_supports_yolo_finetune_strategy(tmp_path: Path) -> None:
+    from perception_worker.adapters.training.yolo_finetune_trainer import YoloFineTuneTrainer
+    from perception_worker.entrypoints.cli import build_trainer
+
+    trainer = build_trainer(
+        trainer_name="yolo_finetune",
+        artifact_root=tmp_path,
+        database_url="postgres://perceptionlab:perceptionlab@127.0.0.1:55432/perceptionlab",
+    )
+
+    assert isinstance(trainer, YoloFineTuneTrainer)

@@ -19,6 +19,11 @@ from perception_worker.adapters.storage.local_dataset_ingestion_store import (
 )
 from perception_worker.adapters.training.fake_trainer import FakeTrainer
 from perception_worker.adapters.training.tiny_torch_trainer import TinyTorchTrainer
+from perception_worker.adapters.training.yolo_dataset_materializer import (
+    LocalYoloDatasetWriter,
+    PostgresYoloDatasetMaterializer,
+)
+from perception_worker.adapters.training.yolo_finetune_trainer import YoloFineTuneTrainer
 from perception_worker.app.ingest_dataset import DatasetIngestionService
 from perception_worker.app.process_training_job import TrainingJobProcessor
 from perception_worker.app.run_live_webcam_detection import LiveWebcamDetector
@@ -93,7 +98,11 @@ def process_once(
     )
     processor = TrainingJobProcessor(
         job_repository=repository,
-        trainer=build_trainer(trainer_name=trainer_name, artifact_root=resolved_artifact_root),
+        trainer=build_trainer(
+            trainer_name=trainer_name,
+            artifact_root=resolved_artifact_root,
+            database_url=database_url,
+        ),
     )
     processed = processor.run_once()
 
@@ -209,12 +218,27 @@ def default_worker_id() -> str:
     return f"{socket.gethostname()}-{os.getpid()}"
 
 
-def build_trainer(trainer_name: str, artifact_root: Path) -> FakeTrainer | TinyTorchTrainer:
+def build_trainer(
+    trainer_name: str,
+    artifact_root: Path,
+    database_url: str | None = None,
+) -> FakeTrainer | TinyTorchTrainer | YoloFineTuneTrainer:
     if trainer_name == "fake":
         return FakeTrainer()
     if trainer_name == "tiny_torch":
         return TinyTorchTrainer(artifact_root=artifact_root / "models")
-    raise typer.BadParameter("trainer must be fake or tiny_torch")
+    if trainer_name == "yolo_finetune":
+        if database_url is None:
+            raise typer.BadParameter("database_url is required for yolo_finetune")
+
+        return YoloFineTuneTrainer(
+            artifact_root=artifact_root / "models",
+            dataset_materializer=PostgresYoloDatasetMaterializer(
+                database_url=database_url,
+                writer=LocalYoloDatasetWriter(root=artifact_root / "datasets"),
+            ),
+        )
+    raise typer.BadParameter("trainer must be fake, tiny_torch, or yolo_finetune")
 
 
 def main() -> None:
