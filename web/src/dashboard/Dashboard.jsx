@@ -24,6 +24,7 @@ import {
   formatMetricValue,
   metricSeriesForChart,
 } from './dashboard-data.js';
+import { orderCameraModels } from './camera-models.js';
 import { buildDetectionOverlayItems } from './camera-overlay.js';
 import { createPerceptionApi } from './perception-api.js';
 
@@ -79,10 +80,7 @@ export function Dashboard() {
     () => metricSeriesForChart(payload.metricsByJob),
     [payload.metricsByJob],
   );
-  const inferenceModels = useMemo(
-    () => payload.models.filter((model) => model.status !== 'archived'),
-    [payload.models],
-  );
+  const inferenceModels = useMemo(() => orderCameraModels(payload.models), [payload.models]);
   const selectedCameraModel = useMemo(
     () => inferenceModels.find((model) => model.id === cameraModelId) ?? inferenceModels[0] ?? null,
     [cameraModelId, inferenceModels],
@@ -690,7 +688,7 @@ function CameraInferencePanel({
               ) : (
                 models.map((model) => (
                   <option value={model.id} key={model.id}>
-                    {model.name} / {model.status}
+                    {model.name} / {model.model_family} / {model.status}
                   </option>
                 ))
               )}

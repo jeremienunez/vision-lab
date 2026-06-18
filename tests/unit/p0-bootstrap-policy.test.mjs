@@ -117,6 +117,19 @@ describe('P0 bootstrap policy', () => {
     assert.match(makefile, /npm run web:dev/);
   });
 
+  it('exposes a host YOLO API target for real camera inference', () => {
+    const makefile = readFileSync('Makefile', 'utf8');
+
+    assert.match(makefile, /^api-real:/m);
+    assert.match(makefile, /\$\(COMPOSE\) stop api/);
+    assert.match(makefile, /PERCEPTIONLAB_INFERENCE_ENGINE=yolo_cli/);
+    assert.match(
+      makefile,
+      /PERCEPTIONLAB_DATABASE_URL=\$\$\{PERCEPTIONLAB_DATABASE_URL:-postgres:\/\/perceptionlab:perceptionlab@127\.0\.0\.1:55432\/perceptionlab\}/,
+    );
+    assert.match(makefile, /cargo run --manifest-path api\/Cargo\.toml -p perception_api/);
+  });
+
   it('documents the product-grade P0 quickstart commands', () => {
     const readme = readFileSync('README.md', 'utf8');
 
