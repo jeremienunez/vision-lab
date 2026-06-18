@@ -24,6 +24,7 @@ import {
   formatMetricValue,
   metricSeriesForChart,
 } from './dashboard-data.js';
+import { buildDetectionOverlayItems } from './camera-overlay.js';
 import { createPerceptionApi } from './perception-api.js';
 
 const EMPTY_PAYLOAD = {
@@ -640,6 +641,7 @@ function CameraInferencePanel({
   onCapture,
 }) {
   const detections = result?.detections ?? [];
+  const overlayItems = buildDetectionOverlayItems(detections, { mirrored: true });
 
   return (
     <div className="camera-panel">
@@ -653,6 +655,22 @@ function CameraInferencePanel({
           playsInline
         />
         <canvas ref={canvasRef} hidden />
+        {overlayItems.length > 0 && (
+          <div className="camera-detection-layer" aria-label="Detected objects on camera preview">
+            {overlayItems.map((item, index) => (
+              <div
+                className="camera-detection-box"
+                key={`${item.label}-${index}`}
+                style={item.style}
+              >
+                <span className="camera-detection-tag">
+                  <strong>{item.label}</strong>
+                  {item.confidenceLabel && <em>{item.confidenceLabel}</em>}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="camera-overlay">
           <StatusBadge icon={ScanSearch} label={busy ? 'Analyzing frame' : status} tone={busy ? 'pending' : 'success'} />
         </div>
