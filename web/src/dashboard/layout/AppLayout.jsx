@@ -1,0 +1,42 @@
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
+
+import { Sidebar } from './Sidebar.jsx';
+import { Topbar } from './Topbar.jsx';
+import { SettingsDrawer } from './SettingsDrawer.jsx';
+import { usePerceptionDataContext } from '../context/PerceptionDataContext.jsx';
+
+export function AppLayout() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { error, loading } = usePerceptionDataContext();
+
+  return (
+    <div className="grid min-h-screen grid-cols-[236px_minmax(0,1fr)]">
+      <Sidebar />
+      <main className="flex flex-col gap-6 p-6 lg:p-8" aria-busy={loading}>
+        <Topbar settingsOpen={settingsOpen} onToggleSettings={() => setSettingsOpen((open) => !open)} />
+
+        {error && (
+          <div
+            className="flex items-center gap-2 rounded-xl border border-red/30 bg-red-soft px-4 py-3 text-sm text-red"
+            role="status"
+          >
+            <AlertTriangle size={18} aria-hidden="true" />
+            <span>
+              <strong className="mr-2">API response</strong>
+              {error}
+            </span>
+          </div>
+        )}
+
+        <div className={settingsOpen ? 'flex flex-col gap-6 lg:flex-row' : ''}>
+          <div className="min-w-0 flex-1">
+            <Outlet />
+          </div>
+          {settingsOpen && <SettingsDrawer />}
+        </div>
+      </main>
+    </div>
+  );
+}
