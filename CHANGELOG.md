@@ -78,3 +78,4 @@ The format follows Keep a Changelog principles, and versioning should follow Sem
 - Extended local quality gates to validate P0 bootstrap files, Rust workspace checks, and worker package tests.
 - Excluded internal agent planning docs from Git tracking and future adds before publishing.
 - Docker Compose now lets the API apply SQLx migrations, runs the API with the PostgreSQL dataset backend, and exposes Postgres on configurable host port `PERCEPTIONLAB_POSTGRES_PORT`, defaulting to `55432`.
+- Rebuilt the web dashboard into react-router routed views (Overview, Datasets, Training, Models, Camera, Metrics) with hand-rolled Tailwind v4 components on a refined light-SaaS theme; extracted config/data/camera hooks and contexts while reusing the existing API/data layer unchanged.
