@@ -27,9 +27,13 @@ export function buildDashboardViewModel({
   const activeJobCount = normalizedJobs.filter((job) => ACTIVE_JOB_STATUSES.has(job.status)).length;
   const promotedModelCount = normalizedModels.filter((model) => model.status === 'promoted').length;
   const latestMetric = selectLatestMetric(metricsByJob);
+  const systemCards = buildSystemCards(health);
+  const connectionTone = systemCards.every((card) => card.tone === 'success') ? 'success' : 'danger';
 
   return {
-    healthLabel: health?.status === 'healthy' ? 'API healthy' : 'API degraded',
+    healthLabel: connectionTone === 'success' ? 'API healthy' : 'API degraded',
+    connectionTone,
+    systemCards,
     dependencyHealth: health?.dependencies ?? {},
     jobStatusCounts: statusCounts,
     activeJobCount,
@@ -46,6 +50,23 @@ export function buildDashboardViewModel({
       },
     ],
   };
+}
+
+function buildSystemCards(health) {
+  return [
+    { label: 'API', value: health?.status ?? 'unreachable', tone: readinessTone(health?.status) },
+    ...Object.entries(health?.dependencies ?? {}).map(([label, value]) => ({
+      label,
+      value,
+      tone: readinessTone(value),
+    })),
+  ];
+}
+
+function readinessTone(value) {
+  return ['healthy', 'ready', 'ok', 'connected'].includes(String(value ?? '').toLowerCase())
+    ? 'success'
+    : 'danger';
 }
 
 export function formatMetricValue(metric) {
@@ -80,10 +101,17 @@ function selectLatestMetric(metricsByJob) {
 }
 
 function compareMetricRank(left, right) {
-  const age = compareMetricAge(right, left);
+  const age = compareMetricTime(right, left);
   if (age !== 0) return age;
 
   return metricPriority(right) - metricPriority(left);
+}
+
+function compareMetricTime(left, right) {
+  return (
+    (left.epoch ?? 0) - (right.epoch ?? 0)
+    || (left.step ?? 0) - (right.step ?? 0)
+  );
 }
 
 function compareMetricAge(left, right) {

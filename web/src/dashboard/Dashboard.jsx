@@ -5,7 +5,6 @@ import {
   Box,
   BrainCircuit,
   CheckCircle2,
-  ChevronRight,
   Database,
   Gauge,
   GitBranch,
@@ -37,11 +36,11 @@ const DEFAULT_CONFIG = {
 };
 
 const NAV_ITEMS = [
-  { label: 'Overview', icon: Activity, active: true },
-  { label: 'Datasets', icon: Database },
-  { label: 'Training', icon: GitBranch },
-  { label: 'Models', icon: BrainCircuit },
-  { label: 'Inference', icon: Gauge },
+  { label: 'Overview', icon: Activity, href: '#overview', active: true },
+  { label: 'Datasets', icon: Database, href: '#datasets' },
+  { label: 'Training', icon: GitBranch, href: '#training' },
+  { label: 'Models', icon: BrainCircuit, href: '#models' },
+  { label: 'Metrics', icon: Gauge, href: '#metrics' },
 ];
 
 const STATUS_ORDER = ['queued', 'running', 'succeeded', 'failed', 'cancelled'];
@@ -53,7 +52,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [settingsOpen, setSettingsOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState('all');
 
   const viewModel = useMemo(() => buildDashboardViewModel(payload), [payload]);
@@ -106,7 +105,7 @@ export function Dashboard() {
 
         <nav className="nav-list">
           {NAV_ITEMS.map((item) => (
-            <a className={item.active ? 'nav-item active' : 'nav-item'} href="#overview" key={item.label}>
+            <a className={item.active ? 'nav-item active' : 'nav-item'} href={item.href} key={item.label}>
               <item.icon size={18} aria-hidden="true" />
               <span>{item.label}</span>
             </a>
@@ -119,21 +118,31 @@ export function Dashboard() {
         </div>
       </aside>
 
-      <main className="workspace" id="overview">
+      <main className="workspace" id="overview" aria-busy={loading}>
         <header className="topbar">
           <div>
+            <span className="eyebrow">Computer vision operations</span>
             <h1>Operations</h1>
-            <p>{viewModel.healthLabel}</p>
+            <p>
+              {config.baseUrl}
+              {lastUpdated ? ` / synced ${lastUpdated.toLocaleTimeString()}` : ' / waiting for sync'}
+            </p>
           </div>
           <div className="topbar-actions">
             <StatusBadge
               icon={Server}
               label={loading ? 'Refreshing' : viewModel.healthLabel}
-              tone={error ? 'danger' : 'success'}
+              tone={loading ? 'pending' : viewModel.connectionTone}
             />
-            <button className="icon-button text-button" type="button" onClick={refresh} title="Refresh dashboard">
-              <RefreshCw size={17} aria-hidden="true" />
-              <span>Refresh</span>
+            <button
+              className="icon-button text-button"
+              type="button"
+              onClick={refresh}
+              title="Refresh dashboard"
+              disabled={loading}
+            >
+              <RefreshCw className={loading ? 'spin' : ''} size={17} aria-hidden="true" />
+              <span>{loading ? 'Syncing' : 'Refresh'}</span>
             </button>
             <button
               className="icon-button"
@@ -141,16 +150,27 @@ export function Dashboard() {
               onClick={() => setSettingsOpen((open) => !open)}
               title="API settings"
               aria-label="API settings"
+              aria-expanded={settingsOpen}
             >
               <Settings size={18} aria-hidden="true" />
             </button>
           </div>
         </header>
 
+        <SystemStrip
+          cards={viewModel.systemCards}
+          apiKeyConfigured={Boolean(config.apiKey)}
+          lastUpdated={lastUpdated}
+          loading={loading}
+        />
+
         {error && (
           <div className="error-strip" role="status">
             <AlertTriangle size={18} aria-hidden="true" />
-            <span>{error}</span>
+            <span>
+              <strong>API response</strong>
+              {error}
+            </span>
           </div>
         )}
 
@@ -163,6 +183,7 @@ export function Dashboard() {
         <section className={settingsOpen ? 'content-layout with-settings' : 'content-layout'}>
           <div className="primary-grid">
             <Panel
+              id="datasets"
               title="Datasets"
               action={`${payload.datasets.length} total`}
               icon={Database}
@@ -171,6 +192,7 @@ export function Dashboard() {
             </Panel>
 
             <Panel
+              id="training"
               title="Training queue"
               action={`${viewModel.activeJobCount} active`}
               icon={GitBranch}
@@ -184,6 +206,7 @@ export function Dashboard() {
             </Panel>
 
             <Panel
+              id="models"
               title="Model registry"
               action={`${viewModel.promotedModelCount} promoted`}
               icon={BrainCircuit}
@@ -193,9 +216,11 @@ export function Dashboard() {
             </Panel>
 
             <Panel
+              id="metrics"
               title="Latest metrics"
               action={lastUpdated ? lastUpdated.toLocaleTimeString() : 'Pending'}
               icon={Gauge}
+              wide
             >
               <MetricChart metrics={chartMetrics} />
             </Panel>
@@ -243,6 +268,38 @@ export function Dashboard() {
   );
 }
 
+function SystemStrip({ cards, apiKeyConfigured, lastUpdated, loading }) {
+  const syncLabel = loading
+    ? 'refreshing'
+    : lastUpdated
+      ? lastUpdated.toLocaleTimeString()
+      : 'pending';
+  const statusCards = [
+    ...cards,
+    {
+      label: 'auth',
+      value: apiKeyConfigured ? 'protected' : 'local open',
+      tone: apiKeyConfigured ? 'success' : 'neutral',
+    },
+    {
+      label: 'sync',
+      value: syncLabel,
+      tone: loading ? 'pending' : 'neutral',
+    },
+  ];
+
+  return (
+    <section className="system-strip" aria-label="System status">
+      {statusCards.map((card) => (
+        <article className={`system-card ${card.tone}`} key={`${card.label}-${card.value}`}>
+          <span>{formatCardLabel(card.label)}</span>
+          <strong>{card.value}</strong>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 function StatusBadge({ icon: Icon, label, tone }) {
   return (
     <span className={`status-badge ${tone}`}>
@@ -261,9 +318,9 @@ function KpiTile({ label, value, tone }) {
   );
 }
 
-function Panel({ title, action, icon: Icon, children, wide = false }) {
+function Panel({ id, title, action, icon: Icon, children, wide = false }) {
   return (
-    <section className={wide ? 'panel wide' : 'panel'}>
+    <section className={wide ? 'panel wide' : 'panel'} id={id}>
       <div className="panel-heading">
         <div className="panel-title">
           <Icon size={18} aria-hidden="true" />
@@ -448,4 +505,8 @@ function persistConfig(nextConfig) {
 
   window.localStorage.setItem('perceptionlab.apiBaseUrl', nextConfig.baseUrl);
   window.localStorage.setItem('perceptionlab.apiKey', nextConfig.apiKey);
+}
+
+function formatCardLabel(label) {
+  return String(label ?? '').replaceAll('_', ' ');
 }

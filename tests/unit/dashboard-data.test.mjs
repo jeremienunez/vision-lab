@@ -53,7 +53,59 @@ describe('dashboard data view model', () => {
     );
     assert.deepEqual(viewModel.jobStatusCounts, { running: 1, succeeded: 1 });
     assert.equal(viewModel.healthLabel, 'API healthy');
+    assert.equal(viewModel.connectionTone, 'success');
+    assert.deepEqual(viewModel.systemCards, [
+      { label: 'API', value: 'healthy', tone: 'success' },
+      { label: 'database', value: 'ready', tone: 'success' },
+      { label: 'storage', value: 'ready', tone: 'success' },
+      { label: 'queue', value: 'ready', tone: 'success' },
+    ]);
     assert.equal(viewModel.promotedModelCount, 1);
+  });
+
+  it('marks the platform degraded when health or dependencies are not ready', () => {
+    const viewModel = buildDashboardViewModel({
+      health: {
+        status: 'healthy',
+        dependencies: {
+          database: 'ready',
+          queue: 'offline',
+        },
+      },
+      datasets: [],
+      trainingJobs: [],
+      models: [],
+      metricsByJob: {},
+    });
+
+    assert.equal(viewModel.healthLabel, 'API degraded');
+    assert.equal(viewModel.connectionTone, 'danger');
+    assert.deepEqual(viewModel.systemCards, [
+      { label: 'API', value: 'healthy', tone: 'success' },
+      { label: 'database', value: 'ready', tone: 'success' },
+      { label: 'queue', value: 'offline', tone: 'danger' },
+    ]);
+  });
+
+  it('prefers business-critical metrics when latest metrics have the same age', () => {
+    const viewModel = buildDashboardViewModel({
+      health: { status: 'healthy', dependencies: {} },
+      datasets: [],
+      trainingJobs: [],
+      models: [],
+      metricsByJob: {
+        job_01: [
+          { metric_name: 'precision', metric_value: 0.91, epoch: 2, step: 40 },
+          { metric_name: 'mAP50', metric_value: 0.873, epoch: 2, step: 40 },
+        ],
+      },
+    });
+
+    assert.equal(viewModel.latestMetric.metric_name, 'mAP50');
+    assert.deepEqual(
+      viewModel.kpis.map((kpi) => [kpi.label, kpi.value]).at(-1),
+      ['Latest metric', 'mAP50 0.873'],
+    );
   });
 
   it('adds the API key header only when a local key is configured', () => {
