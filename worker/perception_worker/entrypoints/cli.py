@@ -17,6 +17,9 @@ from perception_worker.adapters.inference.yolo_object_detector import YoloObject
 from perception_worker.adapters.storage.local_dataset_ingestion_store import (
     LocalDatasetIngestionStore,
 )
+from perception_worker.adapters.storage.local_yolo_directory_source import (
+    LocalYoloDirectoryDatasetSource,
+)
 from perception_worker.adapters.training.fake_trainer import FakeTrainer
 from perception_worker.adapters.training.tiny_torch_trainer import TinyTorchTrainer
 from perception_worker.adapters.training.yolo_dataset_materializer import (
@@ -59,6 +62,35 @@ def ingest_hf(
     result = service.ingest(
         DatasetIngestionCommand(
             source_dataset=source_dataset,
+            split=split,
+            target_name=target_name,
+            classes=parse_classes(classes),
+            max_samples=max_samples,
+        )
+    )
+
+    typer.echo(
+        f"ingested {result.sample_count} sample(s), "
+        f"{result.annotation_count} annotation(s) into {result.dataset_root}"
+    )
+
+
+@app.command("ingest-yolo")
+def ingest_yolo(
+    source_dataset: Path,
+    target_name: Annotated[str, typer.Option()],
+    classes: Annotated[str, typer.Option()],
+    split: Annotated[str, typer.Option()] = "train",
+    max_samples: Annotated[int | None, typer.Option()] = None,
+) -> None:
+    data_root = Path(os.environ.get("PERCEPTIONLAB_DATA_ROOT", "datasets")).expanduser()
+    service = DatasetIngestionService(
+        source=LocalYoloDirectoryDatasetSource(),
+        store=LocalDatasetIngestionStore(root=data_root),
+    )
+    result = service.ingest(
+        DatasetIngestionCommand(
+            source_dataset=str(source_dataset),
             split=split,
             target_name=target_name,
             classes=parse_classes(classes),

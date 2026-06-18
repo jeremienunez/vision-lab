@@ -15,6 +15,22 @@ UV_CACHE_DIR=../.perceptionlab/cache/uv uv run perception-worker ingest-hf owner
 
 `HF_TOKEN` is read from the environment and must not be committed.
 
+Local YOLO directory ingestion command for Roboflow, Open Images, or manually merged
+exports:
+
+```bash
+PERCEPTIONLAB_DATA_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets \
+UV_CACHE_DIR=../.perceptionlab/cache/uv uv run perception-worker ingest-yolo \
+  /media/jerem/ubuntu1/perceptionlab/raw/phone-remote-yolo \
+  --target-name phone-remote-mix \
+  --classes phone,remote,person,laptop,mouse,keyboard \
+  --split train
+```
+
+The source directory must contain `data.yaml`, `images/<split>`, and matching
+`labels/<split>/<image-stem>.txt` YOLO label files. Images with empty labels are
+preserved as hard negatives.
+
 Process one PostgreSQL-backed training job:
 
 ```bash

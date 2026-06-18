@@ -82,3 +82,35 @@ The worker writes a materialized YOLO dataset under the configured artifact root
 trains with Ultralytics, and registers the resulting `best.pt` as a candidate model.
 Start inference with the real API path using `make api-real`, then select the new
 candidate model in the dashboard camera panel.
+
+For the phone-vs-remote correction pass, keep the first training mix focused on:
+
+```text
+phone,remote,person,laptop,mouse,keyboard
+```
+
+Use external YOLO exports for broad coverage and local webcam captures for the real
+room lighting. A usable first mix is Open Images V7 subsets for the six classes above,
+Roboflow Mobile phone detection, Roboflow E-collect, Roboflow Classroom Cell Phone
+Detection, and local hard negatives such as a real remote, mouse, empty hand, and
+rectangular objects that are not phones.
+
+Import a YOLO export into the local seed-manifest format:
+
+```bash
+cd worker
+PERCEPTIONLAB_DATA_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets \
+UV_CACHE_DIR=../.perceptionlab/cache/uv \
+uv run perception-worker ingest-yolo \
+  /media/jerem/ubuntu1/perceptionlab/raw/phone-remote-yolo \
+  --target-name phone-remote-mix \
+  --classes phone,remote,person,laptop,mouse,keyboard \
+  --split train
+```
+
+Then seed and train:
+
+```bash
+PERCEPTIONLAB_SEED_DATASET_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets/phone-remote-mix make seed
+make worker-yolo-once
+```

@@ -242,6 +242,37 @@ Use `model_family: "yolo_finetune"` and `base_model: ".perceptionlab/models/yolo
 when creating the training job. The worker materializes the dataset version into YOLO
 format, runs Ultralytics training, writes metrics, and creates a candidate model.
 
+For the current phone-vs-remote failure mode, build a mixed dataset with these target
+classes:
+
+```text
+phone,remote,person,laptop,mouse,keyboard
+```
+
+Recommended sources are Open Images V7 subsets for `Mobile phone`, `Remote control`,
+`Person`, `Laptop`, `Mouse`, and `Keyboard`; Roboflow Mobile phone detection;
+Roboflow E-collect; Roboflow Classroom Cell Phone Detection; plus local webcam captures
+from the deployment room. Export or convert each source to an Ultralytics YOLO directory
+with `data.yaml`, `images/<split>`, and `labels/<split>`, then ingest it:
+
+```bash
+cd worker
+PERCEPTIONLAB_DATA_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets \
+UV_CACHE_DIR=../.perceptionlab/cache/uv \
+uv run perception-worker ingest-yolo \
+  /media/jerem/ubuntu1/perceptionlab/raw/phone-remote-yolo \
+  --target-name phone-remote-mix \
+  --classes phone,remote,person,laptop,mouse,keyboard \
+  --split train
+```
+
+Push the generated manifest into the running API, then process the queued fine-tune job:
+
+```bash
+PERCEPTIONLAB_SEED_DATASET_ROOT=/media/jerem/ubuntu1/perceptionlab/datasets/phone-remote-mix make seed
+make worker-yolo-once
+```
+
 ## Download A Real Detection Dataset
 
 Download a bounded CPPE-5 object-detection subset from Hugging Face into the configured data disk:
