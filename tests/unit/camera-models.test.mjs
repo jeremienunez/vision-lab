@@ -25,6 +25,29 @@ describe('camera model selection', () => {
     assert.equal(models[0].id, 'yolo_01');
   });
 
+  it('prioritizes the strongest YOLO model when several are available', () => {
+    const models = orderCameraModels([
+      {
+        id: 'old_yolo',
+        name: 'final-yolo-model',
+        model_family: 'yolo11n',
+        artifact_uri: 'file:///repo/.perceptionlab/models/yolo11n.pt',
+        metrics_summary: {},
+        status: 'candidate',
+      },
+      {
+        id: 'volume_yolo',
+        name: 'worker-volume-yolo',
+        model_family: 'yolo11s_finetune',
+        artifact_uri: 'file:///media/jerem/ubuntu1/perceptionlab/artifacts/models/job/train/weights/best.pt',
+        metrics_summary: { mAP50: '0.6154332345571324' },
+        status: 'candidate',
+      },
+    ]);
+
+    assert.equal(models[0].id, 'volume_yolo');
+  });
+
   it('keeps archived models out of the camera selector', () => {
     const models = orderCameraModels([
       {
