@@ -25,6 +25,7 @@
     "detect:webcam": "UV_CACHE_DIR=.perceptionlab/cache/uv uv run --project worker perception-worker detect-webcam",
     "detect:webcam-live": "UV_CACHE_DIR=.perceptionlab/cache/uv uv run --project worker perception-worker detect-webcam-live",
     "bdd:dry-run": "cucumber-js \"qa/features/**/*.feature\" --import \"qa/steps/**/*.mjs\" --import \"qa/support/**/*.mjs\" --format json:qa/reports/cucumber-report.json --dry-run",
+    "bdd:smoke": "cucumber-js \"qa/features/**/*.feature\" --tags \"@smoke\" --import \"qa/steps/**/*.mjs\" --import \"qa/support/**/*.mjs\" --format progress --format json:qa/reports/cucumber-smoke-report.json",
     "install:rust": "cargo fetch --manifest-path api/Cargo.toml",
     "install:worker:ml": "cd worker && UV_CACHE_DIR=../.perceptionlab/cache/uv uv sync --extra ml --group dev",
     "install:deps": "npm run bootstrap:env && npm run install:rust && npm run install:worker:ml",

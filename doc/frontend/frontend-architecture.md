@@ -68,6 +68,8 @@ The stack choice follows the project constraints:
 
 ## Repository Layout
 
+Implementation note: the current production frontend lives under `web/` and uses the repository's Vite app configured by `web/vite.config.mjs`. The original `frontend/` target layout remains a reference architecture for future extraction, but current slices should extend `web/src/dashboard` instead of creating a second app shell.
+
 Target structure:
 
 ```text

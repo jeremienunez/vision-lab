@@ -86,14 +86,14 @@
 - [x] Add minimal web dashboard only after API-first MVP.
 - [x] Restructure and restyle the web dashboard into routed Tailwind views.
 - [x] Add Makefile launcher with local Loki/Alloy observability.
-- [ ] Add `frontend/` app shell.
-- [ ] Add frontend design token files.
-- [ ] Add typed frontend API client with API key support.
-- [ ] Add dashboard read-only cards for datasets, jobs, models, and latest inference.
-- [ ] Add single-image inference lab.
-- [ ] Add live camera preview mode.
-- [ ] Add manual live camera frame inference.
-- [ ] Add bounded live camera interval inference.
+- [x] Add `web/` app shell as the implemented frontend surface.
+- [x] Add frontend design token files.
+- [x] Add typed frontend API client with API key support.
+- [x] Add dashboard read-only cards for datasets, jobs, models, and latest inference.
+- [x] Add single-image inference lab.
+- [x] Add live camera preview mode.
+- [x] Add manual live camera frame inference.
+- [x] Add bounded live camera interval inference.
 - [ ] Add quantization metadata to model registry summaries.
 - [ ] Add calibration dataset convention and validation script.
 - [ ] Add FP16 mobile export smoke.

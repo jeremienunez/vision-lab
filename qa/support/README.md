@@ -1,6 +1,14 @@
 # BDD Support
 
-Shared test support lives here:
+Shared test support lives here.
+
+Current executable subset:
+
+- `world.mjs`
+- `api-client.mjs`
+- `assertions.mjs`
+
+Future full-stack support:
 
 - `world.mjs`
 - `api-client.mjs`

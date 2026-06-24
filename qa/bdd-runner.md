@@ -26,4 +26,10 @@ The selected executable runner command is:
 npm run bdd:dry-run
 ```
 
+The first executable smoke subset is tagged with `@smoke` and runs without a live stack:
+
+```sh
+npm run bdd:smoke
+```
+
 Full scenario execution will be enabled once `qa/steps/**/*.mjs` and `qa/support/**/*.mjs` contain the API, database, storage, and worker step definitions.

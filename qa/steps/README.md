@@ -1,6 +1,12 @@
 # BDD Steps
 
-Future BDD step definitions live here:
+BDD step definitions live here.
+
+Current executable subset:
+
+- `smoke.steps.mjs` - stack-free smoke coverage for health, API key auth, dashboard API key headers, and product fire smoke.
+
+Future full-stack step definitions:
 
 - `dataset.steps.mjs`
 - `sample.steps.mjs`

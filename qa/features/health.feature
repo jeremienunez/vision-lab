@@ -2,6 +2,7 @@
 Feature: Platform healthcheck
   The platform must expose health endpoints so users and automation can verify service readiness.
 
+  @smoke
   Scenario: API healthcheck returns healthy status
     Given the PerceptionLab API is running
     When I call GET "/health"

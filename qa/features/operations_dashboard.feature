@@ -7,6 +7,7 @@ Feature: Operations dashboard
     When I open the operations dashboard
     Then I should see dataset, active job, model, and latest metric summaries
 
+  @smoke
   Scenario: Dashboard supports protected local APIs
     Given the PerceptionLab API is configured with an API key
     When I save the API key in the dashboard configuration panel

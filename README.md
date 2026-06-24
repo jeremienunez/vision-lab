@@ -152,6 +152,10 @@ The Vite dev server proxies `/api` to `http://127.0.0.1:8080` by default. Overri
 
 If the API runs with `PERCEPTIONLAB_API_KEY`, either enter the key in the dashboard configuration panel or expose it locally with `VITE_PERCEPTIONLAB_API_KEY=<redacted> npm run web:dev`.
 
+The dashboard includes a single-image inference lab at `/inference`. Select a registered model, choose a JPG/PNG/WebP image, set the confidence threshold, and run the existing `POST /models/{model_id}/infer` contract from the browser. Results show the run id, latency, detections, and a local overlay on the selected image.
+
+Next portfolio work after this frontend slice is job-level training logs, a read-only experiment comparison table, and the mobile quantization/calibration pass.
+
 Run only the dashboard when the API is already available:
 
 ```bash

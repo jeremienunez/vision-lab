@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Activity, BrainCircuit, Camera, Database, Gauge, GitBranch, ShieldCheck } from 'lucide-react';
+import { Activity, BrainCircuit, Camera, Database, Gauge, GitBranch, ImageUp, ShieldCheck } from 'lucide-react';
 
 import { useConfigContext } from '../context/ConfigContext.jsx';
 
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { label: 'Datasets', icon: Database, to: '/datasets' },
   { label: 'Training', icon: GitBranch, to: '/training' },
   { label: 'Models', icon: BrainCircuit, to: '/models' },
+  { label: 'Inference', icon: ImageUp, to: '/inference' },
   { label: 'Camera', icon: Camera, to: '/camera' },
   { label: 'Metrics', icon: Gauge, to: '/metrics' },
 ];
