@@ -21,3 +21,8 @@ pub struct DatasetVersionResponse {
     pub split_config: BTreeMap<String, String>,
     pub created_by: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct ListDatasetVersionsResponse {
+    pub dataset_versions: Vec<DatasetVersionResponse>,
+}

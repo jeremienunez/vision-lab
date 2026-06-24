@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use perception_domain::DatasetVersionId;
+use perception_domain::{DatasetId, DatasetVersionId};
 
 use crate::{DatasetVersionDraft, UseCaseError};
 
@@ -14,4 +14,9 @@ pub trait DatasetVersionRepository: Send + Sync {
         &self,
         version_id: DatasetVersionId,
     ) -> Result<Option<DatasetVersionDraft>, UseCaseError>;
+
+    async fn list_by_dataset(
+        &self,
+        dataset_id: DatasetId,
+    ) -> Result<Vec<DatasetVersionDraft>, UseCaseError>;
 }

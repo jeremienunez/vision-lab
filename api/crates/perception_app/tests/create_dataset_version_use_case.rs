@@ -156,6 +156,20 @@ impl DatasetVersionRepository for InMemoryDatasetVersionRepository {
             .find(|version| version.id == version_id)
             .cloned())
     }
+
+    async fn list_by_dataset(
+        &self,
+        dataset_id: DatasetId,
+    ) -> Result<Vec<DatasetVersionDraft>, UseCaseError> {
+        Ok(self
+            .versions
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .filter(|version| version.dataset_id == dataset_id)
+            .cloned()
+            .collect())
+    }
 }
 
 fn dataset_fixture() -> DatasetDraft {

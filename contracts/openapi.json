@@ -186,6 +186,25 @@
       }
     },
     "/datasets/{dataset_id}/versions": {
+      "get": {
+        "operationId": "listDatasetVersions",
+        "tags": ["Dataset Versions"],
+        "summary": "List dataset versions.",
+        "parameters": [{ "$ref": "#/components/parameters/DatasetId" }],
+        "responses": {
+          "200": {
+            "description": "Dataset versions.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListDatasetVersionsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": { "$ref": "#/components/responses/RepositoryError" }
+        }
+      },
       "post": {
         "operationId": "createDatasetVersion",
         "tags": ["Dataset Versions"],
@@ -907,6 +926,17 @@
             "additionalProperties": { "type": "string" }
           },
           "created_by": { "type": "string" }
+        }
+      },
+      "ListDatasetVersionsResponse": {
+        "type": "object",
+        "required": ["dataset_versions"],
+        "additionalProperties": false,
+        "properties": {
+          "dataset_versions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DatasetVersionResponse" }
+          }
         }
       },
       "CreateTrainingJobRequest": {

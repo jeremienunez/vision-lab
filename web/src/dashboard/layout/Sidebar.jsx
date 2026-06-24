@@ -17,7 +17,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="sticky top-0 flex h-screen flex-col gap-6 bg-nav px-4 py-6 text-white"
+      className="sticky top-0 z-20 flex w-full min-w-0 flex-col gap-3 overflow-hidden bg-nav px-3 py-3 text-white lg:h-screen lg:gap-6 lg:px-4 lg:py-6"
       aria-label="PerceptionLab navigation"
     >
       <div className="flex items-center gap-3 px-2">
@@ -30,14 +30,14 @@ export function Sidebar() {
         </span>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1">
+      <nav className="flex min-w-0 gap-1 overflow-x-auto lg:flex-1 lg:flex-col lg:overflow-visible">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.label}
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
+              `flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors lg:gap-3 ${
                 isActive ? 'bg-white/10 text-white' : 'text-nav-muted hover:bg-white/5 hover:text-white'
               }`
             }
@@ -48,7 +48,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="flex items-center gap-2 px-2 text-xs text-nav-muted">
+      <div className="hidden items-center gap-2 px-2 text-xs text-nav-muted lg:flex">
         <ShieldCheck size={18} aria-hidden="true" />
         <span>{config.apiKey ? 'Protected' : 'Local open'}</span>
       </div>

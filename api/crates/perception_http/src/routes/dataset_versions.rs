@@ -5,12 +5,17 @@ use axum::{
     response::{IntoResponse, Response},
     routing::post,
 };
-use perception_app::{CreateDatasetVersionCommand, CreateDatasetVersionUseCase, UseCaseError};
+use perception_app::{
+    CreateDatasetVersionCommand, CreateDatasetVersionUseCase, ListDatasetVersionsUseCase,
+    UseCaseError,
+};
 use perception_domain::DatasetId;
 
 use crate::{
     dto::{
-        dataset_version::{CreateDatasetVersionRequest, DatasetVersionResponse},
+        dataset_version::{
+            CreateDatasetVersionRequest, DatasetVersionResponse, ListDatasetVersionsResponse,
+        },
         error::ErrorResponse,
     },
     mappers,
@@ -21,9 +26,28 @@ pub fn routes(state: DatasetVersionHttpState) -> Router {
     Router::new()
         .route(
             "/datasets/{dataset_id}/versions",
-            post(create_dataset_version),
+            post(create_dataset_version).get(list_dataset_versions),
         )
         .with_state(state)
+}
+
+async fn list_dataset_versions(
+    State(state): State<DatasetVersionHttpState>,
+    Path(dataset_id): Path<String>,
+) -> Result<Json<ListDatasetVersionsResponse>, DatasetVersionRouteError> {
+    let dataset_id =
+        DatasetId::parse(dataset_id).map_err(|_| UseCaseError::Validation("invalid dataset id"))?;
+    let versions =
+        ListDatasetVersionsUseCase::new(state.dataset_repository(), state.dataset_version_repository())
+            .execute(dataset_id)
+            .await?;
+
+    Ok(Json(ListDatasetVersionsResponse {
+        dataset_versions: versions
+            .into_iter()
+            .map(mappers::dataset_version::dataset_version_response)
+            .collect(),
+    }))
 }
 
 async fn create_dataset_version(

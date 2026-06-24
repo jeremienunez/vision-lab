@@ -2,7 +2,7 @@ export function Panel({ id, title, action, icon: Icon, children, wide = false })
   return (
     <section
       id={id}
-      className={`flex flex-col rounded-2xl border border-line bg-surface p-5 shadow-panel ${
+      className={`flex min-w-0 flex-col rounded-2xl border border-line bg-surface p-5 shadow-panel ${
         wide ? 'lg:col-span-2' : ''
       }`}
     >

@@ -20,6 +20,19 @@ export function createPerceptionApi({ baseUrl, apiKey, fetchImpl = globalThis.fe
     return readJsonResponse(response);
   }
 
+  async function postJson(path, payload) {
+    const response = await fetchImpl(`${apiBaseUrl}${path}`, {
+      method: 'POST',
+      headers: {
+        ...buildApiHeaders(apiKey),
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    return readJsonResponse(response);
+  }
+
   async function readJsonResponse(response) {
     const text = await response.text();
 
@@ -70,6 +83,33 @@ export function createPerceptionApi({ baseUrl, apiKey, fetchImpl = globalThis.fe
       formData.set('image', imageBlob, filename);
 
       return postMultipart(`/models/${modelId}/infer`, formData);
+    },
+
+    async listDatasetVersions(datasetId) {
+      const payload = await getJson(`/datasets/${datasetId}/versions`);
+      return payload.dataset_versions ?? [];
+    },
+
+    async createTrainingJob({
+      datasetVersionId,
+      modelFamily,
+      baseModel,
+      epochs,
+      batchSize,
+      imageSize,
+      learningRate,
+    }) {
+      return postJson('/training-jobs', {
+        dataset_version_id: datasetVersionId,
+        model_family: modelFamily,
+        base_model: baseModel || null,
+        hyperparameters: {
+          epochs,
+          batch_size: batchSize,
+          image_size: imageSize,
+          learning_rate: learningRate,
+        },
+      });
     },
   };
 }

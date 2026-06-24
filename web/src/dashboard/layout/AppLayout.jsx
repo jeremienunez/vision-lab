@@ -12,9 +12,9 @@ export function AppLayout() {
   const { error, loading } = usePerceptionDataContext();
 
   return (
-    <div className="grid min-h-screen grid-cols-[236px_minmax(0,1fr)]">
+    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[236px_minmax(0,1fr)]">
       <Sidebar />
-      <main className="flex flex-col gap-6 p-6 lg:p-8" aria-busy={loading}>
+      <main className="flex min-w-0 flex-col gap-6 p-4 sm:p-6 lg:p-8" aria-busy={loading}>
         <Topbar settingsOpen={settingsOpen} onToggleSettings={() => setSettingsOpen((open) => !open)} />
 
         {error && (

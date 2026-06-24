@@ -15,7 +15,7 @@ export function Topbar({ settingsOpen, onToggleSettings }) {
       <div className="flex flex-col gap-1">
         <span className="text-xs font-medium uppercase tracking-wide text-subtle">Computer vision operations</span>
         <h1 className="text-2xl font-semibold text-ink">Operations</h1>
-        <p className="text-sm text-muted">
+        <p className="break-all text-sm text-muted">
           {config.baseUrl}
           {lastUpdated ? ` / synced ${lastUpdated.toLocaleTimeString()}` : ' / waiting for sync'}
         </p>

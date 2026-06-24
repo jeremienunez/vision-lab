@@ -68,6 +68,27 @@ impl DatasetVersionRepository for PostgresDatasetVersionRepository {
 
         row.map(row_to_dataset_version).transpose()
     }
+
+    async fn list_by_dataset(
+        &self,
+        dataset_id: DatasetId,
+    ) -> Result<Vec<DatasetVersionDraft>, UseCaseError> {
+        let rows = sqlx::query(
+            r#"
+            SELECT id, dataset_id, version_name, sample_count, annotation_count,
+                   classes_snapshot, split_config, created_by
+            FROM dataset_versions
+            WHERE dataset_id = $1
+            ORDER BY version_name ASC, id ASC
+            "#,
+        )
+        .bind(dataset_id.into_uuid())
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|_| UseCaseError::Repository("postgres dataset version list failed"))?;
+
+        rows.into_iter().map(row_to_dataset_version).collect()
+    }
 }
 
 fn row_to_dataset_version(row: PgRow) -> Result<DatasetVersionDraft, UseCaseError> {

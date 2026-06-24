@@ -160,6 +160,20 @@ impl DatasetVersionRepository for RouteDatasetVersionRepository {
             .find(|version| version.id == version_id)
             .cloned())
     }
+
+    async fn list_by_dataset(
+        &self,
+        dataset_id: DatasetId,
+    ) -> Result<Vec<DatasetVersionDraft>, UseCaseError> {
+        Ok(self
+            .versions
+            .lock()
+            .expect("repository mutex is available")
+            .iter()
+            .filter(|version| version.dataset_id == dataset_id)
+            .cloned()
+            .collect())
+    }
 }
 
 struct RouteSampleStorage;
@@ -369,4 +383,106 @@ async fn create_dataset_version_route_rejects_invalid_split_config() {
     let error = json_body(version_response).await;
     assert_eq!(error["error"]["code"], "validation_failed");
     assert_eq!(error["error"]["message"], "dataset split must sum to 100");
+}
+
+#[tokio::test]
+async fn list_dataset_versions_route_returns_versions_for_dataset() {
+    let app = perception_http::router_with_version_ports(
+        Arc::new(RouteDatasetRepository::default()),
+        Arc::new(RouteSampleRepository::default()),
+        Arc::new(RouteSampleStorage),
+        Arc::new(RouteAnnotationRepository::default()),
+        Arc::new(RouteDatasetVersionRepository::default()),
+    );
+
+    let create_dataset_response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/datasets")
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(
+                    json!({
+                        "name": "openimages-office-objects-v2",
+                        "description": null,
+                        "task_type": "object_detection",
+                        "classes": ["phone", "remote", "person"]
+                    })
+                    .to_string(),
+                ))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+    let dataset = json_body(create_dataset_response).await;
+    let dataset_id = dataset["id"].as_str().expect("dataset id is present");
+    let (boundary, body) = multipart_body();
+    let upload_sample_response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/datasets/{dataset_id}/samples"))
+                .header(
+                    "content-type",
+                    format!("multipart/form-data; boundary={boundary}"),
+                )
+                .body(axum::body::Body::from(body))
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+    assert_eq!(upload_sample_response.status(), StatusCode::CREATED);
+
+    for version_name in ["v1", "v2"] {
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!("/datasets/{dataset_id}/versions"))
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        json!({
+                            "version_name": version_name,
+                            "split_config": {
+                                "train": "80",
+                                "validation": "10",
+                                "test": "10"
+                            },
+                            "created_by": "local-user"
+                        })
+                        .to_string(),
+                    ))
+                    .expect("request is valid"),
+            )
+            .await
+            .expect("route responds");
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+    }
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri(format!("/datasets/{dataset_id}/versions"))
+                .body(axum::body::Body::empty())
+                .expect("request is valid"),
+        )
+        .await
+        .expect("route responds");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json_body(response).await;
+    assert_eq!(
+        body["dataset_versions"]
+            .as_array()
+            .expect("dataset versions are an array")
+            .len(),
+        2
+    );
+    assert_eq!(body["dataset_versions"][0]["dataset_id"], dataset_id);
+    assert_eq!(body["dataset_versions"][0]["version_name"], "v1");
+    assert_eq!(body["dataset_versions"][1]["version_name"], "v2");
 }

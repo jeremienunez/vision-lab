@@ -2,7 +2,7 @@ use std::sync::RwLock;
 
 use async_trait::async_trait;
 use perception_app::{DatasetVersionDraft, DatasetVersionRepository, UseCaseError};
-use perception_domain::DatasetVersionId;
+use perception_domain::{DatasetId, DatasetVersionId};
 
 #[derive(Default)]
 pub struct TransientDatasetVersionRepository {
@@ -34,6 +34,22 @@ impl DatasetVersionRepository for TransientDatasetVersionRepository {
                     .iter()
                     .find(|version| version.id == version_id)
                     .cloned()
+            })
+            .map_err(|_| UseCaseError::Repository("dataset version repository lock poisoned"))
+    }
+
+    async fn list_by_dataset(
+        &self,
+        dataset_id: DatasetId,
+    ) -> Result<Vec<DatasetVersionDraft>, UseCaseError> {
+        self.versions
+            .read()
+            .map(|versions| {
+                versions
+                    .iter()
+                    .filter(|version| version.dataset_id == dataset_id)
+                    .cloned()
+                    .collect()
             })
             .map_err(|_| UseCaseError::Repository("dataset version repository lock poisoned"))
     }
