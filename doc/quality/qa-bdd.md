@@ -52,7 +52,8 @@ The final BDD runner is Cucumber-JS via `@cucumber/cucumber`.
 ```bash
 npm run validate:bdd
 npm run bdd:dry-run
+npm run bdd:smoke
 ./scripts/run_bdd.sh
 ```
 
-`npm run validate:bdd` performs static validation of feature-file structure. `npm run bdd:dry-run` validates runner wiring until executable step definitions are implemented.
+`npm run validate:bdd` performs static validation of feature-file structure. `npm run bdd:dry-run` validates runner wiring across the full suite and still lists undefined full-stack scenarios by design. `npm run bdd:smoke` executes the current stack-free smoke subset for health, API key auth, dashboard API client behavior, and product fire smoke.

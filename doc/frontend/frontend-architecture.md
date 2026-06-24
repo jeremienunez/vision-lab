@@ -20,10 +20,10 @@ The first frontend surface is a minimal dashboard for platform state:
 The second frontend surface is an inference lab:
 
 - select a model
-- upload or capture an image
+- upload an image
 - run inference through `POST /models/{model_id}/infer`
 - display detections, confidence scores, latency, and overlay
-- keep a local history of recent runs
+- keep only local current-run state in the first slice; server-side history can come later from persisted inference runs
 
 The third frontend surface is a live camera lab:
 
@@ -64,13 +64,13 @@ The stack choice follows the project constraints:
 - The app needs strong typing and explicit contracts.
 - The dashboard needs server state caching, refetching, and mutation handling.
 - The live camera needs browser APIs, canvas rendering, and careful backpressure.
-- The repo already uses Node-based local automation, so a `frontend/` workspace can integrate naturally with current scripts.
+- The repo already uses Node-based local automation, and the current `web/` Vite workspace integrates with the existing scripts.
 
 ## Repository Layout
 
-Implementation note: the current production frontend lives under `web/` and uses the repository's Vite app configured by `web/vite.config.mjs`. The original `frontend/` target layout remains a reference architecture for future extraction, but current slices should extend `web/src/dashboard` instead of creating a second app shell.
+Implementation note: the current production frontend lives under `web/` and uses the repository's Vite app configured by `web/vite.config.mjs`. Current slices should extend `web/src/dashboard` instead of creating a second app shell.
 
-Target structure:
+Reference target structure for a future extraction, not the current implementation root:
 
 ```text
 frontend/
@@ -231,15 +231,16 @@ Client state must stay small and local. Do not create a global store for data th
 ```text
 /                     -> Dashboard
 /datasets             -> Dataset list and creation entry
-/datasets/:datasetId  -> Dataset detail, samples, annotations, versions
-/jobs                 -> Training job list
-/jobs/:jobId          -> Job detail, metrics, future logs
+/training             -> Training job list and creation entry
 /models               -> Model registry
-/models/:modelId      -> Model detail, exports, promotion state
 /inference            -> Single-image inference lab
-/live-camera          -> Camera preview and bounded live inference
+/camera               -> Camera preview and bounded live inference
+/metrics              -> Training metrics overview
+
+Future routes:
+
 /experiments          -> Fine-tuning experiment comparison
-/settings             -> Local API base URL and API key configuration
+/settings             -> Dedicated local API base URL and API key configuration if the drawer outgrows the shell
 ```
 
 ## Dashboard Composition
@@ -394,16 +395,21 @@ Live camera tests should keep hardware-specific behavior out of CI. CI can test 
 
 ## Implementation Order
 
-1. Add `frontend/` app shell.
-2. Add design tokens and base layout.
-3. Add typed API client and API key injection.
-4. Add dashboard route with read-only cards.
-5. Add model registry and inference lab route.
-6. Add live camera preview without inference.
-7. Add manual frame capture and inference.
-8. Add bounded interval mode with backpressure.
-9. Add experimental lab read-only comparison table.
-10. Only then consider dashboard polish and richer visualizations.
+Delivered in `web/`:
+
+- Vite app shell, routed layout, and dashboard navigation.
+- Tailwind token theme and shared dashboard controls.
+- API client with API key injection.
+- Read-only dashboard cards for datasets, jobs, models, and metrics.
+- Model registry route and single-image inference lab at `/inference`.
+- Camera preview, manual frame inference, and bounded interval mode at `/camera`.
+
+Remaining order:
+
+1. Add job-level training logs.
+2. Add experimental lab read-only comparison table.
+3. Add quantization/mobile metadata to model registry summaries.
+4. Add calibration dataset validation and mobile export/benchmark smoke checks.
 
 ## Definition Of Done
 

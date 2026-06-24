@@ -48,12 +48,12 @@ The portfolio signal is explicit: this is not a model demo, it is ML infrastruct
 
 - `api/crates/` - Rust hexagonal workspace with `perception_domain`, `perception_app`, `perception_infra`, `perception_http`, and `perception_api`.
 - `worker/perception_worker/` - typed Python/PyTorch worker with domain, contracts, app, ports, adapters, and entrypoints.
-- `web/` - React/Vite operations dashboard for API health, datasets, training jobs, models, and metrics.
+- `web/` - React/Vite operations dashboard for API health, datasets, training jobs, models, single-image inference, live camera inference, and metrics.
 - `contracts/` - OpenAPI and JSON schemas for public and cross-component contracts.
 - `infra/` - local infrastructure notes, Docker Compose target, and Loki/Alloy config.
 - `datasets/seed/` - planned minimal demo dataset.
 - `doc/` - product, architecture, QA, sprint, demo, and reference documentation.
-- `qa/` - Gherkin features, future step definitions, support utilities, and fixtures.
+- `qa/` - Gherkin features, executable smoke steps, future full-stack step definitions, support utilities, and fixtures.
 - `scripts/` - local automation used by hooks and quality gates.
 - `tests/` - policy, unit, integration, and contract tests.
 - `.githooks/` - versioned Git hooks.
@@ -153,6 +153,8 @@ The Vite dev server proxies `/api` to `http://127.0.0.1:8080` by default. Overri
 If the API runs with `PERCEPTIONLAB_API_KEY`, either enter the key in the dashboard configuration panel or expose it locally with `VITE_PERCEPTIONLAB_API_KEY=<redacted> npm run web:dev`.
 
 The dashboard includes a single-image inference lab at `/inference`. Select a registered model, choose a JPG/PNG/WebP image, set the confidence threshold, and run the existing `POST /models/{model_id}/infer` contract from the browser. Results show the run id, latency, detections, and a local overlay on the selected image.
+
+The dashboard camera lab at `/camera` requests camera access explicitly, supports manual frame inference, and can run a bounded interval loop while keeping only one inference request in flight.
 
 Next portfolio work after this frontend slice is job-level training logs, a read-only experiment comparison table, and the mobile quantization/calibration pass.
 

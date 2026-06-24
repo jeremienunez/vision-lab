@@ -344,15 +344,16 @@ canvas drawing can receive resolved CSS token values at runtime
 third-party chart libraries may need token values passed as props
 ```
 
-## First Token Files To Create
+## Current Token Implementation
+
+The current dashboard implementation keeps Tailwind v4 theme tokens in:
 
 ```text
-frontend/src/shared/design/tokens.css
-frontend/src/shared/design/tokens.ts
-frontend/src/shared/design/theme.ts
+web/src/index.css
+web/src/dashboard/components/tone.js
 ```
 
-The first frontend PR should include tokens before visual components. Otherwise the dashboard will accumulate visual debt immediately.
+A future extracted frontend workspace can split these into CSS and TypeScript token modules, but current work should extend the `web/` token surface instead of creating a second app root.
 
 ## Definition Of Done
 

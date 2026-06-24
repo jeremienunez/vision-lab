@@ -81,7 +81,8 @@ make worker-yolo-once
 The worker writes a materialized YOLO dataset under the configured artifact root,
 trains with Ultralytics, and registers the resulting `best.pt` as a candidate model.
 Start inference with the real API path using `make api-real`, then select the new
-candidate model in the dashboard camera panel.
+candidate model in the dashboard inference lab at `/inference` or the camera panel
+at `/camera`.
 
 For the phone-vs-remote correction pass, keep the first training mix focused on:
 

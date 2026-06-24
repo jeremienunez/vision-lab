@@ -39,6 +39,7 @@ Then one observable outcome is true
 - BDD feature files live in `qa/features/` and use English Gherkin for a GitHub technical audience.
 - `npm run validate:bdd` statically validates BDD feature structure.
 - `@cucumber/cucumber` is the final executable BDD runner, with steps in `qa/steps/**/*.mjs`, support in `qa/support/**/*.mjs`, and reports in `qa/reports/cucumber-report.json`.
+- `npm run bdd:smoke` runs the current executable `@smoke` subset without requiring the full local stack.
 - Sprint documents include goal, priority, dependencies, scope, BDD criteria, and definition of done.
 - Architecture checks run locally and later in CI.
 

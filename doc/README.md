@@ -23,9 +23,9 @@ The initial PDF references are stored in `doc/references/`:
 - `doc/specs/demo-spec.md` - final demo target and portfolio proof.
 - `doc/specs/technical-pass-questions.md` - questions intentionally left for the technical pass.
 - `doc/specs/qa-bdd-spec.md` - QA strategy and BDD format.
-- `doc/frontend/frontend-architecture.md` - frontend architecture, route map, API client, live camera integration, and implementation order.
-- `doc/frontend/live-camera-spec.md` - browser live camera modes, frame capture, overlay mapping, backpressure, and BDD scenarios.
-- `doc/design/graphic-tokens.md` - color, typography, spacing, status, chart, camera, and detection overlay tokens.
+- `doc/frontend/frontend-architecture.md` - current `web/` implementation root, frontend architecture, route map, API client, live camera integration, and remaining implementation order.
+- `doc/frontend/live-camera-spec.md` - browser camera modes, frame capture, overlay mapping, backpressure, and BDD scenarios.
+- `doc/design/graphic-tokens.md` - design token reference plus the current `web/src/index.css` Tailwind token implementation note.
 - `doc/research/experimental-finetuning-pass.md` - fine-tuning experiment protocol, dataset tracks, experiment matrix, metrics, artifacts, and model card template.
 - `doc/research/mobile-quantization-pass.md` - mobile quantization, compression, teacher-student distillation, QAT, calibration, mobile benchmarking, and deployment readiness.
 - `doc/sprints/` - sprint plans with validation criteria.
@@ -38,6 +38,6 @@ The initial PDF references are stored in `doc/references/`:
 - `doc/architecture/design-patterns.md` - mandatory patterns and forbidden anti-patterns.
 - `doc/architecture/review-checklist.md` - review checklist before P0 implementation.
 - `doc/demo/` - planned demo inputs, overlays, and API response examples.
-- `qa/features/` - Gherkin acceptance scenarios in English.
+- `qa/features/` - Gherkin acceptance scenarios in English, including the executable `@smoke` subset.
 - `qa/fixtures/` - planned test fixtures mirrored from the QA/BDD reference.
 - `contracts/` - OpenAPI and JSON schemas for API and worker contracts.

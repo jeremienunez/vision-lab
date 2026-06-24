@@ -4,6 +4,8 @@
 
 The live camera feature turns PerceptionLab into a visible real-time perception demo. The first implementation should be browser-based, bounded, and API-compatible with the existing inference contract.
 
+Implementation note: the current dashboard route is `/camera` under `web/src/dashboard/features/camera`. Older `live-camera` labels in this document describe the feature domain, not a separate frontend workspace.
+
 The goal is not to build a full streaming platform first. The goal is to prove that the existing ML infrastructure can accept camera frames, return detections, and render stable overlays in a product UI.
 
 ## Product Promise
@@ -365,7 +367,7 @@ Component tests:
 Manual smoke:
 
 ```text
-open /live-camera
+open /camera
 allow camera
 select model
 manual capture
