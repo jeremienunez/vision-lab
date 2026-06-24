@@ -78,9 +78,27 @@
 - [x] Connect real YOLO inference to the API product fire smoke.
 - [x] Add bounded live webcam YOLO detection command.
 - [x] Add API key auth.
+- [x] Add frontend architecture spec.
+- [x] Add graphic token spec.
+- [x] Add live camera frontend spec.
+- [x] Add experimental fine-tuning pass.
+- [x] Add mobile quantization pass.
 - [x] Add minimal web dashboard only after API-first MVP.
 - [x] Restructure and restyle the web dashboard into routed Tailwind views.
 - [x] Add Makefile launcher with local Loki/Alloy observability.
+- [ ] Add `frontend/` app shell.
+- [ ] Add frontend design token files.
+- [ ] Add typed frontend API client with API key support.
+- [ ] Add dashboard read-only cards for datasets, jobs, models, and latest inference.
+- [ ] Add single-image inference lab.
+- [ ] Add live camera preview mode.
+- [ ] Add manual live camera frame inference.
+- [ ] Add bounded live camera interval inference.
+- [ ] Add quantization metadata to model registry summaries.
+- [ ] Add calibration dataset convention and validation script.
+- [ ] Add FP16 mobile export smoke.
+- [ ] Add PTQ INT8 compression smoke.
+- [ ] Add mobile benchmark summary format.
 - [ ] Stream training logs.
 - [ ] Support video.
 - [ ] Support depth metadata.
@@ -94,3 +112,9 @@
 - [ ] Model drift report.
 - [ ] Human-in-the-loop correction.
 - [ ] Auto-labeling with existing model.
+- [ ] Run baseline detector evaluation on a fixed live-camera eval set.
+- [ ] Run first fine-tuned YOLO experiment through the worker and model registry.
+- [ ] Add experiment comparison table to the frontend.
+- [ ] Run teacher-student distillation with a larger teacher and mobile student.
+- [ ] Run QAT recovery pass if PTQ accuracy drop is too high.
+- [ ] Promote best mobile artifact for live camera demo.

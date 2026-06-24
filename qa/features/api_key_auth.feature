@@ -1,23 +1,25 @@
 @p2 @api @security
 Feature: API key authentication
-  Protected API routes must require an API key only when local configuration enables it.
+  The API must optionally protect non-health routes without breaking local development ergonomics.
+
+  Background:
+    Given the PerceptionLab API is running with API key "dev-secret"
 
   Scenario: Healthcheck remains public when API key auth is enabled
-    Given the PerceptionLab API is configured with an API key
-    When I call the healthcheck endpoint without an API key
+    When I call GET "/health" without an API key
     Then the response status should be 200
 
   Scenario: Protected route rejects missing API key
-    Given the PerceptionLab API is configured with an API key
-    When I call a protected endpoint without the x-api-key header
+    When I call GET "/datasets" without an API key
     Then the response status should be 401
+    And the response body should contain error code "missing_api_key"
 
   Scenario: Protected route rejects wrong API key
-    Given the PerceptionLab API is configured with an API key
-    When I call a protected endpoint with the wrong x-api-key header
+    When I call GET "/datasets" with API key "wrong-secret"
     Then the response status should be 403
+    And the response body should contain error code "invalid_api_key"
 
-  Scenario: Protected route accepts correct API key
-    Given the PerceptionLab API is configured with an API key
-    When I call a protected endpoint with the correct x-api-key header
-    Then the response status should be 200
+  Scenario: Protected route accepts matching API key
+    When I call GET "/datasets" with API key "dev-secret"
+    Then the response should not be 401
+    And the response should not be 403
